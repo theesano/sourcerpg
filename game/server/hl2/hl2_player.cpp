@@ -415,6 +415,8 @@ CHL2_Player::CHL2_Player()
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
 	// Sprint handling
+	m_flDelayedUseTime = 0.0f;
+	m_bDelayedUse = false;
 	
 
 }
@@ -424,12 +426,12 @@ CHL2_Player::CHL2_Player()
 //
 // SUIT POWER DEVICES
 //
-#define SUITPOWER_CHARGE_RATE	150.0											// 100 units in 8 seconds
+#define SUITPOWER_CHARGE_RATE	12.0											// 100 units in 8 seconds
 
 #ifdef HL2MP
 	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 25.0f );				// 100 units in 4 seconds
 #else
-	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 10.0f );				// 100 units in 8 seconds
+	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 50.0f );				// 100 units in 8 seconds
 #endif
 
 #ifdef HL2_EPISODIC
@@ -505,19 +507,29 @@ void CHL2_Player::RemoveSuit( void )
 	m_HL2Local.m_bDisplayReticle = false;
 }
 
+void CHL2_Player::DelayedUseTime(void)
+{
+	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
+	{
+		m_bDelayedUse = false;
+		StopSprinting();
+		m_nButtons &= ~IN_SPEED;
+	}
+
+}
+
+
 void CHL2_Player::HandleSpeedChanges( void )
 {
 	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
 	bool bCanSprint = CanSprint();
 	bool bIsSprinting = IsSprinting();
-	bool bWantSprint = ( bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED) );
+	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
 
-	bool			m_bDelayedUse = false;
-	float			m_flDelayedUseTime = 0.0f;
 
 	
-	if ( bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED) )
+	if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
 	{
 		// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
 		// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
@@ -526,45 +538,46 @@ void CHL2_Player::HandleSpeedChanges( void )
 		{
 			if ( sv_stickysprint.GetBool() )
 			{
-				/*StartAutoSprint();*/
+				StartAutoSprint();
 			}
 			else
 			{
 				StartSprinting();
-				/*m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
-				m_bDelayedUse = true;*/
+				m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
+				m_bDelayedUse = true;
 			}
 		}
 		
-		else //if (m_bDelayedUse && !bWantSprint && gpGlobals->curtime > m_flDelayedUseTime)
+		else 
 		{
-
-			
-				m_bDelayedUse = false;
 				StopSprinting();
-				m_nButtons &= ~IN_SPEED;
-			
-			/*if ( !sv_stickysprint.GetBool() )
+				
+			if ( !sv_stickysprint.GetBool() )
 			{
 			StopSprinting();
-			}*/
+			}
 
 		}
+
+
 			 //Reset key, so it will be activated post whatever is suppressing it.
 			m_nButtons &= ~IN_SPEED;
 		
 	}
 
-	/*if (m_bDelayedUse)
+	if (m_bDelayedUse)
 	{
-		if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
+
+		DelayedUseTime();
+		//m_nButtons &= ~IN_SPEED;
+		/*if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
 		{
 			m_bDelayedUse = false;
 			StopSprinting();
 			m_nButtons &= ~IN_SPEED;
-		}
+		}*/
 	}
-*/
+
 	bool bIsWalking = IsWalking();
 	// have suit, pressing button, not sprinting or ducking
 	bool bWantWalking;
@@ -1433,19 +1446,19 @@ bool CHL2_Player::CanSprint()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-//void CHL2_Player::StartAutoSprint() 
-//{
-//	if( IsSprinting() )
-//	{
-//		StopSprinting();
-//	}
-//	else
-//	{
-//		StartSprinting();
-//		m_bIsAutoSprinting = true;
-//		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
-//	}
-//}
+void CHL2_Player::StartAutoSprint() 
+{
+	if( IsSprinting() )
+	{
+		StopSprinting();
+	}
+	else
+	{
+		StartSprinting();
+		m_bIsAutoSprinting = true;
+		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
+	}
+}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
