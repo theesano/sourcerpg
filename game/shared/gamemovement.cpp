@@ -2391,8 +2391,8 @@ void CGameMovement::Dash(void)
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
 	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
-	float m_nDiffOrgTraceEndx = mv->m_vecAbsOrigin.x - tr.endpos.x;
-	float m_nDiffOrgTraceEndy = mv->m_vecAbsOrigin.y - tr.endpos.y;
+	float m_nDiffOrgTraceEndx = abs( mv->m_vecAbsOrigin.x - tr.endpos.x);
+	float m_nDiffOrgTraceEndy = abs(mv->m_vecAbsOrigin.y - tr.endpos.y);
 
 	float m_uDash = 0;
 	//&& player->GetGroundEntity() == NULL
