@@ -110,7 +110,6 @@ ConVar sv_infinite_aux_power( "sv_infinite_aux_power", "0", FCVAR_CHEAT );
 
 ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
 
-ConVar sv_stickysprint("sv_stickysprint", "0", FCVAR_ARCHIVE | FCVAR_ARCHIVE_XBOX);
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
@@ -528,55 +527,38 @@ void CHL2_Player::HandleSpeedChanges( void )
 	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
 
 
-	
 	if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
 	{
 		// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
 		// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
 		// We want a full debounce of the key to resume sprinting after the suit is completely drained
-		if (bWantSprint && !m_bDelayedUse)
+		if (bWantSprint )
 		{
-			if ( sv_stickysprint.GetBool() )
-			{
-				StartAutoSprint();
-			}
-			else
-			{
 				StartSprinting();
-				m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
-				m_bDelayedUse = true;
-			}
 		}
 		
 		else 
 		{
 				StopSprinting();
-				
-			if ( !sv_stickysprint.GetBool() )
-			{
-			StopSprinting();
-			}
-
 		}
-
 
 			 //Reset key, so it will be activated post whatever is suppressing it.
 			m_nButtons &= ~IN_SPEED;
+	}
+	if (bIsSprinting && !m_bDelayedUse)
+	{	
 		
+		StopSprinting();
+		m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
+		m_bDelayedUse = true;
+	
 	}
 
 	if (m_bDelayedUse)
 	{
-
 		DelayedUseTime();
-		//m_nButtons &= ~IN_SPEED;
-		/*if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
-		{
-			m_bDelayedUse = false;
-			StopSprinting();
-			m_nButtons &= ~IN_SPEED;
-		}*/
 	}
+
 
 	bool bIsWalking = IsWalking();
 	// have suit, pressing button, not sprinting or ducking
@@ -870,28 +852,14 @@ void CHL2_Player::PreThink(void)
 	HandleArmorReduction();
 #endif
 
-	if( sv_stickysprint.GetBool() && m_bIsAutoSprinting )
-	{
+	
 		// If we're ducked and not in the air
-		if( IsDucked() && GetGroundEntity() != NULL )
+	if ( IsDucked() && GetGroundEntity() != NULL )
 		{
 			StopSprinting();
 		}
-		// Stop sprinting if the player lets off the stick for a moment.
-		else if( GetStickDist() == 0.0f )
-		{
-			if( gpGlobals->curtime > m_fAutoSprintMinTime )
-			{
-				StopSprinting();
-			}
-		}
-		else
-		{
-			// Stop sprinting one half second after the player stops inputting with the move stick.
-			m_fAutoSprintMinTime = gpGlobals->curtime + 0.5f;
-		}
-	}
-	else if ( IsSprinting() )
+		
+	 if ( IsSprinting() )
 	{
 		// Disable sprint while ducked unless we're in the air (jumping)
 		if ( IsDucked() && ( GetGroundEntity() != NULL ) )
@@ -900,9 +868,6 @@ void CHL2_Player::PreThink(void)
 		}
 	}
 
-
-	
-	
 	VPROF_SCOPE_END();
 
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
@@ -1446,19 +1411,19 @@ bool CHL2_Player::CanSprint()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CHL2_Player::StartAutoSprint() 
-{
-	if( IsSprinting() )
-	{
-		StopSprinting();
-	}
-	else
-	{
-		StartSprinting();
-		m_bIsAutoSprinting = true;
-		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
-	}
-}
+//void CHL2_Player::StartAutoSprint() 
+//{
+//	if( IsSprinting() )
+//	{
+//		StopSprinting();
+//	}
+//	else
+//	{
+//		StartSprinting();
+//		m_bIsAutoSprinting = true;
+//		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
+//	}
+//}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1512,11 +1477,6 @@ void CHL2_Player::StopSprinting( void )
 
 	m_fIsSprinting = false;
 
-	if ( sv_stickysprint.GetBool() )
-	{
-		m_bIsAutoSprinting = false;
-		m_fAutoSprintMinTime = 1.5f;
-	}
 }
 
 
@@ -2247,8 +2207,7 @@ void CHL2_Player::SuitPower_Update( void )
 		float flPowerLoad = m_flSuitPowerLoad;
 
 		//Since stickysprint quickly shuts off sprint if it isn't being used, this isn't an issue.
-		if ( !sv_stickysprint.GetBool() )
-		{
+		
 			if( SuitPower_IsDeviceActive(SuitDeviceSprint) )
 			{
 				if( !fabs(GetAbsVelocity().x) && !fabs(GetAbsVelocity().y) )
@@ -2257,7 +2216,7 @@ void CHL2_Player::SuitPower_Update( void )
 					flPowerLoad -= SuitDeviceSprint.GetDeviceDrainRate();
 				}
 			}
-		}
+		
 
 		if( SuitPower_IsDeviceActive(SuitDeviceFlashlight) )
 		{

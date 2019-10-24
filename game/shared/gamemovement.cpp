@@ -2027,7 +2027,7 @@ void CGameMovement::WalkMove( void )
 
 	StayOnGround();
 }
-
+//Delay condition for x
 void CGameMovement::DelayedUseTime(void)
 {
 	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
@@ -2369,12 +2369,45 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-// Prototype:Moving X units , teleport style.
+// Prototype:Moving X units in 4 directions , teleport style.
+//BROKEN : Dash doesn't work as intended atm .
 void CGameMovement::Dash(void)
 {
+	
+	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
+	if (!pPlayer)
+		return; //Always validate a pointer
+
+	// Create Vector for direction
+	Vector vecDir;
+
+	// Take the Player's EyeAngles and turn it into a direction
+	AngleVectors(pPlayer->EyeAngles(), &vecDir);
+
+	// Get the Start/End
+	Vector vecAbsStart = pPlayer->EyePosition();
+	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
+
+	trace_t tr; // Create our trace_t class to hold the end result
+	// Do the TraceLine, and write our results to our trace_t class, tr.
+	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	float m_nDiffOrgTraceEndx = mv->m_vecAbsOrigin.x - tr.endpos.x;
+	float m_nDiffOrgTraceEndy = mv->m_vecAbsOrigin.y - tr.endpos.y;
+
+	float m_uDash = 0;
 	//&& player->GetGroundEntity() == NULL
-	float m_uDash = 400.0f;
-	if (mv->m_nButtons & IN_SPEED  && !m_bDelayedUse)
+	if (m_nDiffOrgTraceEndx && m_nDiffOrgTraceEndy < 320)
+	{
+		m_uDash = 0;
+		return;
+	}
+	else
+	{
+		m_uDash = 320;
+
+	}
+
+	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{	
 		if ((mv->m_vecViewAngles.y > 45) && (mv->m_vecViewAngles.y < 135))
 		{
@@ -2396,8 +2429,21 @@ void CGameMovement::Dash(void)
 		{
 			mv->m_vecAbsOrigin.y -= m_uDash;
 		}
+
 		m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
 		m_bDelayedUse = true;
+
+		if (tr.m_pEnt)
+		{
+			if (tr.m_pEnt->IsWorld())
+			{
+				DevMsg("Include this variable: %.2f \n", tr.endpos.x);
+				DevMsg("Include this variable: %.2f \n", tr.endpos.y);
+				
+
+			}
+		}
+		
 	}
 	
 }

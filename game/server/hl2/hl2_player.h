@@ -323,8 +323,7 @@ private:
 	float				m_flTimeAllSuitDevicesOff;
 
 	bool				m_bSprintEnabled;		// Used to disable sprint temporarily
-	bool				m_bIsAutoSprinting;		// A proxy for holding down the sprint key.
-	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
+
 	CNetworkVar ( float, m_fSprintReboundTime);	// 
 
 	CNetworkVar( bool, m_fIsSprinting );
