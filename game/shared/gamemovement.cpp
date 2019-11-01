@@ -55,6 +55,8 @@ ConVar player_limit_jump_speed( "player_limit_jump_speed", "1", FCVAR_REPLICATED
 // convar which is ONLY set by the X360 controller menu to tell us which way to bind the
 // duck controls. Its value is meaningless anytime we don't have the options window open.
 ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCHIVE );// 0 = HOLD to duck, 1 = Duck is a toggle
+ConVar debug_dashcoordiff("debug_dashcoordiff", "0");//Print out the value of the differences between the end of the raytraced and the current player's position.
+ConVar sk_dashdistance("sk_dashdistance", "320"); // Set the dash distance.
 
 #ifdef STAGING_ONLY
 #ifdef CLIENT_DLL
@@ -2394,18 +2396,26 @@ void CGameMovement::Dash(void)
 	float m_nDiffOrgTraceEndx = abs( mv->m_vecAbsOrigin.x - tr.endpos.x);
 	float m_nDiffOrgTraceEndy = abs(mv->m_vecAbsOrigin.y - tr.endpos.y);
 
-	float m_uDash = 0;
+	float m_uDash = sk_dashdistance.GetInt();
 	//&& player->GetGroundEntity() == NULL
-	if (m_nDiffOrgTraceEndx && m_nDiffOrgTraceEndy < 320)
+	if (m_nDiffOrgTraceEndx < m_uDash && m_nDiffOrgTraceEndy <m_uDash)
 	{
 		m_uDash = 0;
-		return;
-	}
+		//return;
+	}	
 	else
 	{
-		m_uDash = 320;
+		m_uDash = sk_dashdistance.GetInt();
 
 	}
+
+	if (debug_dashcoordiff.GetInt() == 1)
+	{
+
+		DevMsg("Diff X: %.2f \n", m_nDiffOrgTraceEndx);
+		DevMsg("Diff Y: %.2f \n", m_nDiffOrgTraceEndy);
+	}
+	
 
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{	
@@ -2430,17 +2440,16 @@ void CGameMovement::Dash(void)
 			mv->m_vecAbsOrigin.y -= m_uDash;
 		}
 
-		m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
+		m_flDelayedUseTime = gpGlobals->curtime + 0.5f;
 		m_bDelayedUse = true;
 
 		if (tr.m_pEnt)
 		{
 			if (tr.m_pEnt->IsWorld())
 			{
-				DevMsg("Include this variable: %.2f \n", tr.endpos.x);
-				DevMsg("Include this variable: %.2f \n", tr.endpos.y);
+				DevMsg("Trace X: %.2f \n", tr.endpos.x);
+				DevMsg("Trace Y: %.2f \n", tr.endpos.y);
 				
-
 			}
 		}
 		
