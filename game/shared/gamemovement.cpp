@@ -56,7 +56,7 @@ ConVar player_limit_jump_speed( "player_limit_jump_speed", "1", FCVAR_REPLICATED
 // duck controls. Its value is meaningless anytime we don't have the options window open.
 ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCHIVE );// 0 = HOLD to duck, 1 = Duck is a toggle
 ConVar debug_dashcoordiff("debug_dashcoordiff", "0");//Print out the value of the differences between the end of the raytraced and the current player's position.
-ConVar sk_dashdistance("sk_dashdistance", "320"); // Set the dash distance.
+ConVar sk_dashdistance("sk_dashdistance", "64"); // Set the dash distance.
 
 #ifdef STAGING_ONLY
 #ifdef CLIENT_DLL
@@ -2392,7 +2392,8 @@ void CGameMovement::Dash(void)
 
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
-	UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	//UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
+	TracePlayerBBox(mv->GetAbsOrigin(), vecAbsEnd,PlayerSolidMask() , COLLISION_GROUP_PLAYER_MOVEMENT, tr );
 	float m_nDiffOrgTraceEndx = abs( mv->m_vecAbsOrigin.x - tr.endpos.x);
 	float m_nDiffOrgTraceEndy = abs(mv->m_vecAbsOrigin.y - tr.endpos.y);
 
@@ -2418,26 +2419,55 @@ void CGameMovement::Dash(void)
 	
 
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
-	{	
-		if ((mv->m_vecViewAngles.y > 45) && (mv->m_vecViewAngles.y < 135))
-		{
-			mv->m_vecAbsOrigin.y += m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y > 135) && (mv->m_vecViewAngles.y <180))
-		{
-			mv->m_vecAbsOrigin.x -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < -135) && (mv->m_vecViewAngles.y >-180))
-		{
-			mv->m_vecAbsOrigin.x -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < 45) && (mv->m_vecViewAngles.y > -45))
+	{
+		if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_DIE);
+		} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
+		if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
+		{
+			mv->m_vecAbsOrigin.x += m_uDash;
+			mv->m_vecAbsOrigin.y += m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
 		}
-		if ((mv->m_vecViewAngles.y < -45 ) && (mv->m_vecViewAngles.y > -135))
+		if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
+		{
+			mv->m_vecAbsOrigin.y += m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
+		{
+			mv->m_vecAbsOrigin.y += m_uDash;
+			mv->m_vecAbsOrigin.x -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
+		{
+			mv->m_vecAbsOrigin.x -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
+		{
+			mv->m_vecAbsOrigin.x -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
+		{
+			mv->m_vecAbsOrigin.x -= m_uDash;
+			mv->m_vecAbsOrigin.y -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
 		{
 			mv->m_vecAbsOrigin.y -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		}
+		if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
+		{
+			mv->m_vecAbsOrigin.x += m_uDash;
+			mv->m_vecAbsOrigin.y -= m_uDash;
+			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
 		}
 
 		m_flDelayedUseTime = gpGlobals->curtime + 0.5f;
