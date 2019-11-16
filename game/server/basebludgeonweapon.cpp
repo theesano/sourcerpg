@@ -125,7 +125,7 @@ void CBaseHLBludgeonWeapon::PrimaryAttack()
 //------------------------------------------------------------------------------
 void CBaseHLBludgeonWeapon::SecondaryAttack()
 {
-	Swing( true );
+	Swing2( false );
 }
 
 
@@ -381,5 +381,105 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 
 	//Play swing sound
 	WeaponSound( SINGLE );
+	pOwner->SetAnimation(PLAYER_ATTACK1);
+}
+
+//Secondary Attack Swing
+//------------------------------------------------------------------------------
+// Purpose : Starts the swing of the weapon and determines the animation
+// Input   : bIsSecondary - is this a secondary attack?
+//------------------------------------------------------------------------------
+void CBaseHLBludgeonWeapon::Swing2(int bIsSecondary)
+{
+	trace_t traceHit;
+
+	// Try a ray
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	pOwner->RumbleEffect(RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART);
+
+	Vector swingStart = pOwner->Weapon_ShootPosition();
+	Vector forward;
+
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+
+	Vector swingEnd = swingStart + forward * GetRange();
+	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+	Activity nHitActivity = ACT_VM_HITCENTER;
+
+	// Like bullets, bludgeon traces have to trace against triggers.
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward);
+	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+
+	if (traceHit.fraction == 1.0)
+	{
+		float bludgeonHullRadius = 1.732f * BLUDGEON_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+
+		// Back off by hull "radius"
+		swingEnd -= forward * bludgeonHullRadius;
+
+		UTIL_TraceHull(swingStart, swingEnd, g_bludgeonMins, g_bludgeonMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+		if (traceHit.fraction < 1.0 && traceHit.m_pEnt)
+		{
+			Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
+			VectorNormalize(vecToTarget);
+
+			float dot = vecToTarget.Dot(forward);
+
+			// YWB:  Make sure they are sort of facing the guy at least...
+			if (dot < 0.70721f)
+			{
+				// Force amiss
+				traceHit.fraction = 1.0f;
+			}
+			else
+			{
+				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, g_bludgeonMins, g_bludgeonMaxs, pOwner);
+			}
+		}
+	}
+
+	if (!bIsSecondary)
+	{
+		m_iPrimaryAttacks++;
+	}
+	else
+	{
+		m_iSecondaryAttacks++;
+	}
+
+	gamestats->Event_WeaponFired(pOwner, !bIsSecondary, GetClassname());
+
+	// -------------------------
+	//	Miss
+	// -------------------------
+	if (traceHit.fraction == 1.0f)
+	{
+		nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
+
+		// We want to test the first swing again
+		Vector testEnd = swingStart + forward * GetRange();
+
+		// See if we happened to hit water
+		ImpactWater(swingStart, testEnd);
+	}
+	else
+	{
+		Hit(traceHit, nHitActivity, bIsSecondary ? true : false);
+	}
+
+	// Send the anim
+	SendWeaponAnim(nHitActivity);
+
+	//Setup our next attack times
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+
+	//Play swing sound
+	WeaponSound(SINGLE);
 	pOwner->SetAnimation(PLAYER_ATTACK1);
 }

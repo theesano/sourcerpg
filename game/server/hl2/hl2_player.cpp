@@ -532,7 +532,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 		// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
 		// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
 		// We want a full debounce of the key to resume sprinting after the suit is completely drained
-		if (bWantSprint )
+	/*	if (bWantSprint )
 		{
 				StartSprinting();
 		}
@@ -541,7 +541,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 		{
 				StopSprinting();
 		}
-
+*/
 			 //Reset key, so it will be activated post whatever is suppressing it.
 			m_nButtons &= ~IN_SPEED;
 	}
@@ -1998,6 +1998,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	speed = GetAbsVelocity().Length2D();
 
+	
+
 	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
 	{
 		speed = 0;
@@ -2005,6 +2007,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	Activity idealActivity = ACT_HL2MP_RUN;
+
 
 	if (playerAnim == PLAYER_JUMP)
 	{

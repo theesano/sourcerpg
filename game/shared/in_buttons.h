@@ -38,7 +38,7 @@
 #define IN_GRENADE2		(1 << 24)	// grenade 2
 #define	IN_ATTACK3		(1 << 25)
 #define IN_THROWGRENADE (1 << 26)	//would probably be changed for quickaction, or not
-#define IN_SLOT1		(1 << 27)	//mmorpg styled quickslot , from 1-6
+#define IN_SLOT1		(1 << 27)	//mmorpg style quickslot , from 1-6
 #define IN_SLOT2		(1 << 28)
 #define IN_SLOT3		(1 << 29)
 #define IN_SLOT4		(1 << 30)

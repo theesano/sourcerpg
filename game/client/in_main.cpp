@@ -708,6 +708,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		
 		if (side || forward )
 		{
+			
 			viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
 		}
 		

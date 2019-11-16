@@ -60,6 +60,7 @@ IMPLEMENT_ACTTABLE(CWeaponCrowbar);
 //-----------------------------------------------------------------------------
 CWeaponCrowbar::CWeaponCrowbar( void )
 {
+
 }
 
 //-----------------------------------------------------------------------------
@@ -74,6 +75,7 @@ float CWeaponCrowbar::GetDamageForActivity( Activity hitActivity )
 
 	return sk_npc_dmg_crowbar.GetFloat();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Add in a view kick for this weapon

@@ -2048,6 +2048,7 @@ void CGameMovement::FullWalkMove( )
 	//PROTOTYPING: Dash function. 
 			Dash();
 
+	//For use to add delay to Dash() usage
 	//On m_bDelayedUse = 1 run DelayedUseTime();
 	if (m_bDelayedUse)
 	{
@@ -2423,51 +2424,51 @@ void CGameMovement::Dash(void)
 		if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_DIE);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
 		if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
 			mv->m_vecAbsOrigin.y += m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
 		{
 			mv->m_vecAbsOrigin.y += m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
 		{
 			mv->m_vecAbsOrigin.y += m_uDash;
 			mv->m_vecAbsOrigin.x -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+		//	MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
 		{
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			MoveHelper()->PlayerSetAnimation(PLAYER_WALK);
+			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 
 		m_flDelayedUseTime = gpGlobals->curtime + 0.5f;

@@ -1772,6 +1772,12 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		playerAnim = PLAYER_IDLE;
 	}
 
+	if ((GetFlags() & (FL_FROZEN | FL_ATCONTROLS)) && (m_nButtons & IN_SPEED) )
+	{
+		speed = 0;
+		SetSequence(ACT_RUN_CROUCH);
+		SetPlaybackRate(5.0f);
+	}
 	Activity idealActivity = ACT_WALK;// TEMP!!!!!
 
 	// This could stand to be redone. Why is playerAnim abstracted from activity? (sjb)
@@ -4562,9 +4568,27 @@ void CBasePlayer::PostThink()
 			if ( IsInAVehicle() )
 				SetAnimation( PLAYER_IN_VEHICLE );
 			else if (!GetAbsVelocity().x && !GetAbsVelocity().y)
-				SetAnimation( PLAYER_IDLE );
-			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && ( GetFlags() & FL_ONGROUND ))
-				SetAnimation( PLAYER_WALK );
+			{	
+				SetAnimation(PLAYER_IDLE);
+				//BROKEN :Supposed to play the sequence when standing still and pressed the button
+				if (m_nButtons & IN_SPEED)
+				{
+					SetSequence(ACT_RUN_PROTECTED);
+					SetPlaybackRate(10.0f);
+				}
+			}
+			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (GetFlags() & FL_ONGROUND))
+			{
+				SetAnimation(PLAYER_WALK);
+			}
+			else if ((GetAbsVelocity().x || GetAbsVelocity().y))
+			{ //PARTIALLY WORKING : when in air & pressing the Evade button, play the animation, Doesn't work when on the ground atm.
+				if (m_nButtons & IN_SPEED)
+				{
+					SetSequence(ACT_RUN_PROTECTED);
+					SetPlaybackRate(10.0f);
+				}
+			}
 			else if (GetWaterLevel() > 1)
 				SetAnimation( PLAYER_WALK );
 		}

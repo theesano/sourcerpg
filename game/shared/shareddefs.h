@@ -359,6 +359,9 @@ enum PLAYER_ANIM
 	PLAYER_RELOAD,
 	PLAYER_START_AIMING,
 	PLAYER_LEAVE_AIMING,
+
+	//Custom 
+	PLAYER_EVADE, //Does nothing at the moment
 };
 
 #ifdef HL2_DLL

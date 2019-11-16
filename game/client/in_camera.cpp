@@ -91,6 +91,7 @@ void CAM_ToThirdPerson_MayaMode(void)
 	bool &rb = Is_CAM_ThirdPerson_MayaMode();
 	rb = !rb;
 }
+//Reset the pitch & yaw Value to 0
 void CAM_Reset(void)
 {
 	cam_idealyaw.SetValue(0);
@@ -188,7 +189,15 @@ void CAM_ToggleSnapto( void )
 	cam_snapto.SetValue( !cam_snapto.GetInt() );
 }
 
+void CAM_DistMoveIn(void)
+{
+	input->CAM_DistMoveIn();
+}
 
+void CAM_DistMoveOut(void)
+{
+	input->CAM_DistMoveOut();
+}
 /*
 ==============================
 MoveToward
@@ -248,11 +257,12 @@ void CInput::CAM_Think( void )
 		return CAM_CameraThirdThink();
 	}
 
+
 	Vector idealAngles;
 	Vector camOffset;
 	float flSensitivity;
 	QAngle viewangles;
-	
+
 	switch( cam_command.GetInt() )
 	{
 	case CAM_COMMAND_TOTHIRDPERSON:
@@ -321,6 +331,8 @@ void CInput::CAM_Think( void )
 	idealAngles[ YAW ]   = cam_idealyaw.GetFloat();
 	idealAngles[ DIST ]  = cam_idealdist.GetFloat();
 
+	
+
 	//
 	//movement of the camera with the mouse
 	//
@@ -337,7 +349,7 @@ void CInput::CAM_Think( void )
 		
 		m_nCameraX = cpx;
 		m_nCameraY = cpy;
-		
+		m_nCamDistChange = 0;
 		//check for X delta values and adjust accordingly
 		//eventually adjust YAW based on amount of movement
 		//don't do any movement of the cam using YAW/PITCH if we are zooming in/out the camera	
@@ -414,6 +426,8 @@ void CInput::CAM_Think( void )
 				m_nCameraOldX=m_nCameraX;
 				m_nCameraOldY=m_nCameraY;
 			}
+			//Change the distance between the player and camera dynamically
+			idealAngles[DIST] = idealAngles[DIST] + m_nCamDistChange;
 #ifndef _XBOX
 			ResetMouse();
 #endif
@@ -430,22 +444,42 @@ void CInput::CAM_Think( void )
 		idealAngles[ YAW ] -= cam_idealdelta.GetFloat();
 	else if( input->KeyState( &cam_yawright ) )
 		idealAngles[ YAW ] += cam_idealdelta.GetFloat();
-	
-	if( input->KeyState( &cam_in ) )
+	//Code for zooming in and out Camera 
+
+	if (input->KeyState(&cam_in))
 	{
-		idealAngles[ DIST ] -= 2*cam_idealdelta.GetFloat();
-		if( idealAngles[ DIST ] < CAM_MIN_DIST )
-		{
-			// If we go back into first person, reset the angle
-			idealAngles[ PITCH ] = 0;
-			idealAngles[ YAW ] = 0;
-			idealAngles[ DIST ] = CAM_MIN_DIST;
-		}
-		
+		idealAngles[DIST] -= 2*cam_idealdelta.GetFloat();
+			if (idealAngles[DIST] < CAM_MIN_DIST)
+			{
+				// If we go back into first person, reset the angle
+				idealAngles[PITCH] = 0;
+				idealAngles[YAW] = 0;
+				viewangles[PITCH] = 0;
+				idealAngles[DIST] = CAM_MIN_DIST;
+			}
+
 	}
-	else if( input->KeyState( &cam_out ) )
-		idealAngles[ DIST ] += 2*cam_idealdelta.GetFloat();
+	else if (input->KeyState(&cam_out))
+		idealAngles[DIST] += 2*cam_idealdelta.GetFloat();
+
+
+
+	//if (input->KeyState(&cam_in))
+	//{
+	//	idealAngles[DIST] -= 2 * cam_idealdelta.GetFloat();
+	//	if (idealAngles[DIST] < CAM_MIN_DIST)
+	//	{
+	//		// If we go back into first person, reset the angle
+	//		idealAngles[PITCH] = 0;
+	//		idealAngles[YAW] = 0;
+	//		idealAngles[DIST] = CAM_MIN_DIST;
+	//	}
+
+	//}
+	//else if (input->KeyState(&cam_out))
+	//	idealAngles[DIST] += 2 * cam_idealdelta.GetFloat();
 	
+
 	if (m_fCameraDistanceMove)
 	{
 		int x, y;
@@ -673,6 +707,7 @@ void CAM_InUp( const CCommand &args ) { KeyUp( &cam_in, args[1] ); }
 void CAM_OutDown( const CCommand &args ) { KeyDown( &cam_out, args[1] ); }
 void CAM_OutUp( const CCommand &args ) { KeyUp( &cam_out, args[1] ); }
 
+
 /*
 ==============================
 CAM_ToThirdPerson
@@ -898,6 +933,44 @@ int CInput::CAM_InterceptingMouse( void )
 {
 	return m_fCameraInterceptingMouse;
 }
+/*
+==============================
+CAM_DistMoveIn
+Move the Camera Closer by 1 unit
+
+==============================
+*/
+void CInput::CAM_DistMoveIn(void)
+{	//Checks if we are in Thirdperson Camera mode
+
+ 
+	if (m_fCameraInThirdPerson)
+	{
+		
+			m_nCamDistChange = m_nCamDistChange - 1;
+		
+		
+	}
+}
+/*
+==============================
+CAM_DistMoveIn
+Move the Camera Further by 1 unit
+
+==============================
+*/
+void CInput::CAM_DistMoveOut(void)
+{
+	
+	//Checks if we are in Thirdperson Camera mode
+	if (m_fCameraInThirdPerson)
+	{
+		
+			m_nCamDistChange = m_nCamDistChange + 1;
+		
+	}
+}
+
 
 static ConCommand startpitchup( "+campitchup", CAM_PitchUpDown );
 static ConCommand endpitcup( "-campitchup", CAM_PitchUpUp );
@@ -919,7 +992,7 @@ static ConCommand thirdpersoncamreset("thirdpersoncamreset", ::CAM_Reset, "Reset
 static ConCommand thirdperson( "thirdperson", ::CAM_ToThirdPerson, "Switch to thirdperson camera.", FCVAR_CHEAT | FCVAR_SERVER_CAN_EXECUTE );
 static ConCommand firstperson( "firstperson", ::CAM_ToFirstPerson, "Switch to firstperson camera.", FCVAR_SERVER_CAN_EXECUTE );
 #else
-static ConCommand thirdperson( "thirdperson", ::CAM_ToThirdPerson, "Switch to thirdperson camera.", FCVAR_CHEAT );
+static ConCommand thirdperson( "thirdperson", ::CAM_ToThirdPerson, "Switch to thirdperson camera." );
 static ConCommand firstperson( "firstperson", ::CAM_ToFirstPerson, "Switch to firstperson camera." );
 #endif
 static ConCommand camortho( "camortho", ::CAM_ToOrthographic, "Switch to orthographic camera.", FCVAR_CHEAT );
@@ -928,6 +1001,9 @@ static ConCommand endcammousemove( "-cammousemove",::CAM_EndMouseMove);
 static ConCommand startcamdistance( "+camdistance", ::CAM_StartDistance );
 static ConCommand endcamdistance( "-camdistance", ::CAM_EndDistance );
 static ConCommand snapto( "snapto", CAM_ToggleSnapto );
+static ConCommand camdistmovein("+camdist", ::CAM_DistMoveIn);
+static ConCommand camdistmoveout("-camdist", ::CAM_DistMoveOut);
+
 /*
 ==============================
 Init_Camera

@@ -91,11 +91,14 @@ public:
 	virtual void		CAM_StartDistance(void) = 0;
 	virtual void		CAM_EndDistance(void) = 0;
 	virtual int			CAM_InterceptingMouse( void ) = 0;
+	virtual	void		CAM_DistMoveIn(void) = 0;
+	virtual	void		CAM_DistMoveOut(void) = 0;
 
 	// orthographic camera info	( TODO/FIXME:  Move this to a separate interface? )
 	virtual void		CAM_ToOrthographic() = 0;
 	virtual	bool		CAM_IsOrthographic() const = 0;
 	virtual	void		CAM_OrthographicSize( float& w, float& h ) const = 0;
+
 
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info

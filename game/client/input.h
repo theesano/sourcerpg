@@ -93,6 +93,8 @@ public:
 	virtual		void		CAM_StartDistance(void);
 	virtual		void		CAM_EndDistance(void);
 	virtual		int			CAM_InterceptingMouse( void );
+	virtual		void		CAM_DistMoveIn(void);
+	virtual		void		CAM_DistMoveOut(void);
 
 	// orthographic camera info
 	virtual		void		CAM_ToOrthographic();
@@ -236,7 +238,9 @@ private:
 	int			m_nCameraOldY;
 	int			m_nCameraX;
 	int			m_nCameraY;
-
+	
+	// Change the idealAngles [DISTANCE] Stuffs.
+	float		m_nCamDistChange;
 	// orthographic camera settings
 	bool		m_CameraIsOrthographic;
 

@@ -23,6 +23,7 @@
 #include "vgui/ISurface.h"
 #include "vgui_controls/Controls.h"
 #include "vgui/Cursor.h"
+#include <vgui/IInput.h>
 #include "cdll_client_int.h"
 #include "cdll_util.h"
 #include "tier1/convar_serverbounded.h"
@@ -452,6 +453,20 @@ void CInput::ScaleMouse( float *x, float *y )
 //-----------------------------------------------------------------------------
 void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float mouse_y )
 {
+	//Forces player to face(follow) the position where the camera is pointing towards
+	//when pressing down the left mouse key.
+	if (CAM_IsThirdPerson() && thirdperson_platformer.GetInt())
+	{
+		if (vgui::input()->IsMouseDown(MOUSE_LEFT))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+
+		}
+	}
 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
 	{
 #ifdef PORTAL
