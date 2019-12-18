@@ -1847,7 +1847,7 @@ void CBasePlayer::SharedSpawn()
 	m_flMaxspeed		= 0.0f;
 
 	MDLCACHE_CRITICAL_SECTION();
-	SetSequence( SelectWeightedSequence( ACT_IDLE ) );
+	SetSequence( SelectWeightedSequence( ACT_IDLE ) );  //Formerly IDLE
 
 	if ( GetFlags() & FL_DUCKING ) 
 		SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );

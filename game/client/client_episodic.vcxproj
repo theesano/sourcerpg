@@ -376,6 +376,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="..\..\game\shared\weapon_ifmsteadycam.h" />
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
+    <ClInclude Include="..\server\baseentity.h" />
     <ClInclude Include="..\server\singleplayer_animstate.h" />
     <ClInclude Include="c_weapon_grapple.h" />
     <ClInclude Include="game_controls\baseviewport.h" />

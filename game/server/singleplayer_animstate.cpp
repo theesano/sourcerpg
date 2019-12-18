@@ -466,7 +466,7 @@ void CSinglePlayerAnimState::ComputePoseParam_HeadPitch(CStudioHdr *pStudioHdr)
 Activity CSinglePlayerAnimState::BodyYawTranslateActivity(Activity activity)
 {
 	// Not even standing still, sigh
-	if (activity != ACT_IDLE)
+	if (activity != ACT_IDLE) 
 		return activity;
 
 	// Not turning

@@ -353,6 +353,7 @@ enum PLAYER_ANIM
 	PLAYER_SUPERJUMP,
 	PLAYER_DIE,
 	PLAYER_ATTACK1,
+	PLAYER_EVADE, //Does nothing at the moment, Custom 
 	PLAYER_IN_VEHICLE,
 
 	// TF Player animations
@@ -360,8 +361,6 @@ enum PLAYER_ANIM
 	PLAYER_START_AIMING,
 	PLAYER_LEAVE_AIMING,
 
-	//Custom 
-	PLAYER_EVADE, //Does nothing at the moment
 };
 
 #ifdef HL2_DLL

@@ -15,6 +15,10 @@
 #include "igamemovement.h"
 #include "cmodel.h"
 #include "tier0/vprof.h"
+//#include "Sprite.h"
+//#include "SpriteTrail.h"
+
+
 
 #define CTEXTURESMAX		512			// max number of textures loaded
 #define CBTEXTURENAMEMAX	13			// only load first n chars of name
@@ -255,7 +259,9 @@ protected:
 
 
 protected:
-
+#ifndef CLIENT_DLL
+	/*CHandle<CSpriteTrail>	m_pGlowTrail;*/
+#endif
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );
 

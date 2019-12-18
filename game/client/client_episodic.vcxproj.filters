@@ -1895,6 +1895,7 @@
     <ClInclude Include="view.h">
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\server\baseentity.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">

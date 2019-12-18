@@ -154,7 +154,7 @@ void CGrenadeFrag::CreateEffects( void )
 {
 	// Start up the eye glow
 	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
-
+	
 	int	nAttachment = LookupAttachment( "fuse" );
 
 	if ( m_pMainGlow != NULL )

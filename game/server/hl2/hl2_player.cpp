@@ -77,7 +77,7 @@ extern ConVar autoaim_max_dist;
 #define	HL2_SINGLE_PRIMARY_WEAPON_MODE	0
 
 #define TIME_IGNORE_FALL_DAMAGE 10.0
-#define PLAYER_MODEL "models/humans/group01/male_09.mdl"
+
 
 
 extern int gEvilImpulse101;
@@ -113,7 +113,7 @@ ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
-#define PLAYER_MODEL "models/player/humans/group03/male_03.mdl"
+#define PLAYER_MODEL "models/player/lily.mdl"
 
 
 
@@ -1998,12 +1998,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	speed = GetAbsVelocity().Length2D();
 
-	
-
 	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
 	{
 		speed = 0;
-		playerAnim = PLAYER_IDLE;
+		playerAnim = PLAYER_IDLE; //Formerly IDLE
 	}
 
 	Activity idealActivity = ACT_HL2MP_RUN;
@@ -2041,6 +2039,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	else if (playerAnim == PLAYER_RELOAD)
 	{
 		idealActivity = ACT_HL2MP_GESTURE_RELOAD;
+	}
+	else if (playerAnim == PLAYER_EVADE)
+	{
+		idealActivity = ACT_EVADE;
+	}
+	else if (idealActivity == ACT_EVADE)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		return;
 	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
@@ -2112,6 +2119,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 		//idealActivity = TranslateTeamActivity( idealActivity );
 	}
+	
 
 	if (IsInAVehicle())
 	{

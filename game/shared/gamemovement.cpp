@@ -14,6 +14,7 @@
 #include "decals.h"
 #include "coordsize.h"
 #include "rumble_shared.h"
+//#include "baseanimating.h"
 //#include "view.h"
 
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
@@ -2372,8 +2373,7 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-// Prototype:Moving X units in 4 directions , teleport style.
-//BROKEN : Dash doesn't work as intended atm .
+// PROTOTYPE:Moving X units in 6 directions , teleport style.
 void CGameMovement::Dash(void)
 {
 	
@@ -2411,78 +2411,90 @@ void CGameMovement::Dash(void)
 
 	}
 
-	if (debug_dashcoordiff.GetInt() == 1)
-	{
-
-		DevMsg("Diff X: %.2f \n", m_nDiffOrgTraceEndx);
-		DevMsg("Diff Y: %.2f \n", m_nDiffOrgTraceEndy);
-	}
 	
-
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{
 		if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
+			
 		} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
 		if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
 			mv->m_vecAbsOrigin.y += m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
+			
 		}
 		if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
 		{
 			mv->m_vecAbsOrigin.y += m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
+			
 		}
 		if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
 		{
 			mv->m_vecAbsOrigin.y += m_uDash;
 			mv->m_vecAbsOrigin.x -= m_uDash;
-		//	MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
 		{
 			mv->m_vecAbsOrigin.x -= m_uDash;
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
 		{
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
 		if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
 			mv->m_vecAbsOrigin.y -= m_uDash;
-			//MoveHelper()->PlayerSetAnimation(PLAYER_SUPERJUMP);
 		}
+#ifndef CLIENT_DLL
+		// Start up the eye trail
+		/*
+		int	nAttachment = LookupAttachment("fuse");
+		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", mv->GetAbsOrigin(), false);
 
+		if (m_pGlowTrail != NULL)
+		{
+			m_pGlowTrail->FollowEntity(pPlayer);
+			m_pGlowTrail->SetAttachment(pPlayer, nAttachment);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetStartWidth(8.0f);
+			m_pGlowTrail->SetEndWidth(1.0f);
+			m_pGlowTrail->SetLifeTime(0.5f);
+		}*/
+#endif
 		m_flDelayedUseTime = gpGlobals->curtime + 0.5f;
 		m_bDelayedUse = true;
 
-		if (tr.m_pEnt)
+		//Display the distance between the player and the object they're looking at 
+		if (debug_dashcoordiff.GetInt() == 1)
 		{
-			if (tr.m_pEnt->IsWorld())
+			DevMsg("Diff X: %.2f \n", m_nDiffOrgTraceEndx);
+			DevMsg("Diff Y: %.2f \n", m_nDiffOrgTraceEndy);
+
+			if (tr.m_pEnt)
 			{
-				DevMsg("Trace X: %.2f \n", tr.endpos.x);
-				DevMsg("Trace Y: %.2f \n", tr.endpos.y);
-				
+				if (tr.m_pEnt->IsWorld())
+				{
+					DevMsg("Trace X: %.2f \n", tr.endpos.x);
+					DevMsg("Trace Y: %.2f \n", tr.endpos.y);
+
+				}
 			}
+
 		}
+
+
 		
 	}
 	

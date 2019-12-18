@@ -18,6 +18,7 @@ typedef enum
 	ACT_INVALID = -1,			// So we have something more succint to check for than '-1'
 	ACT_RESET = 0,				// Set m_Activity to this invalid value to force a reset to m_IdealActivity
 	ACT_IDLE,
+	ACT_EVADE,
 	ACT_TRANSITION,
 	ACT_COVER,					// FIXME: obsolete? redundant with ACT_COVER_LOW?
 	ACT_COVER_MED,				// FIXME: unsupported?
@@ -201,6 +202,7 @@ typedef enum
 	ACT_GESTURE_TURN_RIGHT45_FLAT,
 	ACT_GESTURE_TURN_LEFT90_FLAT,
 	ACT_GESTURE_TURN_RIGHT90_FLAT,
+
 
 	// HALF-LIFE 1 compatability stuff goes here. Temporary!
 	ACT_BARNACLE_HIT,		// barnacle tongue hits a monster

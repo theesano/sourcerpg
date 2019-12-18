@@ -18,7 +18,7 @@
 #include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
-
+#include "SpriteTrail.h"
 #if defined USES_ECON_ITEMS
 #include "game_item_schema.h"
 #include "econ_item_view.h"
@@ -243,6 +243,7 @@ protected:
 	// HACK FOR BOTS
 	friend class CBotManager;
 	static edict_t *s_PlayerEdict; // must be set before calling constructor
+	CHandle<CSpriteTrail>	m_pGlowTrail;
 public:
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
@@ -298,6 +299,7 @@ public:
 
 	virtual void			Jump( void );
 	virtual void			Duck( void );
+	virtual void			Dash(void);
 
 	const char				*GetTracerType( void );
 	void					MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );

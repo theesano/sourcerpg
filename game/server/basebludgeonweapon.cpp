@@ -150,11 +150,18 @@ void CBaseHLBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity, bool 
 	//Apply damage to a hit target
 	if ( pHitEntity != NULL )
 	{
+		float m_nDamageRadius = 128.0f;
+		Vector hit1 = GetAbsOrigin();
 		Vector hitDirection;
 		pPlayer->EyeVectors( &hitDirection, NULL, NULL );
 		VectorNormalize( hitDirection );
 
 		CTakeDamageInfo info( GetOwner(), GetOwner(), GetDamageForActivity( nHitActivity ), DMG_CLUB );
+
+		//CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
+
+		//Makes weapon produce AoE damage
+		RadiusDamage(info, hit1, m_nDamageRadius, CLASS_NONE, NULL);
 
 		if( pPlayer && pHitEntity->IsNPC() )
 		{
@@ -162,13 +169,13 @@ void CBaseHLBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity, bool 
 			info.AdjustPlayerDamageInflictedForSkillLevel();
 		}
 
-		CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );
+		//CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );
 
-		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit ); 
+		//pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit ); 
 		ApplyMultiDamage();
 
 		// Now hit all triggers along the ray that... 
-		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
+		//TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
 
 		if ( ToBaseCombatCharacter( pHitEntity ) )
 		{
@@ -297,6 +304,7 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( !pOwner )
 		return;
+	float m_nDamageRadius = 128.0f;
 
 	pOwner->RumbleEffect( RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART );
 
@@ -311,37 +319,40 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 
 	// Like bullets, bludgeon traces have to trace against triggers.
 	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetDamageForActivity( nHitActivity ), DMG_CLUB );
-	triggerInfo.SetDamagePosition( traceHit.startpos );
-	triggerInfo.SetDamageForce( forward );
-	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
+	//triggerInfo.SetDamagePosition( traceHit.startpos );
+	//triggerInfo.SetDamageForce( forward );
+	//TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
 
-	if ( traceHit.fraction == 1.0 )
-	{
-		float bludgeonHullRadius = 1.732f * BLUDGEON_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
+	//Makes weapon produce AoE damage
+	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, NULL);
 
-		// Back off by hull "radius"
-		swingEnd -= forward * bludgeonHullRadius;
+	//if ( traceHit.fraction == 1.0 )
+	//{
+	//	float bludgeonHullRadius = 1.732f * BLUDGEON_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
 
-		UTIL_TraceHull( swingStart, swingEnd, g_bludgeonMins, g_bludgeonMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
-		if ( traceHit.fraction < 1.0 && traceHit.m_pEnt )
-		{
-			Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
-			VectorNormalize( vecToTarget );
+	//	// Back off by hull "radius"
+	//	swingEnd -= forward * bludgeonHullRadius;
 
-			float dot = vecToTarget.Dot( forward );
+	//	UTIL_TraceHull( swingStart, swingEnd, g_bludgeonMins, g_bludgeonMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
+	//	if ( traceHit.fraction < 1.0 && traceHit.m_pEnt )
+	//	{
+	//		Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
+	//		VectorNormalize( vecToTarget );
 
-			// YWB:  Make sure they are sort of facing the guy at least...
-			if ( dot < 0.70721f )
-			{
-				// Force amiss
-				traceHit.fraction = 1.0f;
-			}
-			else
-			{
-				nHitActivity = ChooseIntersectionPointAndActivity( traceHit, g_bludgeonMins, g_bludgeonMaxs, pOwner );
-			}
-		}
-	}
+	//		float dot = vecToTarget.Dot( forward );
+
+	//		// YWB:  Make sure they are sort of facing the guy at least...
+	//		if ( dot < 0.70721f )
+	//		{
+	//			// Force amiss
+	//			traceHit.fraction = 1.0f;
+	//		}
+	//		else
+	//		{
+	//			nHitActivity = ChooseIntersectionPointAndActivity( traceHit, g_bludgeonMins, g_bludgeonMaxs, pOwner );
+	//		}
+	//	}
+	//}
 
 	if ( !bIsSecondary )
 	{
@@ -369,7 +380,7 @@ void CBaseHLBludgeonWeapon::Swing( int bIsSecondary )
 	}
 	else
 	{
-		Hit( traceHit, nHitActivity, bIsSecondary ? true : false );
+		//Hit( traceHit, nHitActivity, bIsSecondary ? true : false );
 	}
 
 	// Send the anim

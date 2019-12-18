@@ -187,7 +187,7 @@ public:
 	void StopZooming( void );
 	bool IsZooming( void );
 	void CheckSuitZoom( void );
-	void Dash(void);
+
 	// Walking
 	void StartWalking( void );
 	void StopWalking( void );

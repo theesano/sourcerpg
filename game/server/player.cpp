@@ -1735,7 +1735,7 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 {
 	// NOT GIBBED, RUN THIS CODE
 
-	DeathSound( info );
+	//DeathSound( info );
 
 	// The dead body rolls out of the vehicle.
 	if ( IsInAVehicle() )
@@ -1769,14 +1769,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	if (GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
 	{
 		speed = 0;
-		playerAnim = PLAYER_IDLE;
-	}
-
-	if ((GetFlags() & (FL_FROZEN | FL_ATCONTROLS)) && (m_nButtons & IN_SPEED) )
-	{
-		speed = 0;
-		SetSequence(ACT_RUN_CROUCH);
-		SetPlaybackRate(5.0f);
+		playerAnim = PLAYER_IDLE;  //Formerly IDLE
 	}
 	Activity idealActivity = ACT_WALK;// TEMP!!!!!
 
@@ -1787,7 +1780,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	}
 	else if (playerAnim == PLAYER_SUPERJUMP)
 	{
-		idealActivity = ACT_LEAP;
+		idealActivity = ACT_EVADE;
 	}
 	else if (playerAnim == PLAYER_DIE)
 	{
@@ -1810,6 +1803,10 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		{
 			idealActivity = ACT_RANGE_ATTACK1;
 		}
+	}
+	else if (playerAnim == PLAYER_EVADE)
+	{
+		idealActivity = ACT_EVADE;
 	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
@@ -2893,6 +2890,15 @@ void CBasePlayer::Duck( )
 	}
 }
 
+void CBasePlayer::Dash()
+{
+	if (m_nButtons & IN_SPEED)
+	{
+		SetSequence(ACT_EVADE);
+		SetPlaybackRate(10.0f);
+		//SetAnimation(PLAYER_EVADE);
+	}
+}
 //
 // ID's player as such.
 //
@@ -3876,7 +3882,8 @@ void CBasePlayer::PreThink(void)
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
 
-
+	//Play Evade Animation lol
+		Dash();
 	// StudioFrameAdvance( );//!!!HACKHACK!!! Can't be hit by traceline when not animating?
 }
 
@@ -4564,33 +4571,68 @@ void CBasePlayer::PostThink()
 
 			// select the proper animation for the player character	
 			VPROF( "CBasePlayer::PostThink-Animation" );
+			//There's alot of conflict with how animations for the player are selected and played.
+			//Need to fix that.
 			// If he's in a vehicle, sit down
-			if ( IsInAVehicle() )
-				SetAnimation( PLAYER_IN_VEHICLE );
-			else if (!GetAbsVelocity().x && !GetAbsVelocity().y)
-			{	
+			 if (!GetAbsVelocity().x && !GetAbsVelocity().y)
+			{
 				SetAnimation(PLAYER_IDLE);
-				//BROKEN :Supposed to play the sequence when standing still and pressed the button
-				if (m_nButtons & IN_SPEED)
-				{
-					SetSequence(ACT_RUN_PROTECTED);
-					SetPlaybackRate(10.0f);
-				}
+				//BROKEN :Supposed to play the sequence when standing still and pressing the button
 			}
+			 else if (!(GetAbsVelocity().x && !GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
+			 {
+				 SetSequence(ACT_EVADE);
+				 SetPlaybackRate(10.0f);
+				 DevMsg("Lol \n");
+				 ResetSequence(ACT_EVADE);
+			 }
 			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (GetFlags() & FL_ONGROUND))
 			{
 				SetAnimation(PLAYER_WALK);
 			}
-			else if ((GetAbsVelocity().x || GetAbsVelocity().y))
-			{ //PARTIALLY WORKING : when in air & pressing the Evade button, play the animation, Doesn't work when on the ground atm.
-				if (m_nButtons & IN_SPEED)
-				{
-					SetSequence(ACT_RUN_PROTECTED);
+			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
+			{
+					SetSequence(ACT_EVADE);
 					SetPlaybackRate(10.0f);
-				}
+					DevMsg("Lol \n");
+					ResetSequence(ACT_EVADE);
+
+					//int	nAttachment = LookupAttachment("chest");
+					m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+
+					if (m_pGlowTrail != NULL)
+					{
+						m_pGlowTrail->FollowEntity(this);
+						m_pGlowTrail->SetAttachment(this,NULL);
+						m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+						m_pGlowTrail->SetStartWidth(8.0f);
+						m_pGlowTrail->SetEndWidth(1.0f);
+						m_pGlowTrail->SetLifeTime(0.5f);
+					}
 			}
+
 			else if (GetWaterLevel() > 1)
-				SetAnimation( PLAYER_WALK );
+				SetAnimation(PLAYER_WALK);
+
+			// If he's in a vehicle, sit down
+			//if (IsInAVehicle())
+			//	SetAnimation(PLAYER_IN_VEHICLE);
+			//else if (!GetAbsVelocity().x && !GetAbsVelocity().y)
+			//{
+			//	SetAnimation(PLAYER_IDLE);
+			//	//BROKEN :Supposed to play the sequence when standing still and pressing the button
+			//	if (m_nButtons & IN_SPEED)
+			//	{
+			//		SetSequence(ACT_EVADE);
+			//		SetPlaybackRate(10.0f);
+			//	}
+			//}
+			//else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (GetFlags() & FL_ONGROUND))
+			//{
+			//	SetAnimation(PLAYER_WALK);
+			//}
+			//else if (GetWaterLevel() > 1)
+			//	SetAnimation(PLAYER_WALK);
 		}
 
 		// Don't allow bogus sequence on player
