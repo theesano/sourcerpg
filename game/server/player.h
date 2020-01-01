@@ -301,6 +301,7 @@ public:
 	virtual void			Duck( void );
 	virtual void			Dash(void);
 
+
 	const char				*GetTracerType( void );
 	void					MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 	void					DoImpactEffect( trace_t &tr, int nDamageType );
@@ -425,6 +426,7 @@ public:
 	virtual bool			IsFiringWeapon( void ) const;					// return true if this player is currently firing their weapon
 
 	bool					HasAnyAmmoOfType( int nAmmoIndex );
+	bool					IsDash() { return m_bIsDash == false; }
 
 	// JOHN:  sends custom messages if player HUD data has changed  (eg health, ammo)
 	virtual void			UpdateClientData( void );
@@ -1176,9 +1178,10 @@ protected:
 	char			m_chPreviousTextureType;	// Separate from m_chTextureType. This is cleared if the player's not on the ground.
 
 	bool			m_bSinglePlayerGameEnding;
+	
 
 public:
-
+	bool			m_bIsDash;
 	float  GetLaggedMovementValue( void ){ return m_flLaggedMovementValue;	}
 	void   SetLaggedMovementValue( float flValue ) { m_flLaggedMovementValue = flValue;	}
 

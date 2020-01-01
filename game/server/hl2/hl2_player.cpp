@@ -2093,26 +2093,45 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			}
 			else
 			{
+				//Problem here.
 				if (speed > 0)
 				{
 					{
 						if (HasWeapons())
+							if (m_afButtonPressed & IN_SPEED)
+								idealActivity = ACT_EVADE;
+							else
 							idealActivity = ACT_HL2MP_RUN;
 						else
 						{
-							if (speed > HL2_WALK_SPEED + 20.0f)
-								idealActivity = ACT_RUN;
+							if (m_afButtonPressed & IN_SPEED)
+								idealActivity = ACT_EVADE;
 							else
-								idealActivity = ACT_WALK;
+							{
+								if (speed > HL2_WALK_SPEED + 20.0f)
+									idealActivity = ACT_RUN;
+								else
+									idealActivity = ACT_WALK;
+							}
+								
+
 						}
 					}
 				}
 				else
 				{
 					if (HasWeapons())
+						if (m_afButtonPressed & IN_SPEED)
+							idealActivity = ACT_EVADE;
+						else
 						idealActivity = ACT_HL2MP_IDLE;
 					else
-						idealActivity = ACT_IDLE;
+					{
+						if (m_afButtonPressed & IN_SPEED)
+							idealActivity = ACT_EVADE;
+						else
+							idealActivity = ACT_IDLE;
+					}
 				}
 			}
 		}
@@ -2128,6 +2147,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)
 	{
+
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
 
 		// FIXME: this seems a bit wacked
@@ -2155,7 +2175,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				animDesired = 0;
 			}
 		}
-
+//To Do : Fix Animation Priority here.
 		// Already using the desired animation?
 		if (GetSequence() == animDesired)
 			return;

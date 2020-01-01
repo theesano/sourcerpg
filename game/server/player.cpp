@@ -1770,6 +1770,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	{
 		speed = 0;
 		playerAnim = PLAYER_IDLE;  //Formerly IDLE
+
 	}
 	Activity idealActivity = ACT_WALK;// TEMP!!!!!
 
@@ -1777,10 +1778,6 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	if (playerAnim == PLAYER_JUMP)
 	{
 		idealActivity = ACT_HOP;
-	}
-	else if (playerAnim == PLAYER_SUPERJUMP)
-	{
-		idealActivity = ACT_EVADE;
 	}
 	else if (playerAnim == PLAYER_DIE)
 	{
@@ -1804,12 +1801,9 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 			idealActivity = ACT_RANGE_ATTACK1;
 		}
 	}
-	else if (playerAnim == PLAYER_EVADE)
-	{
-		idealActivity = ACT_EVADE;
-	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
+
 		if ( !( GetFlags() & FL_ONGROUND ) && (m_Activity == ACT_HOP || m_Activity == ACT_LEAP) )	// Still jumping
 		{
 			idealActivity = m_Activity;
@@ -1826,7 +1820,15 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 			idealActivity = ACT_WALK;
 		}
 	}
+	else if (playerAnim == PLAYER_EVADE)
+	{
+		idealActivity = ACT_EVADE;
 
+		if ((GetFlags() & FL_ONGROUND) && m_Activity == ACT_RUN)
+		{
+			idealActivity = ACT_EVADE;
+		}
+	}
 	
 	if (idealActivity == ACT_RANGE_ATTACK1)
 	{
@@ -1902,7 +1904,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	if (GetSequence() == animDesired)
 		return;
 
-	//Msg( "Set animation to %d\n", animDesired );
+	Msg( "Set animation to %d\n", animDesired );
 	// Reset to first frame of desired animation
 	ResetSequence( animDesired );
 	SetCycle( 0 );
@@ -2894,9 +2896,9 @@ void CBasePlayer::Dash()
 {
 	if (m_nButtons & IN_SPEED)
 	{
-		SetSequence(ACT_EVADE);
-		SetPlaybackRate(10.0f);
-		//SetAnimation(PLAYER_EVADE);
+		DevMsg("Dash () Working, Playing Evade Animation \n");
+		SetAnimation(PLAYER_EVADE);
+		m_bIsDash = true; 
 	}
 }
 //
@@ -3879,11 +3881,13 @@ void CBasePlayer::PreThink(void)
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
 	}
 
+	//Play Evade Animation lol
+	if (m_nButtons & IN_SPEED)
+		Dash();
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
 
-	//Play Evade Animation lol
-		Dash();
+		
 	// StudioFrameAdvance( );//!!!HACKHACK!!! Can't be hit by traceline when not animating?
 }
 
@@ -4574,43 +4578,35 @@ void CBasePlayer::PostThink()
 			//There's alot of conflict with how animations for the player are selected and played.
 			//Need to fix that.
 			// If he's in a vehicle, sit down
-			 if (!GetAbsVelocity().x && !GetAbsVelocity().y)
+			if (!GetAbsVelocity().x && !GetAbsVelocity().y)
 			{
+				Dash();
 				SetAnimation(PLAYER_IDLE);
 				//BROKEN :Supposed to play the sequence when standing still and pressing the button
 			}
-			 else if (!(GetAbsVelocity().x && !GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
-			 {
-				 SetSequence(ACT_EVADE);
-				 SetPlaybackRate(10.0f);
-				 DevMsg("Lol \n");
-				 ResetSequence(ACT_EVADE);
-			 }
-			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (GetFlags() & FL_ONGROUND))
+			else if (GetFlags() & FL_ONGROUND) //Broken: cannot play Evade animation while walking.
 			{
-				SetAnimation(PLAYER_WALK);
+				if (GetAbsVelocity().x || GetAbsVelocity().y)
+
+					SetAnimation(PLAYER_WALK);
 			}
 			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
 			{
-					SetSequence(ACT_EVADE);
-					SetPlaybackRate(10.0f);
-					DevMsg("Lol \n");
-					ResetSequence(ACT_EVADE);
-
-					//int	nAttachment = LookupAttachment("chest");
+				/*	int	nAttachment = LookupAttachment("chest");
 					m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
 
 					if (m_pGlowTrail != NULL)
 					{
 						m_pGlowTrail->FollowEntity(this);
 						m_pGlowTrail->SetAttachment(this,NULL);
-						m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
-						m_pGlowTrail->SetStartWidth(8.0f);
-						m_pGlowTrail->SetEndWidth(1.0f);
-						m_pGlowTrail->SetLifeTime(0.5f);
-					}
-			}
+						m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
+						m_pGlowTrail->SetStartWidth(12.0f);
+						m_pGlowTrail->SetEndWidth(12.0f);
+						m_pGlowTrail->SetLifeTime(0.2f);
 
+						return;
+					}*/
+			}
 			else if (GetWaterLevel() > 1)
 				SetAnimation(PLAYER_WALK);
 

@@ -2376,7 +2376,6 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 // PROTOTYPE:Moving X units in 6 directions , teleport style.
 void CGameMovement::Dash(void)
 {
-	
 	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
 	if (!pPlayer)
 		return; //Always validate a pointer
@@ -2411,9 +2410,9 @@ void CGameMovement::Dash(void)
 
 	}
 
-	
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{
+		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
 		if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
 		{
 			mv->m_vecAbsOrigin.x += m_uDash;
@@ -2457,25 +2456,42 @@ void CGameMovement::Dash(void)
 			mv->m_vecAbsOrigin.x += m_uDash;
 			mv->m_vecAbsOrigin.y -= m_uDash;
 		}
+
+		mv->m_flClientMaxSpeed = 0;
+
 #ifndef CLIENT_DLL
 		// Start up the eye trail
-		/*
-		int	nAttachment = LookupAttachment("fuse");
+		
+		//int	nAttachment = LookupAttachment("fuse");
 		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", mv->GetAbsOrigin(), false);
 
 		if (m_pGlowTrail != NULL)
 		{
 			m_pGlowTrail->FollowEntity(pPlayer);
-			m_pGlowTrail->SetAttachment(pPlayer, nAttachment);
-			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+			m_pGlowTrail->SetAttachment(pPlayer, NULL);
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
 			m_pGlowTrail->SetStartWidth(8.0f);
-			m_pGlowTrail->SetEndWidth(1.0f);
-			m_pGlowTrail->SetLifeTime(0.5f);
-		}*/
+			m_pGlowTrail->SetEndWidth(8.0f);
+			m_pGlowTrail->SetLifeTime(0.15f);
+		}
+		
+		//UTIL_GetLocalPlayer()->SetSequence(ACT_EVADE);
+		//UTIL_GetLocalPlayer()->ResetSequence(ACT_EVADE);
 #endif
-		m_flDelayedUseTime = gpGlobals->curtime + 0.5f;
+		m_flDelayedUseTime = gpGlobals->curtime + 0.36f;
 		m_bDelayedUse = true;
+		float fl_KillTraceTime = gpGlobals->curtime + 0.3f;
 
+#ifndef CLIENT_DLL
+
+		if (flTimeRemoveTrace < fl_KillTraceTime)
+		{
+			UTIL_Remove(m_pGlowTrail);
+		}
+#endif
+
+
+		MoveHelper()->PlayerSetAnimation(PLAYER_IDLE);
 		//Display the distance between the player and the object they're looking at 
 		if (debug_dashcoordiff.GetInt() == 1)
 		{

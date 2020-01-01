@@ -260,7 +260,7 @@ protected:
 
 protected:
 #ifndef CLIENT_DLL
-	/*CHandle<CSpriteTrail>	m_pGlowTrail;*/
+	CHandle<CSpriteTrail>	m_pGlowTrail;
 #endif
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );

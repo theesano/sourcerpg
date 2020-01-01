@@ -1510,6 +1510,7 @@ echo crc_complete &gt; C:\Users\Install\Documents\SourceMod\sp\src\game\client\c
     <None Include="..\..\vpc_scripts\source_video_base.vpc" />
     <None Include="..\..\vpc_scripts\source_win32_base.vpc" />
     <None Include="..\..\vpc_scripts\version.vpc" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
