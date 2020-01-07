@@ -267,6 +267,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\ammodef.h" />
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h" />
     <ClInclude Include="..\client\view.h" />
+    <ClInclude Include="basemeleeweapon.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
     <ClInclude Include="basetempentity.h" />
@@ -746,6 +747,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
     <ClInclude Include="weapon_grapple.h" />
+    <ClInclude Include="weapon_melee.h" />
     <ClInclude Include="world.h" />
     <ClInclude Include="hl2\ai_behavior_actbusy.h" />
     <ClInclude Include="episodic\ai_behavior_alyx_injured.h" />
@@ -840,6 +842,7 @@ exit 1
     <ClInclude Include="toolframework_server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="basemeleeweapon.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />
     <ClCompile Include="..\..\game\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\..\game\shared\achievementmgr.cpp" />
@@ -1291,6 +1294,7 @@ exit 1
     <ClCompile Include="..\..\game\shared\weapon_parse_default.cpp" />
     <ClCompile Include="..\..\game\shared\weapon_proficiency.cpp" />
     <ClCompile Include="weapon_grapple.cpp" />
+    <ClCompile Include="weapon_melee.cpp" />
     <ClCompile Include="weight_button.cpp" />
     <ClCompile Include="world.cpp" />
     <ClCompile Include="..\..\game\shared\episodic\achievements_ep1.cpp" />

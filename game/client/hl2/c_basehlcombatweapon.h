@@ -33,4 +33,11 @@ public:
 	DECLARE_CLIENTCLASS();
 };
 
+class C_BaseMeleeWeapon : public C_BaseHLCombatWeapon
+{
+public:
+	DECLARE_CLASS(C_BaseMeleeWeapon, C_BaseHLCombatWeapon);
+	DECLARE_CLIENTCLASS();
+};
+
 #endif // C_BASEHLCOMBATWEAPON_H

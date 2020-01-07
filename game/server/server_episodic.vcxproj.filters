@@ -1793,6 +1793,12 @@
     <ClInclude Include="..\client\view.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="basemeleeweapon.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="weapon_melee.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3522,6 +3528,12 @@
     </ClCompile>
     <ClCompile Include="weapon_grapple.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="basemeleeweapon.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon_melee.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

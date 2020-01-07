@@ -2093,7 +2093,6 @@ void CGameMovement::FullWalkMove( )
 		if (mv->m_nButtons & IN_JUMP)
 		{
 			CheckJumpButton();
-			//Dash();
 		}
 		else
 		{
@@ -2123,6 +2122,13 @@ void CGameMovement::FullWalkMove( )
 		else
 		{
 			mv->m_nOldButtons &= ~IN_JUMP;
+		}
+
+		//SUPERDUPERHACK: completely standing still on pressing the button
+		if (mv->m_nButtons & IN_SPEED)
+		{
+			mv->m_vecVelocity.x = 0;
+			mv->m_vecVelocity.y = 0;
 		}
 
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
@@ -2373,7 +2379,9 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-// PROTOTYPE:Moving X units in 6 directions , teleport style.
+//-----------------------------------------------------------------------------
+// Purpose: // PROTOTYPE:Moving X units in 6 directions , teleport style.
+//-----------------------------------------------------------------------------
 void CGameMovement::Dash(void)
 {
 	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
@@ -2410,54 +2418,67 @@ void CGameMovement::Dash(void)
 
 	}
 
+	//Initializing Vector
+	Vector fwd;
+	Vector AngleOrigin = mv->GetAbsOrigin();
+	//Zero out z axis
+	fwd.z = 0;
+	VectorNormalize(fwd);
+
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{
-		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
-		if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
-		{
-			mv->m_vecAbsOrigin.x += m_uDash;
-			
-		} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
-		if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
-		{
-			mv->m_vecAbsOrigin.x += m_uDash;
-			mv->m_vecAbsOrigin.y += m_uDash;
-			
-		}
-		if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
-		{
-			mv->m_vecAbsOrigin.y += m_uDash;
-			
-		}
-		if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
-		{
-			mv->m_vecAbsOrigin.y += m_uDash;
-			mv->m_vecAbsOrigin.x -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
-		{
-			mv->m_vecAbsOrigin.x -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
-		{
-			mv->m_vecAbsOrigin.x -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
-		{
-			mv->m_vecAbsOrigin.x -= m_uDash;
-			mv->m_vecAbsOrigin.y -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
-		{
-			mv->m_vecAbsOrigin.y -= m_uDash;
-		}
-		if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
-		{
-			mv->m_vecAbsOrigin.x += m_uDash;
-			mv->m_vecAbsOrigin.y -= m_uDash;
-		}
+		mv->SetAbsOrigin(AngleOrigin + fwd*m_uDash);
 
-		mv->m_flClientMaxSpeed = 0;
+
+		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
+		//if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
+		//{
+		//	mv->m_vecAbsOrigin.x += m_uDash;
+		//	
+		//} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
+		//if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
+		//{
+		//	mv->m_vecAbsOrigin.x += m_uDash;
+		//	mv->m_vecAbsOrigin.y += m_uDash;
+		//	
+		//}
+		//if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
+		//{
+		//	mv->m_vecAbsOrigin.y += m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
+		//{
+		//	mv->m_vecAbsOrigin.y += m_uDash;
+		//	mv->m_vecAbsOrigin.x -= m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
+		//{
+		//	mv->m_vecAbsOrigin.x -= m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
+		//{
+		//	mv->m_vecAbsOrigin.x -= m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
+		//{
+		//	mv->m_vecAbsOrigin.x -= m_uDash;
+		//	mv->m_vecAbsOrigin.y -= m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
+		//{
+		//	mv->m_vecAbsOrigin.y -= m_uDash;
+		//}
+		//if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
+		//{
+		//	mv->m_vecAbsOrigin.x += m_uDash;
+		//	mv->m_vecAbsOrigin.y -= m_uDash;
+		//}
+
+		mv->m_vecVelocity.x = 0;
+		mv->m_vecVelocity.y = 0;
+		mv->m_nOldButtons &= ~IN_LEFT;
+		mv->m_nOldButtons &= ~IN_RIGHT;
+		mv->m_nOldButtons &= ~IN_BACK;
 
 #ifndef CLIENT_DLL
 		// Start up the eye trail

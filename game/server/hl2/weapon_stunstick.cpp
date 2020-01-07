@@ -276,6 +276,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 
 					//Push the target back
 					pHurt->ApplyAbsVelocityImpulse( dir );
+					
 
 					if ( !bFlashed )
 					{
@@ -285,6 +286,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 					
 					// Force the player to drop anyting they were holding
 					pPlayer->ForceDropOfCarriedPhysObjects();
+					DevMsg("Hit stunstick \n");
 				}
 				
 				// do effect?
