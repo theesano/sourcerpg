@@ -14,7 +14,7 @@
 #ifdef CLIENT_DLL
 	#include "c_baseplayer.h"
 #else
-	#include "baseplayer.h"
+	#include "player.h"
 #endif
 
 #define DIST_FORWARD 0
@@ -73,7 +73,7 @@ public:
 
 	void	SetForcedThirdPerson( bool bForced ) { m_bForced = bForced; }
 	bool	GetForcedThirdPerson() const { return m_bForced; }
-
+	
 private:
 
 	// What is the current camera offset from the view origin?
@@ -102,6 +102,7 @@ private:
 	float	m_flLerpTime;
 	float	m_flUpLerpTime;
 };
+
 
 extern CThirdPersonManager g_ThirdPersonManager;
 

@@ -268,15 +268,15 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 
 					VectorNormalize(dir);
 
-					dir *= 500.0f;
+					dir *= 1500.0f;
 
 					//If not on ground, then don't make them fly!
 					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
 						 dir.z = 0.0f;
 
 					//Push the target back
-					pHurt->ApplyAbsVelocityImpulse( dir );
-					
+					//pHurt->ApplyAbsVelocityImpulse( dir );
+					pCop->ApplyAbsVelocityImpulse(dir);
 
 					if ( !bFlashed )
 					{
@@ -286,7 +286,6 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 					
 					// Force the player to drop anyting they were holding
 					pPlayer->ForceDropOfCarriedPhysObjects();
-					DevMsg("Hit stunstick \n");
 				}
 				
 				// do effect?

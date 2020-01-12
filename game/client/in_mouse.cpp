@@ -30,6 +30,7 @@
 #include "cam_thirdperson.h"
 #include "inputsystem/iinputsystem.h"
 
+
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
@@ -465,6 +466,14 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			viewangles[YAW] = vTempOffset[YAW];
 			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 
+		}
+		if (vgui::input()->IsMouseDown(MOUSE_RIGHT))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 		}
 	}
 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )

@@ -2390,90 +2390,61 @@ void CGameMovement::Dash(void)
 
 	// Create Vector for direction
 	Vector vecDir;
-
+	Vector vecDir2;
 	// Take the Player's EyeAngles and turn it into a direction
 	AngleVectors(pPlayer->EyeAngles(), &vecDir);
-
+	AngleVectors(pPlayer->GetAbsAngles(), &vecDir2);
 	// Get the Start/End
 	Vector vecAbsStart = pPlayer->EyePosition();
 	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
 
+	//Initializing Vector
+	Vector fwd;
+	Vector AngleOrigin = mv->GetAbsOrigin();
+	Vector TraceEnd = AngleOrigin + (vecDir2 *MAX_TRACE_LENGTH);
+	//Zero out z axis
+	AngleVectors(pPlayer->GetAbsAngles(), &fwd);
+	fwd.z = 0;
+	VectorNormalize(fwd);
+
 	trace_t tr; // Create our trace_t class to hold the end result
 	// Do the TraceLine, and write our results to our trace_t class, tr.
 	//UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
-	TracePlayerBBox(mv->GetAbsOrigin(), vecAbsEnd,PlayerSolidMask() , COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+	TracePlayerBBox(mv->GetAbsOrigin(), TraceEnd,PlayerSolidMask() , COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+
 	float m_nDiffOrgTraceEndx = abs( mv->m_vecAbsOrigin.x - tr.endpos.x);
 	float m_nDiffOrgTraceEndy = abs(mv->m_vecAbsOrigin.y - tr.endpos.y);
-
-	float m_uDash = sk_dashdistance.GetInt();
+	VectorNormalize(TraceEnd);
+	TraceEnd.z = 0;
+	float m_uDash = sk_dashdistance.GetFloat();
 	//&& player->GetGroundEntity() == NULL
 	if (m_nDiffOrgTraceEndx < m_uDash && m_nDiffOrgTraceEndy <m_uDash)
 	{
+			//m_uDash = sk_dashdistance.GetFloat()- (m_nDiffOrgTraceEndx + m_nDiffOrgTraceEndy);
+
 		m_uDash = 0;
 		//return;
+
+		if (tr.m_pEnt)
+		{
+			if (tr.m_pEnt->IsNPC())
+			{
+				m_uDash = sk_dashdistance.GetFloat();
+			}
+		}
 	}	
 	else
 	{
 		m_uDash = sk_dashdistance.GetInt();
 
 	}
-
-	//Initializing Vector
-	Vector fwd;
-	Vector AngleOrigin = mv->GetAbsOrigin();
-	//Zero out z axis
-	fwd.z = 0;
-	VectorNormalize(fwd);
-
+	Vector EvadeEndPoint = AngleOrigin + fwd*m_uDash;
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{
-		mv->SetAbsOrigin(AngleOrigin + fwd*m_uDash);
-
-
+		mv->SetAbsOrigin(EvadeEndPoint);
+		
 		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
-		//if ((mv->m_vecViewAngles.y < 20) && (mv->m_vecViewAngles.y > -20))
-		//{
-		//	mv->m_vecAbsOrigin.x += m_uDash;
-		//	
-		//} // when the player face viewangles[yaw] @ 20 to -20 deg ,evade to the right @ m_uDash velocity.
-		//if ((mv->m_vecViewAngles.y > 20) && (mv->m_vecViewAngles.y < 70))
-		//{
-		//	mv->m_vecAbsOrigin.x += m_uDash;
-		//	mv->m_vecAbsOrigin.y += m_uDash;
-		//	
-		//}
-		//if ((mv->m_vecViewAngles.y > 70) && (mv->m_vecViewAngles.y < 110))
-		//{
-		//	mv->m_vecAbsOrigin.y += m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y > 110) && (mv->m_vecViewAngles.y < 160))
-		//{
-		//	mv->m_vecAbsOrigin.y += m_uDash;
-		//	mv->m_vecAbsOrigin.x -= m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y > 160) && (mv->m_vecViewAngles.y <180))
-		//{
-		//	mv->m_vecAbsOrigin.x -= m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y < -160) && (mv->m_vecViewAngles.y >-180))
-		//{
-		//	mv->m_vecAbsOrigin.x -= m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y < -110) && (mv->m_vecViewAngles.y >-160))
-		//{
-		//	mv->m_vecAbsOrigin.x -= m_uDash;
-		//	mv->m_vecAbsOrigin.y -= m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y < -70 ) && (mv->m_vecViewAngles.y > -110))
-		//{
-		//	mv->m_vecAbsOrigin.y -= m_uDash;
-		//}
-		//if ((mv->m_vecViewAngles.y < -20) && (mv->m_vecViewAngles.y >-70))
-		//{
-		//	mv->m_vecAbsOrigin.x += m_uDash;
-		//	mv->m_vecAbsOrigin.y -= m_uDash;
-		//}
-
+		
 		mv->m_vecVelocity.x = 0;
 		mv->m_vecVelocity.y = 0;
 		mv->m_nOldButtons &= ~IN_LEFT;
@@ -2481,7 +2452,7 @@ void CGameMovement::Dash(void)
 		mv->m_nOldButtons &= ~IN_BACK;
 
 #ifndef CLIENT_DLL
-		// Start up the eye trail
+		//UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_uDash);
 		
 		//int	nAttachment = LookupAttachment("fuse");
 		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", mv->GetAbsOrigin(), false);
@@ -2496,7 +2467,7 @@ void CGameMovement::Dash(void)
 			m_pGlowTrail->SetLifeTime(0.15f);
 		}
 		
-		//UTIL_GetLocalPlayer()->SetSequence(ACT_EVADE);
+		UTIL_GetLocalPlayer()->SetAnimation(PLAYER_EVADE);
 		//UTIL_GetLocalPlayer()->ResetSequence(ACT_EVADE);
 #endif
 		m_flDelayedUseTime = gpGlobals->curtime + 0.36f;
@@ -2531,8 +2502,6 @@ void CGameMovement::Dash(void)
 
 		}
 
-
-		
 	}
 	
 }

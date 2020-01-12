@@ -47,6 +47,8 @@
 #include "filters.h"
 #include "tier0/icommandline.h"
 #include "grenade_frag.h"
+#include "cam_thirdperson.h"
+
 
 
 
@@ -479,7 +481,6 @@ void CHL2_Player::CheckSuitZoom( void )
 		else if ( m_afButtonPressed & IN_ZOOM )
 		{
 			StartZooming();
-			ButtonCheck();
 			ThrowGrenade();
 		}
 	}
@@ -604,31 +605,7 @@ void CHL2_Player::HandleArmorReduction( void )
 	SetArmorValue( iArmor );
 }
 
-void CHL2_Player::ButtonCheck(void)
-{
-		hudtextparms_s tTextParam;
 
-		tTextParam.x = 0.7;
-		tTextParam.y = 0.65;
-		tTextParam.effect = 0;
-		tTextParam.r1 = 255;
-		tTextParam.g1 = 255;
-		tTextParam.b1 = 255;
-		tTextParam.a1 = 255;
-		tTextParam.r2 = 255;
-		tTextParam.g2 = 255;
-		tTextParam.b2 = 255;
-		tTextParam.a2 = 255;
-		tTextParam.fadeinTime = 0;
-		tTextParam.fadeoutTime = 0;
-		tTextParam.holdTime = 0.6;
-		tTextParam.fxTime = 0;
-		tTextParam.channel = 1;
-
-		UTIL_HudMessageAll(tTextParam, "Pressed");
-	
-
-}
 void CHL2_Player::HandleThrowGrenade(void)
 {
 	if ((m_afButtonPressed & IN_THROWGRENADE) && !WantThrow && HasAnyAmmoOfType(12) && HasWeapons())
@@ -647,57 +624,63 @@ void CHL2_Player::ThrowGrenade(void)
 {
 	if (WantThrow)
 	{
-		CBaseViewModel *vm = GetViewModel(0);
-		CBaseViewModel *vm2 = GetViewModel(1);
+		//CBaseViewModel *vm = GetViewModel(0);
+		//CBaseViewModel *vm2 = GetViewModel(1);
 
-		//2nd viewmodel creation
-		if (!vm2)
-		{
-			CreateViewModel(1);
-			vm2 = GetViewModel(1);
-		}
+		////2nd viewmodel creation
+		//if (!vm2)
+		//{
+		//	CreateViewModel(1);
+		//	vm2 = GetViewModel(1);
+		//}
 		//Would probably be removed 
 		//HOLSTER SEQUENCING
-		int sequence1 = vm->SelectWeightedSequence(ACT_VM_HOLSTER);
-		if ((timeholster == NULL) && (sequence1 >= 0))
+		//int sequence1 = vm->SelectWeightedSequence(ACT_VM_HOLSTER);
+		//if ((timeholster == NULL) && (sequence1 >= 0))
+		if (timeholster == NULL)
 		{
-			vm->SendViewModelMatchingSequence(sequence1);
-			timeholster = (gpGlobals->curtime + vm->SequenceDuration(sequence1) + 0.5f);
+			//vm->SendViewModelMatchingSequence(sequence1);
+			//timeholster = (gpGlobals->curtime + vm->SequenceDuration(sequence1) + 0.5f);
+			timeholster = gpGlobals->curtime;
 		}
 
 		//THROW SEQUENCING
 		if ((timeholster < gpGlobals->curtime) && (timeholster != NULL))
 		{
-			vm->AddEffects(EF_NODRAW);
-			vm2->SetWeaponModel("models/weapons/v_grenade.mdl", NULL);
+			//vm->AddEffects(EF_NODRAW);
+			//vm2->SetWeaponModel("models/weapons/v_grenade.mdl", NULL);
 
 
-			int sequence2 = vm2->SelectWeightedSequence(ACT_VM_THROW);
-			if ((timethrow == NULL) && (sequence2 >= 0))
+			//int sequence2 = vm2->SelectWeightedSequence(ACT_VM_THROW);
+			//if ((timethrow == NULL) && (sequence2 >= 0))
+			if (timethrow == NULL)
 			{
-				vm2->SendViewModelMatchingSequence(sequence2);
-				timethrow = (gpGlobals->curtime + vm2->SequenceDuration(sequence2));
+				//vm2->SendViewModelMatchingSequence(sequence2);
+				//timethrow = (gpGlobals->curtime + vm2->SequenceDuration(sequence2));
+				timethrow = gpGlobals->curtime;
 				CreateGrenade();
 			}
 		}
 
 		if ((timethrow < gpGlobals->curtime) && (timethrow != NULL))
 		{
-			vm2->SetWeaponModel(NULL, NULL);
-			UTIL_RemoveImmediate(vm2);
-			vm->RemoveEffects(EF_NODRAW);
-			int sequence3 = vm->SelectWeightedSequence(ACT_VM_DRAW);
-			if ((timedeploy == NULL) && (sequence3 >= 0))
+			//vm2->SetWeaponModel(NULL, NULL);
+			//UTIL_RemoveImmediate(vm2);
+			//vm->RemoveEffects(EF_NODRAW);
+			//int sequence3 = vm->SelectWeightedSequence(ACT_VM_DRAW);
+			//if ((timedeploy == NULL) && (sequence3 >= 0))
+			if (timedeploy == NULL)
 			{
-				vm->SendViewModelMatchingSequence(sequence3);
-				timedeploy = (gpGlobals->curtime + vm->SequenceDuration(sequence3));
+				//vm->SendViewModelMatchingSequence(sequence3);
+				//timedeploy = (gpGlobals->curtime + vm->SequenceDuration(sequence3));
+				timedeploy = (gpGlobals->curtime);
 			}
 		}
 
 		if ((timedeploy < gpGlobals->curtime) && (timedeploy != NULL))
 		{
 			//Successfully Thrown A Grenade! Decrement ammo
-			RemoveAmmo(1, 12);
+			//RemoveAmmo(1, 12);
 			WantThrow = false;
 		}
 	}
@@ -739,14 +722,18 @@ void CHL2_Player::CreateGrenade(void)
 	pFrag->SetLocalAngularVelocity(QAngle(0, 400, 0));
 	pFrag->m_bIsLive = true;
 	pFrag->SetTimer(3.0f, 3.0f);
-
-	gamestats->Event_WeaponFired(this, true, GetClassname());
 }
 
 void CHL2_Player::FragDetonate()
 {
 	CBaseEntity *pEntity = NULL;
-
+	//Vector vPlrViewAngles;
+	//AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(),&vPlrViewAngles);
+	//Vector vTempOffsetFrag = g_ThirdPersonManager.GetCameraOffsetAngles();
+	//vTempOffsetFrag.z = 0;
+	//QAngle vTransform;
+	//VectorAngles(vTempOffsetFrag, vTransform);
+	//UTIL_GetLocalPlayer()->SetAbsAngles(vTransform);
 	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
 	{
 		CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
@@ -754,7 +741,6 @@ void CHL2_Player::FragDetonate()
 		{
 			//pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
 			pFrag->SetTimer(0, 0);
-
 		}
 	}
 
@@ -2098,10 +2084,20 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				{
 					{
 						if (HasWeapons())
+						{
 							if (m_afButtonPressed & IN_SPEED)
 								idealActivity = ACT_EVADE;
-							else
-							idealActivity = ACT_HL2MP_RUN;
+							else{
+								if (speed > HL2_WALK_SPEED + 20.0f)
+								{
+									idealActivity = ACT_HL2MP_RUN;
+									SetPlaybackRate(2.25f);
+								}
+								else
+									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
+
+							}
+						}
 						else
 						{
 							if (m_afButtonPressed & IN_SPEED)

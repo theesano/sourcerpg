@@ -22,6 +22,8 @@
 #include "rumble_shared.h"
 #include "gamestats.h"
 #include "npc_metropolice.h"
+#include "ai_eventresponse.h"
+
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -41,6 +43,10 @@ static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEO
 CBaseMeleeWeapon::CBaseMeleeWeapon()
 {
 	m_bFiresUnderwater = true;
+	m_bIsSkCoolDown = false;
+	m_nSkCoolDownTime = 0.0f;
+	m_bIsSkCoolDown2 = false;
+	m_nSkCoolDownTime2 = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -94,6 +100,27 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 
 	if (pOwner == NULL)
 		return;
+	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
+	{	
+		Skill_Evade();
+	}
+	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
+	{
+		Skill_RadialSlash();
+	}
+	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
+	{
+		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime;
+		DevMsg("Spinning Demon %.2f \n ", cdtimer);
+		m_bIsSkCoolDown = false;
+	}
+	if (gpGlobals->curtime - m_nSkCoolDownTime2 < 0)
+	{
+		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime2;
+		DevMsg("Evil Slash CD  %.2f \n ", cdtimer);
+		m_bIsSkCoolDown2 = false;
+	}
+
 
 	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
@@ -127,7 +154,7 @@ void CBaseMeleeWeapon::PrimaryAttack()
 //------------------------------------------------------------------------------
 void CBaseMeleeWeapon::SecondaryAttack()
 {
-	Swing2(false);
+	Swing2(true);
 }
 
 
@@ -315,8 +342,11 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+
+
+	//use g_EntList  to make reference to the npc????
 	float m_nDamageRadius = 128.0f;
-	float m_nStepVelocity = 12.0f;
+	float m_nStepVelocity = 128.0f;
 	pOwner->RumbleEffect(RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART);
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();
@@ -330,7 +360,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	// Like bullets, bludgeon traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition( traceHit.startpos );
 	triggerInfo.SetDamageForce( forward );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
@@ -341,22 +371,33 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	fwd.z = 0;
 	VectorNormalize(fwd);
 	//Makes weapon produce AoE damage
-	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, NULL);
+	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, pOwner);
+
 	Vector AngleOrigin = UTIL_GetLocalPlayer()->GetAbsOrigin();
 	Vector Anglefwd = AngleOrigin;
-	Vector	dir = swingEnd;
+	Vector	dir(1,1,0);
 		VectorNormalize(dir);
 		dir *= 500.0f;
 		ApplyAbsVelocityImpulse(dir);
-
-		DevMsg("fwd x var: %.2f \n", fwd.x);
-		DevMsg("fwd y var: %.2f \n", fwd.y);
-		DevMsg("fwd z var: %.2f \n", fwd.z);
+		//->SetAbsVelocity(fwd*m_nStepVelocity * 200);
+	SetAbsVelocity(fwd*m_nStepVelocity*200);
 	//Stops player from moving for each swing
 	UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 	//Move player forward for each swing.
-	UTIL_GetLocalPlayer()->SetAbsOrigin(AngleOrigin + fwd*m_nStepVelocity);
+	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
 
+	//int	nAttachment = LookupAttachment("fuse");
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetAbsOrigin(), false);
+
+	if (m_pGlowTrail != NULL)
+	{
+		m_pGlowTrail->FollowEntity(this);
+		m_pGlowTrail->SetAttachment(this, NULL);
+		m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
+		m_pGlowTrail->SetStartWidth(8.0f);
+		m_pGlowTrail->SetEndWidth(8.0f);
+		m_pGlowTrail->SetLifeTime(0.15f);
+	}
 
 
 	//if ( traceHit.fraction == 1.0 )
@@ -526,4 +567,90 @@ void CBaseMeleeWeapon::Swing2(int bIsSecondary)
 	//Play swing sound
 	WeaponSound(SINGLE);
 	pOwner->SetAnimation(PLAYER_ATTACK1);
+}
+//Skill: Spinning Demon.
+void CBaseMeleeWeapon::Skill_Evade(void)
+{
+	trace_t traceHit;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+	Vector forward;
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+	Activity nHitActivity = ACT_VM_HITCENTER;
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward);
+	triggerInfo.ScaleDamage(2.0f);
+	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+	float m_nDamageRadius = 192.0f;
+	//Only run when the cooldown time is 0
+	if (!m_bIsSkCoolDown && gpGlobals->curtime > m_nSkCoolDownTime)
+	{
+		float nStopMoving = gpGlobals->curtime + 0.2f;
+		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+		if (!pOwner)
+			return;
+		float m_nStepVelocity = 1024.0f;
+		Vector fwd;
+		AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+		fwd.z = 0;
+		VectorNormalize(fwd);
+		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+		if (gpGlobals->curtime > nStopMoving)
+			UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+
+		if (gpGlobals->curtime - nStopMoving < 0)
+		{
+			Warning("stop %.2f \n", gpGlobals->curtime - nStopMoving);
+			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+			WeaponSound(SINGLE);
+			pOwner->SetAnimation(PLAYER_ATTACK1);
+		}
+		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
+		m_bIsSkCoolDown = true;
+	}
+
+}
+void CBaseMeleeWeapon::Skill_RadialSlash(void)
+{
+	trace_t traceHit;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+	Vector forward;
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+	Activity nHitActivity = ACT_VM_HITCENTER;
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward*10);
+	triggerInfo.ScaleDamage(3.5f);
+	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+	float m_nDamageRadius = 264.0f;
+	if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
+	{
+		float nStopMoving = gpGlobals->curtime + 0.2f;
+		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+		if (!pOwner)
+			return;
+		float m_nStepVelocity = 128.0f;
+		Vector fwd;
+		AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+		fwd.z = 0;
+		VectorNormalize(fwd);
+		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+		if (gpGlobals->curtime > nStopMoving)
+			UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+
+		if (gpGlobals->curtime - nStopMoving < 0)
+		{
+			Warning("stop %.2f \n", gpGlobals->curtime - nStopMoving);
+			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+			WeaponSound(SINGLE);
+			pOwner->SetAnimation(PLAYER_ATTACK1);
+		}
+		m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
+		m_bIsSkCoolDown2 = true;
+	}
+
 }
