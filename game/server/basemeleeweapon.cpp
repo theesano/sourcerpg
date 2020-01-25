@@ -47,6 +47,7 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_nSkCoolDownTime = 0.0f;
 	m_bIsSkCoolDown2 = false;
 	m_nSkCoolDownTime2 = 0.0f;
+	m_nExecutionTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -98,6 +99,21 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
+	Vector fwd;
+	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+
+	////zero out vector angles
+	fwd.z = 0;
+	VectorNormalize(fwd);
+	////UTIL_EntitiesInSphere
+
+	//CBaseEntity *pEntity = NULL;
+	//if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
+	//{
+	//	
+	//}
+
+
 	if (pOwner == NULL)
 		return;
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
@@ -107,6 +123,20 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
 	{
 		Skill_RadialSlash();
+	}
+	if (gpGlobals->curtime < m_nExecutionTime)
+	{
+		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+	}
+
+	if (pOwner->m_nButtons & IN_SCORE)
+	{
+		Warning("Lole time %.2f \n", gpGlobals->curtime - m_nExecutionTime);
+		if (m_nExecutionTime >= 0)
+		{
+			m_nExecutionTime = 0.0f;
+			pOwner->ApplyAbsVelocityImpulse(fwd * 96);
+		}
 	}
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
 	{
@@ -343,7 +373,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	if (!pOwner)
 		return;
 
-
+	//float flSpeedMod = 1.5f;
 	//use g_EntList  to make reference to the npc????
 	float m_nDamageRadius = 128.0f;
 	float m_nStepVelocity = 128.0f;
@@ -373,31 +403,29 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//Makes weapon produce AoE damage
 	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, pOwner);
 
-	Vector AngleOrigin = UTIL_GetLocalPlayer()->GetAbsOrigin();
-	Vector Anglefwd = AngleOrigin;
-	Vector	dir(1,1,0);
-		VectorNormalize(dir);
-		dir *= 500.0f;
-		ApplyAbsVelocityImpulse(dir);
-		//->SetAbsVelocity(fwd*m_nStepVelocity * 200);
-	SetAbsVelocity(fwd*m_nStepVelocity*200);
+	Vector KnockBackdir = fwd;
+		KnockBackdir *= 500.0f;
+		KnockBackdir.z = 128.0f;
+		AddKnockback(KnockBackdir);
 	//Stops player from moving for each swing
 	UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 	//Move player forward for each swing.
 	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+	//Hard coded value, should change to SequenceDuration()
+	m_nExecutionTime = gpGlobals->curtime +	1.3f;
 
-	//int	nAttachment = LookupAttachment("fuse");
-	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetAbsOrigin(), false);
+	/*int	nAttachment = LookupAttachment("sprite");
+	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
 
 	if (m_pGlowTrail != NULL)
 	{
 		m_pGlowTrail->FollowEntity(this);
-		m_pGlowTrail->SetAttachment(this, NULL);
+		m_pGlowTrail->SetAttachment(this, nAttachment);
 		m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
 		m_pGlowTrail->SetStartWidth(8.0f);
 		m_pGlowTrail->SetEndWidth(8.0f);
 		m_pGlowTrail->SetLifeTime(0.15f);
-	}
+	}*/
 
 
 	//if ( traceHit.fraction == 1.0 )
@@ -587,7 +615,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	//Only run when the cooldown time is 0
 	if (!m_bIsSkCoolDown && gpGlobals->curtime > m_nSkCoolDownTime)
 	{
-		float nStopMoving = gpGlobals->curtime + 0.2f;
+		m_nExecutionTime = 0.0f;
 		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 		if (!pOwner)
 			return;
@@ -596,17 +624,13 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 		AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
 		fwd.z = 0;
 		VectorNormalize(fwd);
+		AddKnockback(fwd * 350);
 		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
-		if (gpGlobals->curtime > nStopMoving)
-			UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 
-		if (gpGlobals->curtime - nStopMoving < 0)
-		{
-			Warning("stop %.2f \n", gpGlobals->curtime - nStopMoving);
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 			WeaponSound(SINGLE);
 			pOwner->SetAnimation(PLAYER_ATTACK1);
-		}
+
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
 	}
@@ -629,7 +653,6 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	float m_nDamageRadius = 264.0f;
 	if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
 	{
-		float nStopMoving = gpGlobals->curtime + 0.2f;
 		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 		if (!pOwner)
 			return;
@@ -639,18 +662,29 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 		fwd.z = 0;
 		VectorNormalize(fwd);
 		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
-		if (gpGlobals->curtime > nStopMoving)
-			UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+		m_nExecutionTime = gpGlobals->curtime + 2.0f;
 
-		if (gpGlobals->curtime - nStopMoving < 0)
+		if (gpGlobals->curtime - m_nExecutionTime < 0)
 		{
-			Warning("stop %.2f \n", gpGlobals->curtime - nStopMoving);
-			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 			WeaponSound(SINGLE);
 			pOwner->SetAnimation(PLAYER_ATTACK1);
 		}
 		m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
 		m_bIsSkCoolDown2 = true;
+	}
+
+}
+void CBaseMeleeWeapon::AddKnockback(Vector dir)
+{
+	//UTIL_EntitiesInSphere
+
+	CBaseEntity *pEntity = NULL;
+	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
+	{
+		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
+		pCop->ApplyAbsVelocityImpulse(dir);
+
 	}
 
 }

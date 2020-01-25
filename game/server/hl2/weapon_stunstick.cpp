@@ -275,8 +275,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 						 dir.z = 0.0f;
 
 					//Push the target back
-					//pHurt->ApplyAbsVelocityImpulse( dir );
-					pCop->ApplyAbsVelocityImpulse(dir);
+					pHurt->ApplyAbsVelocityImpulse( dir );
 
 					if ( !bFlashed )
 					{

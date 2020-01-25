@@ -2091,7 +2091,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								if (speed > HL2_WALK_SPEED + 20.0f)
 								{
 									idealActivity = ACT_HL2MP_RUN;
-									SetPlaybackRate(2.25f);
+									SetPlaybackRate(1.5f);
 								}
 								else
 									idealActivity = ACT_WALK; //This is NOT the actual walk animation.

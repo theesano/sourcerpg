@@ -2389,14 +2389,11 @@ void CGameMovement::Dash(void)
 		return; //Always validate a pointer
 
 	// Create Vector for direction
-	Vector vecDir;
 	Vector vecDir2;
 	// Take the Player's EyeAngles and turn it into a direction
-	AngleVectors(pPlayer->EyeAngles(), &vecDir);
 	AngleVectors(pPlayer->GetAbsAngles(), &vecDir2);
 	// Get the Start/End
 	Vector vecAbsStart = pPlayer->EyePosition();
-	Vector vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
 
 	//Initializing Vector
 	Vector fwd;
@@ -2442,6 +2439,7 @@ void CGameMovement::Dash(void)
 	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
 	{
 		mv->SetAbsOrigin(EvadeEndPoint);
+		//pPlayer->ApplyAbsVelocityImpulse(fwd*350);
 		
 		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
 		
