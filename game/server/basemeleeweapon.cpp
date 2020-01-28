@@ -99,6 +99,28 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
+	SkillsHandler();
+
+	if (pOwner == NULL)
+		return;
+
+	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	{
+		PrimaryAttack();
+	}
+	else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+	{
+		SecondaryAttack();
+	}
+	else
+	{
+		WeaponIdle();
+		return;
+	}
+}
+
+void CBaseMeleeWeapon::SkillsHandler(void)
+{
 	Vector fwd;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
 
@@ -112,12 +134,10 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	//{
 	//	
 	//}
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
-
-	if (pOwner == NULL)
-		return;
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
-	{	
+	{
 		Skill_Evade();
 	}
 	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
@@ -152,21 +172,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	}
 
 
-	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
-	{
-		PrimaryAttack();
-	}
-	else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
-	{
-		SecondaryAttack();
-	}
-	else
-	{
-		WeaponIdle();
-		return;
-	}
 }
-
 //------------------------------------------------------------------------------
 // Purpose :
 // Input   :
@@ -366,9 +372,9 @@ void CBaseMeleeWeapon::ImpactEffect(trace_t &traceHit)
 //------------------------------------------------------------------------------
 void CBaseMeleeWeapon::Swing(int bIsSecondary)
 {
+	// Try a ray
 	trace_t traceHit;
 	
-	// Try a ray
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
@@ -376,13 +382,9 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//float flSpeedMod = 1.5f;
 	//use g_EntList  to make reference to the npc????
 	float m_nDamageRadius = 128.0f;
-	float m_nStepVelocity = 128.0f;
-	pOwner->RumbleEffect(RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART);
 
 	Vector swingStart = pOwner->Weapon_ShootPosition();
 	Vector forward;
-	Vector fwd;
-
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
 
 	Vector swingEnd = swingStart + forward * GetRange();
@@ -395,6 +397,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	triggerInfo.SetDamageForce( forward );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
 
+	Vector fwd;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
 
 	//zero out vector angles
@@ -410,22 +413,9 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//Stops player from moving for each swing
 	UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 	//Move player forward for each swing.
-	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+	AddSkillMovementImpulse(1.0f);
 	//Hard coded value, should change to SequenceDuration()
 	m_nExecutionTime = gpGlobals->curtime +	1.3f;
-
-	/*int	nAttachment = LookupAttachment("sprite");
-	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
-
-	if (m_pGlowTrail != NULL)
-	{
-		m_pGlowTrail->FollowEntity(this);
-		m_pGlowTrail->SetAttachment(this, nAttachment);
-		m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
-		m_pGlowTrail->SetStartWidth(8.0f);
-		m_pGlowTrail->SetEndWidth(8.0f);
-		m_pGlowTrail->SetLifeTime(0.15f);
-	}*/
 
 
 	//if ( traceHit.fraction == 1.0 )
@@ -636,32 +626,37 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	}
 
 }
+
+//Skill:Evil Slash
 void CBaseMeleeWeapon::Skill_RadialSlash(void)
-{
+{	
 	trace_t traceHit;
+	//Initialize the player pointer
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+
+	//Initialize the forward vector
 	Vector forward;
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+
+	//Set the ideal activity (for animation)
 	Activity nHitActivity = ACT_VM_HITCENTER;
+
+	//Setting up the damage info for the skill
 	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition(traceHit.startpos);
 	triggerInfo.SetDamageForce(forward*10);
 	triggerInfo.ScaleDamage(3.5f);
 	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+
+	//The area in radius that the skill is going to affect.
 	float m_nDamageRadius = 264.0f;
+
 	if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
 	{
-		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-		if (!pOwner)
-			return;
-		float m_nStepVelocity = 128.0f;
-		Vector fwd;
-		AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
-		fwd.z = 0;
-		VectorNormalize(fwd);
-		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+		//Initialize the variable for moving the player on each attack
+		AddSkillMovementImpulse(1.0f);
 		m_nExecutionTime = gpGlobals->curtime + 2.0f;
 
 		if (gpGlobals->curtime - m_nExecutionTime < 0)
@@ -675,6 +670,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	}
 
 }
+
 void CBaseMeleeWeapon::AddKnockback(Vector dir)
 {
 	//UTIL_EntitiesInSphere
@@ -687,4 +683,22 @@ void CBaseMeleeWeapon::AddKnockback(Vector dir)
 
 	}
 
+}
+
+//Make the player move forward
+void CBaseMeleeWeapon::AddSkillMovementImpulse(float magnitude)
+{
+	float m_nStepVelocity = 128.0f * magnitude;
+
+	//Initialize vector fwd
+	Vector fwd;
+	//Get the player's viewangle and copy it to the fwd vector
+	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+	//Make sure the player won't accelerating forward when using the skill
+	fwd.z = 0;
+	//Normalize the vector so as not to making the value used going out of control
+	VectorNormalize(fwd);
+
+	//Give the player the push they need 
+	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
 }
