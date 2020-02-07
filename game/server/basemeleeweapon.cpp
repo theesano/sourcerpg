@@ -48,6 +48,7 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_bIsSkCoolDown2 = false;
 	m_nSkCoolDownTime2 = 0.0f;
 	m_nExecutionTime = 0.0f;
+	m_nSkillHitRefireTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,12 +122,6 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
-	Vector fwd;
-	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
-
-	////zero out vector angles
-	fwd.z = 0;
-	VectorNormalize(fwd);
 	////UTIL_EntitiesInSphere
 
 	//CBaseEntity *pEntity = NULL;
@@ -140,10 +135,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	{
 		Skill_Evade();
 	}
-	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
-	{
+	
+	//Run the Evil Slash skill code
 		Skill_RadialSlash();
-	}
+	
 	if (gpGlobals->curtime < m_nExecutionTime)
 	{
 		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
@@ -151,13 +146,9 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	if (pOwner->m_nButtons & IN_SCORE)
 	{
-		Warning("Lole time %.2f \n", gpGlobals->curtime - m_nExecutionTime);
-		if (m_nExecutionTime >= 0)
-		{
-			m_nExecutionTime = 0.0f;
-			pOwner->ApplyAbsVelocityImpulse(fwd * 96);
-		}
+		Warning("Execution time %.2f \n", gpGlobals->curtime - m_nExecutionTime);
 	}
+
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
 	{
 		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime;
@@ -603,6 +594,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
 	float m_nDamageRadius = 192.0f;
 	//Only run when the cooldown time is 0
+
 	if (!m_bIsSkCoolDown && gpGlobals->curtime > m_nSkCoolDownTime)
 	{
 		m_nExecutionTime = 0.0f;
@@ -619,7 +611,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 			WeaponSound(SINGLE);
-			pOwner->SetAnimation(PLAYER_ATTACK1);
+			pOwner->SetAnimation(PLAYER_RELOAD);
 
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
@@ -647,26 +639,44 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition(traceHit.startpos);
 	triggerInfo.SetDamageForce(forward*10);
-	triggerInfo.ScaleDamage(3.5f);
+	triggerInfo.ScaleDamage(2.5f);
+	
 	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
 
 	//The area in radius that the skill is going to affect.
 	float m_nDamageRadius = 264.0f;
-
-	if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
+	//HACK! 
+	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -7) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -5.5f))
 	{
-		//Initialize the variable for moving the player on each attack
-		AddSkillMovementImpulse(1.0f);
-		m_nExecutionTime = gpGlobals->curtime + 2.0f;
-
-		if (gpGlobals->curtime - m_nExecutionTime < 0)
+		//HACK! This is a really hacky way to do DPS , Todo: make a proper system or function so every skills can be added dps property easily.
+		if (gpGlobals->curtime > m_nSkillHitRefireTime)
 		{
+			DevMsg("Evil Slash Hit! \n");
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
-			WeaponSound(SINGLE);
-			pOwner->SetAnimation(PLAYER_ATTACK1);
+			AddKnockbackXY(1.5f);
+			//HACK! Reset the timer
+			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
 		}
-		m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
-		m_bIsSkCoolDown2 = true;
+	}
+
+	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
+	{
+		if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
+		{
+			//Initialize the variable for moving the player on each attack
+			AddSkillMovementImpulse(1.0f);
+			m_nExecutionTime = gpGlobals->curtime + 2.0f;
+			//HACK! Fire the timer
+			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
+			if (gpGlobals->curtime - m_nExecutionTime < 0)
+			{
+				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
+				WeaponSound(SINGLE);
+				pOwner->SetAnimation(PLAYER_RELOAD);
+			}
+			m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
+			m_bIsSkCoolDown2 = true;
+		}
 	}
 
 }
@@ -684,7 +694,22 @@ void CBaseMeleeWeapon::AddKnockback(Vector dir)
 	}
 
 }
+void CBaseMeleeWeapon::AddKnockbackXY(float magnitude)
+{
+	float flKnockbackVelocity = 128.0f*magnitude;
+	Vector dir;
+	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &dir);
+	dir.z = 0;
+	VectorNormalize(dir);
 
+	CBaseEntity *pEntity = NULL;
+	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
+	{
+		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
+		pCop->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
+
+	}
+}
 //Make the player move forward
 void CBaseMeleeWeapon::AddSkillMovementImpulse(float magnitude)
 {

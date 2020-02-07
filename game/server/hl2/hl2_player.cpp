@@ -2020,11 +2020,14 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		else
 		{
 			idealActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
+			
 		}
 	}
 	else if (playerAnim == PLAYER_RELOAD)
 	{
-		idealActivity = ACT_HL2MP_GESTURE_RELOAD;
+		//idealActivity = ACT_HL2MP_GESTURE_RELOAD;
+		idealActivity = ACT_MELEE_ATTACK1;
+
 	}
 	else if (playerAnim == PLAYER_EVADE)
 	{
@@ -2139,6 +2142,16 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (IsInAVehicle())
 	{
 		idealActivity = ACT_COVER_LOW;
+	}
+	if (idealActivity == ACT_MELEE_ATTACK1)
+	{
+
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
 	}
 
 	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)

@@ -54,9 +54,11 @@ private:
 	bool m_bIsSkCoolDown2;
 	float m_nSkCoolDownTime2;
 	float m_nExecutionTime;
+	float m_nSkillHitRefireTime;
 	bool			ImpactWater(const Vector &start, const Vector &end);
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);
+	void			AddKnockbackXY(float magnitude);
 	void			AddSkillMovementImpulse(float magnitude);
 	void			Swing(int bIsSecondary);
 	void			Swing2(int bIsSecondary);
