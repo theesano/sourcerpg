@@ -55,6 +55,8 @@ private:
 	float m_nSkCoolDownTime2;
 	float m_nExecutionTime;
 	float m_nSkillHitRefireTime;
+	bool m_bIsAttack1;
+	bool m_bIsAttack2;
 	bool			ImpactWater(const Vector &start, const Vector &end);
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);

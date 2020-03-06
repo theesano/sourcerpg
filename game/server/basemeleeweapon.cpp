@@ -49,6 +49,8 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_nSkCoolDownTime2 = 0.0f;
 	m_nExecutionTime = 0.0f;
 	m_nSkillHitRefireTime = 0.0f;
+	m_bIsAttack1 = true;
+	m_bIsAttack2 = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -380,9 +382,9 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	Vector swingEnd = swingStart + forward * GetRange();
 	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-	Activity nHitActivity = ACT_VM_HITCENTER;
-
-	// Like bullets, bludgeon traces have to trace against triggers.
+	//Activity nHitActivity = ACT_VM_HITCENTER;
+	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
+	// Damage info for 
 	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition( traceHit.startpos );
 	triggerInfo.SetDamageForce( forward );
@@ -406,24 +408,24 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(1.0f);
 	//Hard coded value, should change to SequenceDuration()
-	m_nExecutionTime = gpGlobals->curtime +	1.3f;
+	m_nExecutionTime = gpGlobals->curtime +	0.6667f;
 
 
 	//if ( traceHit.fraction == 1.0 )
 	//{
 	//	float bludgeonHullRadius = 1.732f * BLUDGEON_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
-
+	//
 	//	// Back off by hull "radius"
 	//	swingEnd -= forward * bludgeonHullRadius;
-
+	//
 	//	UTIL_TraceHull( swingStart, swingEnd, g_bludgeonMins, g_bludgeonMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
 	//	if ( traceHit.fraction < 1.0 && traceHit.m_pEnt )
 	//	{
 	//		Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
 	//		VectorNormalize( vecToTarget );
-
+	//
 	//		float dot = vecToTarget.Dot( forward );
-
+	//
 	//		// YWB:  Make sure they are sort of facing the guy at least...
 	//		if ( dot < 0.70721f )
 	//		{
@@ -451,20 +453,20 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	// -------------------------
 	//	Miss
 	// -------------------------
-	if (traceHit.fraction == 1.0f)
-	{
-		nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
-
-		// We want to test the first swing again
-		Vector testEnd = swingStart + forward * GetRange();
-
-		// See if we happened to hit water
-		ImpactWater(swingStart, testEnd);
-	}
-	else
-	{
-		Hit( traceHit, nHitActivity, bIsSecondary ? true : false );
-	}
+	//if (traceHit.fraction == 1.0f)
+	//{
+	//	nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
+	//
+	//	// We want to test the first swing again
+	//	Vector testEnd = swingStart + forward * GetRange();
+	//
+	//	// See if we happened to hit water
+	//	ImpactWater(swingStart, testEnd);
+	//}
+	//else
+	//{
+	//	Hit( traceHit, nHitActivity, bIsSecondary ? true : false );
+	//}
 
 	// Send the anim
 	SendWeaponAnim(nHitActivity);
@@ -474,8 +476,21 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 	//Play swing sound
-	WeaponSound(SINGLE);
-	pOwner->SetAnimation(PLAYER_ATTACK1);
+	if (m_bIsAttack1 == true)
+	{
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_ATTACK1);
+		m_bIsAttack2 = true;
+		m_bIsAttack1 = false;
+	}
+	else if (m_bIsAttack2 == true)
+	{
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_RELOAD);
+		m_bIsAttack2 = false;
+		m_bIsAttack1 = true;
+
+	}
 }
 
 //Secondary Attack Swing
@@ -707,7 +722,6 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude)
 	{
 		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
 		pCop->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
-
 	}
 }
 //Make the player move forward
