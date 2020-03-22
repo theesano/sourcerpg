@@ -49,8 +49,9 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_nSkCoolDownTime2 = 0.0f;
 	m_nExecutionTime = 0.0f;
 	m_nSkillHitRefireTime = 0.0f;
-	m_bIsAttack1 = true;
-	m_bIsAttack2 = false;
+	m_bWIsAttack1 = true;
+	m_bWIsAttack2 = false;
+	m_bWIsAttack3 = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -476,21 +477,38 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 	//Play swing sound
-	if (m_bIsAttack1 == true)
+	if (m_bWIsAttack1 == true)
 	{
+		m_nDamageRadius = 128.0f;
+		triggerInfo.ScaleDamage(1.0);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
-		m_bIsAttack2 = true;
-		m_bIsAttack1 = false;
+		m_bWIsAttack2 = true;
+		m_bWIsAttack1 = false;
 	}
-	else if (m_bIsAttack2 == true)
+	else if (m_bWIsAttack2 == true)
 	{
+		m_nDamageRadius = 192.0f;
+		triggerInfo.ScaleDamage(1.5);
 		WeaponSound(SINGLE);
-		pOwner->SetAnimation(PLAYER_RELOAD);
-		m_bIsAttack2 = false;
-		m_bIsAttack1 = true;
-
+		pOwner->SetAnimation(PLAYER_ATTACK1);
+		m_bWIsAttack2 = false;
+		m_bWIsAttack1 = false;
+		m_bWIsAttack3 = true;
 	}
+	else if (m_bWIsAttack3 == true)
+	{
+		m_nDamageRadius = 256.0f;
+		triggerInfo.ScaleDamage(2.0);
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_ATTACK1);
+		m_bWIsAttack1 = true;
+		m_bWIsAttack2 = false;
+		m_bWIsAttack3 = false;
+	}
+
+	/*WeaponSound(SINGLE);
+	pOwner->SetAnimation(PLAYER_ATTACK1);*/
 }
 
 //Secondary Attack Swing
@@ -626,7 +644,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 			WeaponSound(SINGLE);
-			pOwner->SetAnimation(PLAYER_RELOAD);
+			pOwner->SetAnimation(PLAYER_EVADE);
 
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
@@ -687,7 +705,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			{
 				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 				WeaponSound(SINGLE);
-				pOwner->SetAnimation(PLAYER_RELOAD);
+				pOwner->SetAnimation(PLAYER_SKILL_USE);
 			}
 			m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
 			m_bIsSkCoolDown2 = true;

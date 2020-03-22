@@ -418,8 +418,12 @@ CHL2_Player::CHL2_Player()
 	// Sprint handling
 	m_flDelayedUseTime = 0.0f;
 	m_bDelayedUse = false;
-	
 
+	m_bIsAttack1 = true;
+	m_bIsAttack2 = false;
+	m_bIsAttack3 = false;
+	m_flAtkAnimationChangingTime = 0.0f;
+	
 }
 
 
@@ -1984,6 +1988,9 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	speed = GetAbsVelocity().Length2D();
 
+	//Select Animation for different attacking stages.
+
+
 	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
 	{
 		speed = 0;
@@ -2019,25 +2026,69 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 		else
 		{
-			idealActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
-			
+			if (m_bIsAttack1 == true)
+			{
+				idealActivity = ACT_MELEE_ATTACK1;
+				m_bIsAttack2 = true;
+				m_bIsAttack1 = false;
+			}
+			else if (m_bIsAttack2 == true)
+			{
+				idealActivity = ACT_MELEE_ATTACK2;
+				m_bIsAttack2 = false;
+				m_bIsAttack1 = false;
+				m_bIsAttack3 = true;
+			}
+			else if (m_bIsAttack3 == true)
+			{
+				idealActivity = ACT_MELEE_ATTACK3;
+				m_bIsAttack1 = true;
+				m_bIsAttack2 = false;
+				m_bIsAttack3 = false;
+				
+			}
+			/*if ((bIsAttack1 == true) && (flAtkAnimationChangingTime == 0.0f))
+			{
+				idealActivity = ACT_MELEE_ATTACK1;
+				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
+				bIsAttack1 = false;
+			}
+
+			if ((bIsAttack2 == true) && (flAtkAnimationChangingTime > gpGlobals->curtime))
+			{
+				bIsAttack2 = false;
+				bIsAttack3 = true;
+				idealActivity = ACT_MELEE_ATTACK2;
+				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
+			}
+			else if ((bIsAttack3 == true) && (flAtkAnimationChangingTime > gpGlobals->curtime))
+			{
+				bIsAttack2 = false;
+				bIsAttack3 = true;
+				idealActivity = ACT_MELEE_ATTACK3;
+				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
+			}*/
+
 		}
 	}
-	else if (playerAnim == PLAYER_RELOAD)
+	/*else if (playerAnim == PLAYER_RELOAD)
 	{
-		//idealActivity = ACT_HL2MP_GESTURE_RELOAD;
 		idealActivity = ACT_MELEE_ATTACK1;
-
-	}
+	}*/
 	else if (playerAnim == PLAYER_EVADE)
 	{
 		idealActivity = ACT_EVADE;
+		if (m_afButtonPressed & IN_ATTACK2)
+		{
+			idealActivity = ACT_MELEE_SPEVADE;
+		}
 	}
-	else if (idealActivity == ACT_EVADE)
+	
+	else if (playerAnim == PLAYER_SKILL_USE)
 	{
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
-		return;
+		idealActivity = ACT_MELEE_SKILL_CSLASH;
 	}
+	
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
 		if (!(GetFlags() & FL_ONGROUND) && (GetActivity() == ACT_HL2MP_JUMP || GetActivity() == ACT_JUMP))    // Still jumping
@@ -2143,6 +2194,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	{
 		idealActivity = ACT_COVER_LOW;
 	}
+
 	if (idealActivity == ACT_MELEE_ATTACK1)
 	{
 
@@ -2154,6 +2206,47 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		return;
 	}
 
+	if (idealActivity == ACT_MELEE_ATTACK2)
+	{
+
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
+	}
+
+	if (idealActivity == ACT_MELEE_ATTACK3)
+	{
+
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
+	}
+	if (idealActivity == ACT_MELEE_SKILL_CSLASH)
+	{
+
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
+	}
+	if (idealActivity == ACT_MELEE_SPEVADE)
+	{
+
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
+
+		return;
+	}
 	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)
 	{
 

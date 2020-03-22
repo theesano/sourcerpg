@@ -300,6 +300,12 @@ public:
 	CSoundPatch *m_sndLeeches;
 	CSoundPatch *m_sndWaterSplashes;
 
+	//Player Combat Status
+	bool m_bIsAttack1;
+	bool m_bIsAttack2;
+	bool m_bIsAttack3;
+	float m_flAtkAnimationChangingTime;
+
 protected:
 	virtual void		PreThink( void );
 	virtual	void		PostThink( void );

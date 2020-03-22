@@ -206,7 +206,7 @@ if ERRORLEVEL 1 exit /b 1
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)\server.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>C:\Users\Install\Documents\SourceMod\sp\src\game\server;C:\Users\Install\Documents\SourceMod\sp\src\game\client;..\..\lib\common\.;..\..\lib\public\.</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\PC\Source\Repos\sourcerpg\game\server;C:\Users\PC\Source\Repos\sourcerpg\game\client;..\..\lib\common\.;..\..\lib\public\.</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)/$(TargetName).pdb</ProgramDatabaseFile>
