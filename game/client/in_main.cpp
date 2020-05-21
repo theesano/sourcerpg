@@ -19,6 +19,7 @@
 #include "bitbuf.h"
 #include "checksum_md5.h"
 #include "hltvcamera.h"
+#include "baseentity_shared.h"
 
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
@@ -706,6 +707,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		float side = KeyState(&in_moveleft) - KeyState(&in_moveright);
 		float forward = KeyState(&in_forward) - KeyState(&in_back);
 		
+
 		if (side || forward )
 		{
 			

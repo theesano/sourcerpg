@@ -283,8 +283,8 @@ void CC_ToggleDuck( void )
 			{
 				flForwardSpeed = pCVcl_forwardspeed->GetFloat();
 			}
-
-			flForwardSpeed = MAX( 1.0f, flForwardSpeed );
+			// MAX forward speed
+			//flForwardSpeed = MAX( 1.0f, flForwardSpeed );
 
 			// Make sure we're not in the blindspot on the crouch detection
 			float flStickDistPerc = ( pPlayer->GetStickDist() / flForwardSpeed ); // Speed is the magnitude
@@ -423,7 +423,10 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack2 = false;
 	m_bIsAttack3 = false;
 	m_flAtkAnimationChangingTime = 0.0f;
-	
+	m_flTimeBetweenAttack = 0.0f;
+	m_bCanRun = false;
+	m_flCanRunTimeWindow = 0.0f;
+
 }
 
 
@@ -532,38 +535,38 @@ void CHL2_Player::HandleSpeedChanges( void )
 	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
 
 
-	if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
-	{
-		// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
-		// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
-		// We want a full debounce of the key to resume sprinting after the suit is completely drained
-	/*	if (bWantSprint )
-		{
-				StartSprinting();
-		}
-		
-		else 
-		{
-				StopSprinting();
-		}
-*/
-			 //Reset key, so it will be activated post whatever is suppressing it.
-			m_nButtons &= ~IN_SPEED;
-	}
-	if (bIsSprinting && !m_bDelayedUse)
-	{	
-		
-		StopSprinting();
-		m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
-		m_bDelayedUse = true;
-	
-	}
+	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
+	//{
+	//	// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
+	//	// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
+	//	// We want a full debounce of the key to resume sprinting after the suit is completely drained
+	//	if (bWantSprint )
+	//	{
+	//			StartSprinting();
+	//	}
+	//	
+	//	else 
+	//	{
+	//			StopSprinting();
+	//	}
 
-	if (m_bDelayedUse)
+	//		 //Reset key, so it will be activated post whatever is suppressing it.
+	//		m_nButtons &= ~IN_SPEED;
+	//}
+	//if (bIsSprinting && !m_bDelayedUse)
+	//{	
+	//	
+	//	//StopSprinting();
+	//	m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
+	//	m_bDelayedUse = true;
+	//
+	//}
+
+	/*if (m_bDelayedUse)
 	{
 		DelayedUseTime();
 	}
-
+*/
 
 	bool bIsWalking = IsWalking();
 	// have suit, pressing button, not sprinting or ducking
@@ -576,6 +579,27 @@ void CHL2_Player::HandleSpeedChanges( void )
 	else
 	{
 		bWantWalking = true;
+		//DevMsg("Is Walking No suit \n");
+		//if ((m_afButtonPressed & IN_FORWARD) || (m_afButtonPressed & IN_BACK) || (m_afButtonPressed & IN_LEFT) || (m_afButtonPressed & IN_RIGHT))
+		if (m_afButtonPressed & IN_FORWARD )
+		{
+			SetMaxSpeed(HL2_WALK_SPEED);
+			 DevMsg("Movespeed 1 \n");
+
+		}
+		//if ((m_afButtonReleased & IN_FORWARD) || (m_afButtonReleased & IN_BACK) || (m_afButtonReleased & IN_LEFT) || (m_afButtonReleased & IN_RIGHT))
+			if (m_afButtonReleased & IN_FORWARD)
+		{
+			 DevMsg("Movespeed 1 released \n");
+			m_flCanRunTimeWindow = gpGlobals->curtime + 0.2f;
+
+		}
+			//if ((m_afButtonPressed & IN_FORWARD) || (m_afButtonPressed & IN_BACK) || (m_afButtonPressed & IN_LEFT) || (m_afButtonPressed & IN_RIGHT) && (m_flCanRunTimeWindow > gpGlobals->curtime))
+			if ((m_afButtonPressed & IN_FORWARD) && (m_flCanRunTimeWindow > gpGlobals->curtime))
+		{
+			SetMaxSpeed(HL2_NORM_SPEED);
+			 DevMsg("Movespeed 2 \n");
+		}
 	}
 	
 	if( bIsWalking != bWantWalking )
@@ -583,10 +607,12 @@ void CHL2_Player::HandleSpeedChanges( void )
 		if ( bWantWalking )
 		{
 			StartWalking();
+			// DevMsg("Is Walking \n");
 		}
 		else
 		{
 			StopWalking();
+			// DevMsg("Stop Walking \n");
 		}
 	}
 }  
@@ -774,6 +800,27 @@ void CHL2_Player::PreThink(void)
 	{
 		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
 	}
+
+	//DevMsg("server time : %.2f \n", gpGlobals->curtime);
+		//DevMsg("Is Attack 1,2,3: %i %i %i \n", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3);
+		//DevMsg("m_flAtkAnimationChangingTime %.2f \n", m_flAtkAnimationChangingTime);
+		//if (m_flTimeBetweenAttack <= 0)
+		m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
+		//if (gpGlobals->curtime - m_flAtkAnimationChangingTime <= 0)
+			//Warning("m_flTimeBetweenAttack %.2f \n", m_flTimeBetweenAttack);
+
+			if (gpGlobals->curtime - m_flAtkAnimationChangingTime >= 0)
+			{
+				m_bIsAttack1 = true;
+				m_bIsAttack2 = false;
+				m_bIsAttack3 = false;
+			}
+
+			if ((m_flTimeBetweenAttack < 0) && (m_afButtonPressed & IN_SPEED))
+			{
+				m_flAtkAnimationChangingTime = gpGlobals->curtime;
+			}
+
 #endif//HL2_EPISODIC
 
 	// Riding a vehicle?
@@ -1358,7 +1405,7 @@ void CHL2_Player::Spawn(void)
 
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 
-	InitSprinting();
+	//InitSprinting();
 
 	// Setup our flashlight values
 #ifdef HL2_EPISODIC
@@ -1368,6 +1415,7 @@ void CHL2_Player::Spawn(void)
 	GetPlayerProxy();
 
 	SetFlashlightPowerDrainScale( 1.0f );
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1490,6 +1538,23 @@ void CHL2_Player::EnableSprint( bool bEnable )
 void CHL2_Player::StartWalking( void )
 {
 	SetMaxSpeed( HL2_WALK_SPEED );
+	
+	/*if (m_afButtonPressed & IN_FORWARD )
+	{
+		SetMaxSpeed(HL2_WALK_SPEED);
+		DevMsg("Movespeed 1 \n");
+	}
+	else if (m_afButtonReleased & IN_FORWARD)
+	{
+		m_flCanRunTimeWindow = gpGlobals->curtime + 0.2f;
+		if ((m_afButtonPressed & IN_FORWARD) && (m_flCanRunTimeWindow < gpGlobals->curtime))
+		{
+			SetMaxSpeed(HL2_NORM_SPEED);
+			DevMsg("Movespeed2 \n");
+		}
+		else
+			SetMaxSpeed(HL2_WALK_SPEED);
+	}*/
 	m_fIsWalking = true;
 }
 
@@ -1982,10 +2047,10 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 // Set the activity based on an event or current state
 void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 {
+
 	int animDesired;
 
 	float speed;
-
 	speed = GetAbsVelocity().Length2D();
 
 	//Select Animation for different attacking stages.
@@ -2025,50 +2090,29 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			idealActivity = GetActivity();
 		}
 		else
-		{
-			if (m_bIsAttack1 == true)
+		{  //Select proper animations for each attack. TODO: Sync Animation time with Weapon Attack Cycle.
+			if ((m_bIsAttack1 == true) && (m_flTimeBetweenAttack >= 0))
 			{
-				idealActivity = ACT_MELEE_ATTACK1;
-				m_bIsAttack2 = true;
-				m_bIsAttack1 = false;
+					idealActivity = ACT_MELEE_ATTACK1;
+					m_bIsAttack2 = true;
+					m_bIsAttack1 = false;
+					m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
 			}
-			else if (m_bIsAttack2 == true)
+			else if ((m_bIsAttack2 == true) && (m_flTimeBetweenAttack < 0))
 			{
-				idealActivity = ACT_MELEE_ATTACK2;
-				m_bIsAttack2 = false;
-				m_bIsAttack1 = false;
-				m_bIsAttack3 = true;
+					idealActivity = ACT_MELEE_ATTACK2;
+					m_flAtkAnimationChangingTime = gpGlobals->curtime + 0.8f;
+					m_bIsAttack2 = false;
+					m_bIsAttack1 = false;
+					m_bIsAttack3 = true;
 			}
-			else if (m_bIsAttack3 == true)
+			else if ((m_bIsAttack3 == true) && (m_flTimeBetweenAttack < 0))
 			{
-				idealActivity = ACT_MELEE_ATTACK3;
-				m_bIsAttack1 = true;
-				m_bIsAttack2 = false;
-				m_bIsAttack3 = false;
-				
+					idealActivity = ACT_MELEE_ATTACK3;
+					m_bIsAttack1 = true;
+					m_bIsAttack2 = false;
+					m_bIsAttack3 = false;
 			}
-			/*if ((bIsAttack1 == true) && (flAtkAnimationChangingTime == 0.0f))
-			{
-				idealActivity = ACT_MELEE_ATTACK1;
-				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
-				bIsAttack1 = false;
-			}
-
-			if ((bIsAttack2 == true) && (flAtkAnimationChangingTime > gpGlobals->curtime))
-			{
-				bIsAttack2 = false;
-				bIsAttack3 = true;
-				idealActivity = ACT_MELEE_ATTACK2;
-				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
-			}
-			else if ((bIsAttack3 == true) && (flAtkAnimationChangingTime > gpGlobals->curtime))
-			{
-				bIsAttack2 = false;
-				bIsAttack3 = true;
-				idealActivity = ACT_MELEE_ATTACK3;
-				flAtkAnimationChangingTime = gpGlobals->curtime + 0.2f;
-			}*/
-
 		}
 	}
 	/*else if (playerAnim == PLAYER_RELOAD)
@@ -2141,7 +2185,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 						{
 							if (m_afButtonPressed & IN_SPEED)
 								idealActivity = ACT_EVADE;
-							else{
+							else
+							{
 								if (speed > HL2_WALK_SPEED + 20.0f)
 								{
 									idealActivity = ACT_HL2MP_RUN;
@@ -2149,7 +2194,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								}
 								else
 									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
-
 							}
 						}
 						else
@@ -2158,10 +2202,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								idealActivity = ACT_EVADE;
 							else
 							{
-								if (speed > HL2_WALK_SPEED + 20.0f)
+								if (speed > HL2_WALK_SPEED + 120.0f)
+								{
 									idealActivity = ACT_RUN;
+								}
 								else
-									idealActivity = ACT_WALK;
+								{
+									idealActivity = ACT_RUN;
+									SetPlaybackRate(0.7f);
+								}
 							}
 								
 

@@ -1167,17 +1167,23 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		if ( m_bWasFrozen )
 		{
 			// Stomp the new viewangles with old ones
-			pCmd->viewangles = m_vecOldViewAngles;
-			engine->SetViewAngles( pCmd->viewangles );
+			//pCmd->viewangles = m_vecOldViewAngles;
+			//engine->SetViewAngles( pCmd->viewangles );
+			engine->ClientCmd("thirdperson_platformer 0");
+			
 		}
 		else
 		{
 			m_bWasFrozen = true;
+			engine->ClientCmd("thirdperson_platformer 1");
+
 		}
 	}
 	else
 	{
 		m_bWasFrozen = false;
+		engine->ClientCmd("thirdperson_platformer 1");
+
 	}
 
 	m_vecOldViewAngles = pCmd->viewangles;

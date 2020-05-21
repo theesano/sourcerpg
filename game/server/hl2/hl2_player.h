@@ -180,6 +180,8 @@ public:
 	bool IsSprinting( void ) { return m_fIsSprinting; }
 	bool CanSprint( void );
 	void EnableSprint( bool bEnable);
+	bool m_bCanRun;
+	float m_flCanRunTimeWindow;
 
 	bool CanZoom( CBaseEntity *pRequester );
 	void ToggleZoom(void);
@@ -304,7 +306,7 @@ public:
 	bool m_bIsAttack1;
 	bool m_bIsAttack2;
 	bool m_bIsAttack3;
-	float m_flAtkAnimationChangingTime;
+	
 
 protected:
 	virtual void		PreThink( void );
@@ -339,7 +341,8 @@ protected:	// Jeep: Portal_Player needs access to this variable to overload Play
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
 
 private:
-
+	float m_flAtkAnimationChangingTime;
+	float m_flTimeBetweenAttack;
 	CAI_Squad *			m_pPlayerAISquad;
 	CSimpleSimTimer		m_CommanderUpdateTimer;
 	float				m_RealTimeLastSquadCommand;

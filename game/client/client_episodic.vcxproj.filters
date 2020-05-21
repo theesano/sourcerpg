@@ -1896,6 +1896,7 @@
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\server\baseentity.h" />
+    <ClInclude Include="hud_hull.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3423,6 +3424,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="c_weapon_grapple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_hull.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

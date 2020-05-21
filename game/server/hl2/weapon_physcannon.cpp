@@ -1027,7 +1027,7 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	CHL2_Player *pOwner = (CHL2_Player *)ToBasePlayer( pPlayer );
 	if ( pOwner )
 	{
-		pOwner->EnableSprint( false );
+//		pOwner->EnableSprint( false );
 	}
 
 	// If the target is debris, convert it to non-debris
@@ -1087,7 +1087,7 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 		CHL2_Player *pOwner = (CHL2_Player *)ToBasePlayer( m_pPlayer );
 		if ( pOwner )
 		{
-			pOwner->EnableSprint( true );
+		//	pOwner->EnableSprint( true );
 		}
 
 		m_pPlayer->SetUseEntity( NULL );
@@ -2425,7 +2425,7 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 		// NVNT set the players constant force to simulate holding mass
 		HapticSetConstantForce(pOwner,clamp(m_grabController.GetLoadWeight()*0.05,1,5)*Vector(0,-1,0));
 #endif
-		pOwner->EnableSprint( false );
+	//	pOwner->EnableSprint( false );
 
 		float	loadWeight = ( 1.0f - GetLoadPercentage() );
 		float	maxSpeed = hl2_walkspeed.GetFloat() + ( ( hl2_normspeed.GetFloat() - hl2_walkspeed.GetFloat() ) * loadWeight );
@@ -2874,7 +2874,7 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	CHL2_Player *pOwner = (CHL2_Player *)ToBasePlayer( GetOwner() );
 	if( pOwner != NULL )
 	{
-		pOwner->EnableSprint( true );
+//		pOwner->EnableSprint( true );
 		pOwner->SetMaxSpeed( hl2_normspeed.GetFloat() );
 		
 		if( wasLaunched )

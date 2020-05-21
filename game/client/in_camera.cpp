@@ -22,22 +22,22 @@
 
 //-------------------------------------------------- Global Variables
 
-static ConVar cam_command("cam_command", "0", FCVAR_CHEAT | FCVAR_CHEAT);	 // tells camera to go to thirdperson
+static ConVar cam_command("cam_command", "1", FCVAR_CHEAT | FCVAR_CHEAT);	 // tells camera to go to thirdperson
 static ConVar cam_snapto("cam_snapto", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // snap to thirdperson view
 static ConVar cam_ideallag("cam_ideallag", "4.0", FCVAR_ARCHIVE | FCVAR_CHEAT, "Amount of lag used when matching offset to ideal angles in thirdperson view");
 static ConVar cam_idealdelta("cam_idealdelta", "4.0", FCVAR_ARCHIVE | FCVAR_CHEAT, "Controls the speed when matching offset to ideal angles in thirdperson view");
 ConVar cam_idealyaw("cam_idealyaw", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson yaw
 ConVar cam_idealpitch("cam_idealpitch", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirperson pitch
 ConVar cam_idealdist("cam_idealdist", "200", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
-ConVar cam_idealdistright("cam_idealdistright", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
-ConVar cam_idealdistup("cam_idealdistup", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
+ConVar cam_idealdistright("cam_idealdistright", "18", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
+ConVar cam_idealdistup("cam_idealdistup", "-30", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 static ConVar cam_collision("cam_collision", "1", FCVAR_ARCHIVE | FCVAR_CHEAT, "When in thirdperson and cam_collision is set to 1, an attempt is made to keep the camera from passing though walls.");
 static ConVar cam_showangles("cam_showangles", "1", FCVAR_CHEAT, "When in thirdperson, print viewangles/idealangles/cameraoffsets to the console.");
 static ConVar c_maxpitch("c_maxpitch", "90", FCVAR_ARCHIVE | FCVAR_CHEAT);
-static ConVar c_minpitch("c_minpitch", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);
+static ConVar c_minpitch("c_minpitch", "-18", FCVAR_ARCHIVE | FCVAR_CHEAT);
 static ConVar c_maxyaw("c_maxyaw", "180", FCVAR_ARCHIVE | FCVAR_CHEAT);
 static ConVar c_minyaw("c_minyaw", "-180", FCVAR_ARCHIVE | FCVAR_CHEAT);
-static ConVar c_maxdistance("c_maxdistance", "300", FCVAR_ARCHIVE | FCVAR_CHEAT);
+static ConVar c_maxdistance("c_maxdistance", "200", FCVAR_ARCHIVE | FCVAR_CHEAT);
 static ConVar c_mindistance("c_mindistance", "30", FCVAR_ARCHIVE | FCVAR_CHEAT);
 static ConVar c_orthowidth("c_orthowidth", "100", FCVAR_ARCHIVE | FCVAR_CHEAT);
 static ConVar c_orthoheight("c_orthoheight", "100", FCVAR_ARCHIVE | FCVAR_CHEAT);
@@ -277,6 +277,7 @@ void CInput::CAM_Think( void )
 	default:
 		break;
 	}
+
 
 	g_ThirdPersonManager.Update();
 
@@ -725,6 +726,7 @@ void CInput::CAM_ToThirdPerson(void)
 		m_fCameraInThirdPerson = true; 
 	
 		g_ThirdPersonManager.SetCameraOffsetAngles( Vector( viewangles[ YAW ], viewangles[ PITCH ], CAM_MIN_DIST ) );
+
 	}
 
 	cam_command.SetValue( 0 );
@@ -1013,4 +1015,5 @@ Init_Camera
 void CInput::Init_Camera( void )
 {
 	m_CameraIsOrthographic = false;
+	m_fCameraInThirdPerson = true;
 }

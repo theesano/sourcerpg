@@ -43,16 +43,17 @@ public:
 
 	virtual int		CapabilitiesGet(void);
 	virtual	int		WeaponMeleeAttack1Condition(float flDot, float flDist);
-
+	float m_nSkCoolDownTime;
+	float m_nSkCoolDownTime2;
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
 
 private:
 	CHandle<CSpriteTrail>	m_pGlowTrail;
 	bool m_bIsSkCoolDown;
-	float m_nSkCoolDownTime;
+	//float m_nSkCoolDownTime;
 	bool m_bIsSkCoolDown2;
-	float m_nSkCoolDownTime2;
+	//float m_nSkCoolDownTime2;
 	float m_nExecutionTime;
 	float m_nSkillHitRefireTime;
 	bool m_bWIsAttack1;
