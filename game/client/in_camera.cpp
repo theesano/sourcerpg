@@ -22,13 +22,13 @@
 
 //-------------------------------------------------- Global Variables
 
-static ConVar cam_command("cam_command", "1", FCVAR_CHEAT | FCVAR_CHEAT);	 // tells camera to go to thirdperson
+static ConVar cam_command("cam_command", "0", FCVAR_CHEAT | FCVAR_CHEAT);	 // tells camera to go to thirdperson
 static ConVar cam_snapto("cam_snapto", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // snap to thirdperson view
 static ConVar cam_ideallag("cam_ideallag", "4.0", FCVAR_ARCHIVE | FCVAR_CHEAT, "Amount of lag used when matching offset to ideal angles in thirdperson view");
 static ConVar cam_idealdelta("cam_idealdelta", "4.0", FCVAR_ARCHIVE | FCVAR_CHEAT, "Controls the speed when matching offset to ideal angles in thirdperson view");
 ConVar cam_idealyaw("cam_idealyaw", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson yaw
 ConVar cam_idealpitch("cam_idealpitch", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirperson pitch
-ConVar cam_idealdist("cam_idealdist", "200", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
+ConVar cam_idealdist("cam_idealdist", "120", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 ConVar cam_idealdistright("cam_idealdistright", "18", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 ConVar cam_idealdistup("cam_idealdistup", "-30", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 static ConVar cam_collision("cam_collision", "1", FCVAR_ARCHIVE | FCVAR_CHEAT, "When in thirdperson and cam_collision is set to 1, an attempt is made to keep the camera from passing though walls.");
@@ -72,6 +72,23 @@ void CAM_ToThirdPerson(void)
 	if ( localPlayer )
 	{
 		localPlayer->ThirdPersonSwitch( true );
+	}
+}
+
+void CAM_ForceThirdPerson(void)
+{
+	if (cl_thirdperson.GetBool() == false)
+	{
+		g_ThirdPersonManager.SetOverridingThirdPerson(true);
+	}
+
+	input->CAM_ToThirdPerson();
+
+	// Let the local player know
+	C_BasePlayer *localPlayer = C_BasePlayer::GetLocalPlayer();
+	if (localPlayer)
+	{
+		localPlayer->ThirdPersonSwitch(true);
 	}
 }
 
@@ -274,10 +291,10 @@ void CInput::CAM_Think( void )
 		break;
 		
 	case CAM_COMMAND_NONE:
+		CAM_ForceThirdPerson(); //HACK: This is a very rudamentary way of starting player in third person mode, TO DO: make it so CAM_ForceThirdPerson() is integrated into the code and first person switch can be used. 
 	default:
 		break;
 	}
-
 
 	g_ThirdPersonManager.Update();
 
@@ -726,7 +743,6 @@ void CInput::CAM_ToThirdPerson(void)
 		m_fCameraInThirdPerson = true; 
 	
 		g_ThirdPersonManager.SetCameraOffsetAngles( Vector( viewangles[ YAW ], viewangles[ PITCH ], CAM_MIN_DIST ) );
-
 	}
 
 	cam_command.SetValue( 0 );

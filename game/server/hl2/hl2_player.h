@@ -180,8 +180,16 @@ public:
 	bool IsSprinting( void ) { return m_fIsSprinting; }
 	bool CanSprint( void );
 	void EnableSprint( bool bEnable);
-	bool m_bCanRun;
+
+	//Double Tap Sprinting
+	void StartAutoRunning(void);
+	void StartRunning(void);
+	void StopRunning(void);
+
+	bool m_bIsRunning;
+	bool m_bIsAutoRunning;
 	float m_flCanRunTimeWindow;
+	float m_flAutoRunningMinTime;
 
 	bool CanZoom( CBaseEntity *pRequester );
 	void ToggleZoom(void);

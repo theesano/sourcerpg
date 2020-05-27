@@ -47,7 +47,7 @@ void ThirdPersonChange( IConVar *pConVar, const char *pOldValue, float flOldValu
 	ToggleThirdPerson( var.GetBool() );
 }
 
-ConVar cl_thirdperson( "cl_thirdperson", "1", FCVAR_NOT_CONNECTED | FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Enables/Disables third person", ThirdPersonChange  );
+ConVar cl_thirdperson( "cl_thirdperson", "0", FCVAR_NOT_CONNECTED | FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Enables/Disables third person", ThirdPersonChange  );
 
 #endif
 
@@ -77,20 +77,20 @@ void CThirdPersonManager::Update( void )
 {
 
 #ifdef CLIENT_DLL
-	if ( !sv_cheats )
-	{
-		sv_cheats = cvar->FindVar( "sv_cheats" );
-	}
+	//if ( !sv_cheats )
+	//{
+	//	sv_cheats = cvar->FindVar( "sv_cheats" );
+	//}
 
-	// If cheats have been disabled, pull us back out of third-person view.
-	if ( sv_cheats && !sv_cheats->GetBool() && GameRules() && GameRules()->AllowThirdPersonCamera() == false )
-	{
-		if ( (bool)input->CAM_IsThirdPerson() == true )
-		{
-			input->CAM_ToFirstPerson();
-		}
-		return;
-	}
+	//// If cheats have been disabled, pull us back out of third-person view.
+	//if ( sv_cheats && !sv_cheats->GetBool() && GameRules() && GameRules()->AllowThirdPersonCamera() == false )
+	//{
+	//	if ( (bool)input->CAM_IsThirdPerson() == true )
+	//	{
+	//		input->CAM_ToFirstPerson();
+	//	}
+	//	return;
+	//}
 
 	if ( IsOverridingThirdPerson() == false )
 	{
@@ -112,15 +112,16 @@ Vector CThirdPersonManager::GetDesiredCameraOffset( void )
 
 	return m_vecDesiredCameraOffset; 
 }
-
+//problem here: when boot up server for the first time  cam_up is not +25 unit ahead
 Vector CThirdPersonManager::GetFinalCameraOffset( void )
 {
 	Vector vDesired = GetDesiredCameraOffset();
 
-	if ( m_flUpFraction != 1.0f )
+	if ( m_flUpFraction != 1.0f ) 
 	{
-		vDesired.z += m_flUpOffset;
+		//vDesired.z += m_flUpOffset; //HACK: Will stop the camera from going up m_flUpOffset unit for every first run of the game
 	}
+	//DevMsg("vDesired x,y,z: %.2f, %.2f , %.2f \n", vDesired.x, vDesired.y, vDesired.z);
 
 	return vDesired;
 

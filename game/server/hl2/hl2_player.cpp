@@ -89,6 +89,7 @@ ConVar sv_autojump( "sv_autojump", "0" );
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "320" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "1000" );
+ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting, 0(default) = double-tapping; 1 = pressing sprint key
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
@@ -424,9 +425,8 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack3 = false;
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
-	m_bCanRun = false;
 	m_flCanRunTimeWindow = 0.0f;
-
+	
 }
 
 
@@ -533,6 +533,8 @@ void CHL2_Player::HandleSpeedChanges( void )
 	bool bCanSprint = CanSprint();
 	bool bIsSprinting = IsSprinting();
 	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
+	bool bMoveKeysPressed = (m_afButtonPressed & IN_FORWARD || m_afButtonPressed & IN_BACK || m_afButtonPressed & IN_MOVELEFT || m_afButtonPressed & IN_MOVERIGHT);
+	bool bMoveKeysReleased = (m_afButtonReleased & IN_FORWARD || m_afButtonReleased & IN_BACK || m_afButtonReleased & IN_MOVELEFT || m_afButtonReleased & IN_MOVERIGHT);
 
 
 	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
@@ -579,27 +581,38 @@ void CHL2_Player::HandleSpeedChanges( void )
 	else
 	{
 		bWantWalking = true;
-		//DevMsg("Is Walking No suit \n");
-		//if ((m_afButtonPressed & IN_FORWARD) || (m_afButtonPressed & IN_BACK) || (m_afButtonPressed & IN_LEFT) || (m_afButtonPressed & IN_RIGHT))
-		if (m_afButtonPressed & IN_FORWARD )
+		//SetMaxSpeed(HL2_WALK_SPEED);
+
+		if (bMoveKeysPressed)
 		{
-			SetMaxSpeed(HL2_WALK_SPEED);
-			 DevMsg("Movespeed 1 \n");
 
 		}
-		//if ((m_afButtonReleased & IN_FORWARD) || (m_afButtonReleased & IN_BACK) || (m_afButtonReleased & IN_LEFT) || (m_afButtonReleased & IN_RIGHT))
-			if (m_afButtonReleased & IN_FORWARD)
-		{
-			 DevMsg("Movespeed 1 released \n");
-			m_flCanRunTimeWindow = gpGlobals->curtime + 0.2f;
 
-		}
-			//if ((m_afButtonPressed & IN_FORWARD) || (m_afButtonPressed & IN_BACK) || (m_afButtonPressed & IN_LEFT) || (m_afButtonPressed & IN_RIGHT) && (m_flCanRunTimeWindow > gpGlobals->curtime))
-			if ((m_afButtonPressed & IN_FORWARD) && (m_flCanRunTimeWindow > gpGlobals->curtime))
+		if (sv_runmode.GetInt() == 0)
 		{
-			SetMaxSpeed(HL2_NORM_SPEED);
-			 DevMsg("Movespeed 2 \n");
+			if (bMoveKeysReleased && (!m_bIsRunning))
+			{
+				m_flCanRunTimeWindow = gpGlobals->curtime + 0.15f;
+			}
+
+			if (bMoveKeysPressed && (m_flCanRunTimeWindow > gpGlobals->curtime))
+			{
+				StartAutoRunning();
+			}
 		}
+		else if (sv_runmode.GetInt() == 1)
+		{
+			if (m_nButtons & IN_SPEED)
+				StartAutoRunning();
+			else
+				m_nButtons &= ~IN_SPEED;
+		}
+		else
+		{
+			sv_runmode.SetValue(0);
+		}
+		
+		
 	}
 	
 	if( bIsWalking != bWantWalking )
@@ -607,12 +620,12 @@ void CHL2_Player::HandleSpeedChanges( void )
 		if ( bWantWalking )
 		{
 			StartWalking();
-			// DevMsg("Is Walking \n");
+			
 		}
 		else
 		{
 			StopWalking();
-			// DevMsg("Stop Walking \n");
+			
 		}
 	}
 }  
@@ -888,7 +901,17 @@ void CHL2_Player::PreThink(void)
 #ifdef HL2_EPISODIC
 	HandleArmorReduction();
 #endif
-
+	//Handle AutoRunning
+	if (m_bIsAutoRunning)
+	{
+		if (GetStickDist() == 0.0f)
+		{
+			if (gpGlobals->curtime > m_flAutoRunningMinTime)
+				StopRunning();
+		}
+		else
+			m_flAutoRunningMinTime = gpGlobals->curtime + 0.5f;
+	}
 	
 		// If we're ducked and not in the air
 	if ( IsDucked() && GetGroundEntity() != NULL )
@@ -4384,6 +4407,30 @@ void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t va
 		return;
 
 	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
+}
+//Double Tap Sprinting Logic
+void CHL2_Player::StartAutoRunning()
+{
+	if (m_bIsRunning)
+		StopRunning();
+	else
+	{
+		StartRunning();
+		m_bIsAutoRunning = true;
+		m_flAutoRunningMinTime = gpGlobals->curtime + 0.8f;
+	}
+}
+void CHL2_Player::StartRunning(void)
+{
+	SetMaxSpeed(HL2_NORM_SPEED);
+	m_bIsRunning = true;
+}
+void CHL2_Player::StopRunning(void)
+{
+	SetMaxSpeed(HL2_WALK_SPEED);
+	m_bIsRunning = false;
+	m_bIsAutoRunning = false;
+	m_flAutoRunningMinTime = 0.0f;
 }
 
 LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);

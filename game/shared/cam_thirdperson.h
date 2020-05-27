@@ -33,7 +33,7 @@
 #define	DIST	 2
 #define CAM_HULL_OFFSET		14.0    // the size of the bounding hull used for collision checking
 
-#define CAMERA_UP_OFFSET	25.0f
+#define CAMERA_UP_OFFSET	25.0f //formerly 25.0f
 #define CAMERA_OFFSET_LERP_TIME 0.5f
 #define CAMERA_UP_OFFSET_LERP_TIME 0.25f
 
