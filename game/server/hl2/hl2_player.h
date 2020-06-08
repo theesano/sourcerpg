@@ -202,6 +202,8 @@ public:
 	void StartWalking( void );
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
+	bool m_bIsFallingA;
+
 
 	// Aiming heuristics accessors
 	virtual float		GetIdleTime( void ) const { return ( m_flIdleTime - m_flMoveTime ); }

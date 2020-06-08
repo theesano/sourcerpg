@@ -80,7 +80,7 @@ CBasePlayerAnimState::CBasePlayerAnimState()
 	m_iCurrent8WayCrouchIdleSequence = -1;
 
 	m_pOuter = NULL;
-	m_eCurrentMainSequenceActivity = ACT_IDLE; //Formerly IDLE
+	m_eCurrentMainSequenceActivity = ACT_IDLE; 
 	m_flLastAnimationStateClearTime = 0.0f;
 }
 

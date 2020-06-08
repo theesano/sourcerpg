@@ -116,7 +116,7 @@ ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
-#define PLAYER_MODEL "models/player/lily.mdl"
+#define PLAYER_MODEL "models/player/lilyproto.mdl"
 
 
 
@@ -426,6 +426,9 @@ CHL2_Player::CHL2_Player()
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
 	m_flCanRunTimeWindow = 0.0f;
+	m_bIsFallingA = false;
+
+
 	
 }
 
@@ -535,7 +538,6 @@ void CHL2_Player::HandleSpeedChanges( void )
 	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
 	bool bMoveKeysPressed = (m_afButtonPressed & IN_FORWARD || m_afButtonPressed & IN_BACK || m_afButtonPressed & IN_MOVELEFT || m_afButtonPressed & IN_MOVERIGHT);
 	bool bMoveKeysReleased = (m_afButtonReleased & IN_FORWARD || m_afButtonReleased & IN_BACK || m_afButtonReleased & IN_MOVELEFT || m_afButtonReleased & IN_MOVERIGHT);
-
 
 	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
 	//{
@@ -834,6 +836,7 @@ void CHL2_Player::PreThink(void)
 				m_flAtkAnimationChangingTime = gpGlobals->curtime;
 			}
 
+
 #endif//HL2_EPISODIC
 
 	// Riding a vehicle?
@@ -1085,6 +1088,14 @@ void CHL2_Player::PreThink(void)
 	if ( !( GetFlags() & FL_ONGROUND ) )
 	{
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
+		
+		if (GetAbsVelocity().z < -160.f)
+		{
+			m_bIsFallingA = true;
+			SetAnimation(PLAYER_JUMP);
+		}
+		else
+			m_bIsFallingA = false;
 	}
 
 	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
@@ -1562,22 +1573,6 @@ void CHL2_Player::StartWalking( void )
 {
 	SetMaxSpeed( HL2_WALK_SPEED );
 	
-	/*if (m_afButtonPressed & IN_FORWARD )
-	{
-		SetMaxSpeed(HL2_WALK_SPEED);
-		DevMsg("Movespeed 1 \n");
-	}
-	else if (m_afButtonReleased & IN_FORWARD)
-	{
-		m_flCanRunTimeWindow = gpGlobals->curtime + 0.2f;
-		if ((m_afButtonPressed & IN_FORWARD) && (m_flCanRunTimeWindow < gpGlobals->curtime))
-		{
-			SetMaxSpeed(HL2_NORM_SPEED);
-			DevMsg("Movespeed2 \n");
-		}
-		else
-			SetMaxSpeed(HL2_WALK_SPEED);
-	}*/
 	m_fIsWalking = true;
 }
 
@@ -2067,17 +2062,20 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 	}
 }
 
+int prevFlag;
+
 // Set the activity based on an event or current state
 void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 {
-
+	
 	int animDesired;
 
 	float speed;
 	speed = GetAbsVelocity().Length2D();
+	float flPlayRunToIdleAnim = 0.0f;
 
 	//Select Animation for different attacking stages.
-
+	
 
 	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
 	{
@@ -2085,15 +2083,22 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		playerAnim = PLAYER_IDLE; //Formerly IDLE
 	}
 
-	Activity idealActivity = ACT_HL2MP_RUN;
+	
 
+	Activity idealActivity = ACT_HL2MP_RUN;
 
 	if (playerAnim == PLAYER_JUMP)
 	{
 		if (HasWeapons())
 			idealActivity = ACT_HL2MP_JUMP;
 		else
+		{
 			idealActivity = ACT_JUMP;
+
+			if (m_bIsFallingA)
+				idealActivity = ACT_GLIDE;
+		}
+
 	}
 	else if (playerAnim == PLAYER_DIE)
 	{
@@ -2149,18 +2154,17 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		{
 			idealActivity = ACT_MELEE_SPEVADE;
 		}
-	}
-	
+	}	
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
 		idealActivity = ACT_MELEE_SKILL_CSLASH;
 	}
-	
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
+
 		if (!(GetFlags() & FL_ONGROUND) && (GetActivity() == ACT_HL2MP_JUMP || GetActivity() == ACT_JUMP))    // Still jumping
 		{
-			idealActivity = GetActivity();
+			idealActivity = GetActivity();			
 		}
 		else if (GetWaterLevel() > 1)
 		{
@@ -2180,7 +2184,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			}
 		}
 		else
-		{
+		{ 
 			if (GetFlags() & FL_DUCKING)
 			{
 				if (speed > 0)
@@ -2195,12 +2199,16 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					if (HasWeapons())
 						idealActivity = ACT_HL2MP_IDLE_CROUCH;
 					else
-						idealActivity = ACT_COVER_LOW;
+					{
+						//idealActivity = ACT_COVER_LOW;
+						idealActivity = ACT_LAND;
+						
+					}
 				}
 			}
 			else
 			{
-				//Problem here.
+				//MOVEMENT CODES GOES HERE
 				if (speed > 0)
 				{
 					{
@@ -2225,18 +2233,35 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								idealActivity = ACT_EVADE;
 							else
 							{
-								if (speed > HL2_WALK_SPEED + 120.0f)
+
+								if (speed > HL2_WALK_SPEED + 60.0f)
 								{
 									idealActivity = ACT_RUN;
+									SetPlaybackRate(1.3f);
+
+									/*if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
+									{
+										idealActivity = ACT_LAND;
+									}*/
+
+								}
+								else if (m_fIsWalking && GetStickDist() == 0.0f)
+								{
+									idealActivity = ACT_RUNTOIDLE;
+								}
+								else if (m_bIsRunning && GetStickDist() == 0.0f)
+								{
+									idealActivity = ACT_RUNTOIDLE;
 								}
 								else
 								{
 									idealActivity = ACT_RUN;
-									SetPlaybackRate(0.7f);
+									if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
+									{
+										idealActivity = ACT_LAND;
+									}
 								}
-							}
-								
-
+							}								
 						}
 					}
 				}
@@ -2252,15 +2277,29 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 						if (m_afButtonPressed & IN_SPEED)
 							idealActivity = ACT_EVADE;
 						else
+						{
+							if (GetAbsVelocity().z <0 && (GetFlags() & FL_ONGROUND))
+							{
+								idealActivity = ACT_LAND;
+							}
 							idealActivity = ACT_IDLE;
+
+						}
 					}
+
 				}
 			}
 		}
-
+		
 		//idealActivity = TranslateTeamActivity( idealActivity );
 	}
-	
+
+	if (!(prevFlag & FL_ONGROUND) && (GetFlags() & FL_ONGROUND)) {
+		idealActivity = ACT_LAND;
+	}
+
+	prevFlag = GetFlags();
+
 
 	if (IsInAVehicle())
 	{
@@ -2319,6 +2358,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 		return;
 	}
+
+	if (idealActivity == ACT_LAND)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+
+		// FIXME: this seems a bit wacked
+		return;
+	}
+
 	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)
 	{
 

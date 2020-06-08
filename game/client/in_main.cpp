@@ -83,7 +83,8 @@ ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "1", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
-
+ConVar thirdperson_oldturning("thirdperson_oldturning", "0");
+ConVar thirdperson_turningspeed("thirdperson_turningspeed", "4.5");
 ConVar sv_noclipduringpause( "sv_noclipduringpause", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If cheats are enabled, then you can noclip with the game paused (for doing screenshots, etc.)." );
 
 extern ConVar cl_mouselook;
@@ -692,8 +693,18 @@ AdjustYaw
 
 ==============================
 */
+
+void valid(float& a) {
+	if (a < 0.f) a += 360.f;
+	if (a >= 360.f) a -= 360.f;
+}
+
 void CInput::AdjustYaw( float speed, QAngle& viewangles )
 {
+	float flTargetViewangle;
+	float flViewAngleTurningSpeed, maxTurningSpeed = thirdperson_turningspeed.GetFloat();
+	float prevViewAngle = viewangles[YAW];
+
 	if ( !(in_strafe.state & 1) )
 	{
 		viewangles[YAW] -= speed*cl_yawspeed.GetFloat() * KeyState (&in_right);
@@ -707,18 +718,51 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		float side = KeyState(&in_moveleft) - KeyState(&in_moveright);
 		float forward = KeyState(&in_forward) - KeyState(&in_back);
 		
-
+		
 		if (side || forward )
 		{
+			if (thirdperson_oldturning.GetInt() == 0)
+			{
+
+			flTargetViewangle = RAD2DEG(atan2(side, forward));
+	
+			viewangles[YAW] = flTargetViewangle + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+
+			valid(viewangles[YAW]);
+			valid(prevViewAngle);
+
+			float dif = abs(viewangles[YAW] - prevViewAngle);
+			if (abs(viewangles[YAW] - prevViewAngle) > maxTurningSpeed) 
+			{
+				if (dif > 180.1f) 
+				{
+					if (viewangles[YAW] > prevViewAngle)  prevViewAngle += 360.f;
+					else viewangles[YAW] += 360.f;
+				}
+				float sign = viewangles[YAW] - prevViewAngle;
+				if (sign > 0) 
+				{
+					viewangles[YAW] = prevViewAngle + maxTurningSpeed;
+				}
+				else viewangles[YAW] = prevViewAngle - maxTurningSpeed;
+
+			}
 			
-			viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+			}
+			else if (thirdperson_oldturning.GetInt() == 1)
+			{
+				viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+			}
+
 		}
 		
 		if (side || forward || KeyState(&in_right) || KeyState(&in_left))
 		{
 			cam_idealyaw.SetValue( g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ] - viewangles[ YAW ] );
+			//cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - flTargetViewangle);
 		}
 		
+
 	}
 }
 

@@ -111,6 +111,7 @@ typedef enum
 	ACT_WALK_AGITATED,
 	ACT_WALK_STEALTH,
 
+	ACT_RUN_FINISHED,	//lilyss specific. play when player stop running
 	ACT_RUN_RELAXED,
 	ACT_RUN_STIMULATED,
 	ACT_RUN_AGITATED,

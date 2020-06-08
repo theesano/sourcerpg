@@ -30,7 +30,7 @@ ConVar cam_idealyaw("cam_idealyaw", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // third
 ConVar cam_idealpitch("cam_idealpitch", "0", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirperson pitch
 ConVar cam_idealdist("cam_idealdist", "120", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 ConVar cam_idealdistright("cam_idealdistright", "18", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
-ConVar cam_idealdistup("cam_idealdistup", "-30", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
+ConVar cam_idealdistup("cam_idealdistup", "-5", FCVAR_ARCHIVE | FCVAR_CHEAT);	 // thirdperson distance
 static ConVar cam_collision("cam_collision", "1", FCVAR_ARCHIVE | FCVAR_CHEAT, "When in thirdperson and cam_collision is set to 1, an attempt is made to keep the camera from passing though walls.");
 static ConVar cam_showangles("cam_showangles", "1", FCVAR_CHEAT, "When in thirdperson, print viewangles/idealangles/cameraoffsets to the console.");
 static ConVar c_maxpitch("c_maxpitch", "90", FCVAR_ARCHIVE | FCVAR_CHEAT);
