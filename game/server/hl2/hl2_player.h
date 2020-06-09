@@ -180,6 +180,11 @@ public:
 	bool IsSprinting( void ) { return m_fIsSprinting; }
 	bool CanSprint( void );
 	void EnableSprint( bool bEnable);
+	bool IsFwd = false;
+	bool IsBack = false;
+	bool IsLeft = false;
+	bool IsRight = false;
+	bool IsDoubleTap = false;
 
 	//Double Tap Sprinting
 	void StartAutoRunning(void);

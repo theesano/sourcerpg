@@ -2600,21 +2600,21 @@ bool CGameMovement::CheckJumpButton( void )
 	}
 
 	float flMul;
-	if ( g_bMovementOptimizations )
-	{
-#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
-		Assert( GetCurrentGravity() == 600.0f );
-		flMul = 160.0f;	// approx. 21 units.
-#else
-		Assert( GetCurrentGravity() == 800.0f );
-		flMul = 268.3281572999747f;
-#endif
-
-	}
-	else
-	{
+//	if ( g_bMovementOptimizations )
+//	{
+//#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
+//		Assert( GetCurrentGravity() == 600.0f );
+//		flMul = 160.0f;	// approx. 21 units.
+//#else
+//		Assert( GetCurrentGravity() == 800.0f );
+//		flMul = 268.3281572999747f;
+//#endif
+//
+//	}
+//	else
+//	{
 		flMul = sqrt(2 * GetCurrentGravity() * GAMEMOVEMENT_JUMP_HEIGHT);
-	}
+//	}
 
 	// Acclerate upward
 	// If we are ducking...
@@ -4104,7 +4104,8 @@ void CGameMovement::CheckFalling( void )
 				//
 				// If they hit the ground going this fast they may take damage (and die).
 				//
-				bAlive = MoveHelper( )->PlayerFallingDamage();
+//Disabled Falling Damage because it is not used.
+				//bAlive = MoveHelper( )->PlayerFallingDamage();
 				fvol = 1.0;
 			}
 			else if ( player->m_Local.m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED / 2 )

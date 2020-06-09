@@ -536,8 +536,9 @@ void CHL2_Player::HandleSpeedChanges( void )
 	bool bCanSprint = CanSprint();
 	bool bIsSprinting = IsSprinting();
 	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
-	bool bMoveKeysPressed = (m_afButtonPressed & IN_FORWARD || m_afButtonPressed & IN_BACK || m_afButtonPressed & IN_MOVELEFT || m_afButtonPressed & IN_MOVERIGHT);
-	bool bMoveKeysReleased = (m_afButtonReleased & IN_FORWARD || m_afButtonReleased & IN_BACK || m_afButtonReleased & IN_MOVELEFT || m_afButtonReleased & IN_MOVERIGHT);
+	bool bMoveKeysPressed = ((m_afButtonPressed & IN_FORWARD) != (m_afButtonPressed & IN_BACK) != (m_afButtonPressed & IN_MOVELEFT) != (m_afButtonPressed & IN_MOVERIGHT));
+	bool bMoveKeysReleased = ((m_afButtonReleased & IN_FORWARD) != (m_afButtonReleased & IN_BACK) != (m_afButtonReleased & IN_MOVELEFT) != (m_afButtonReleased & IN_MOVERIGHT));
+
 
 	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
 	//{
@@ -582,14 +583,55 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 	else
 	{
+
 		bWantWalking = true;
 		//SetMaxSpeed(HL2_WALK_SPEED);
+		
 
 		if (bMoveKeysPressed)
 		{
+			if (m_afButtonPressed & IN_FORWARD)
+			{
+				IsFwd = true;
+				IsBack = false;
+				IsLeft = false;
+				IsRight = false;
+			}
+			else
+				IsFwd = false;
+
+			if (m_afButtonPressed & IN_BACK)
+			{
+				IsFwd = false;
+				IsBack = true;
+				IsLeft = false;
+				IsRight = false;
+			}
+			else
+				IsBack = false;
+
+			if (m_afButtonPressed & IN_MOVELEFT)
+			{
+				IsFwd = false;
+				IsBack = false;
+				IsLeft = true;
+				IsRight = false;
+			}
+			else
+				IsLeft = false;
+
+			if (m_afButtonPressed & IN_MOVERIGHT)
+			{
+				IsFwd = false;
+				IsBack = false;
+				IsLeft = false;
+				IsRight = true;
+			}
+			else
+				IsRight = false;
 
 		}
-
+	
 		if (sv_runmode.GetInt() == 0)
 		{
 			if (bMoveKeysReleased && (!m_bIsRunning))
@@ -601,21 +643,19 @@ void CHL2_Player::HandleSpeedChanges( void )
 			{
 				StartAutoRunning();
 			}
+		
 		}
 		else if (sv_runmode.GetInt() == 1)
 		{
-			if (m_nButtons & IN_SPEED)
+			if (m_nButtons & IN_SCORE)
 				StartAutoRunning();
 			else
-				m_nButtons &= ~IN_SPEED;
+				m_nButtons &= ~IN_SCORE;
 		}
 		else
-		{
 			sv_runmode.SetValue(0);
-		}
-		
-		
 	}
+
 	
 	if( bIsWalking != bWantWalking )
 	{
@@ -912,8 +952,8 @@ void CHL2_Player::PreThink(void)
 			if (gpGlobals->curtime > m_flAutoRunningMinTime)
 				StopRunning();
 		}
-		else
-			m_flAutoRunningMinTime = gpGlobals->curtime + 0.5f;
+		/*else
+			m_flAutoRunningMinTime = gpGlobals->curtime + 0.5f;*/
 	}
 	
 		// If we're ducked and not in the air
@@ -1088,8 +1128,10 @@ void CHL2_Player::PreThink(void)
 	if ( !( GetFlags() & FL_ONGROUND ) )
 	{
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
+
 		
-		if (GetAbsVelocity().z < -160.f)
+		//DevMsg("Is Falling %2.f \n", GetAbsVelocity().z);
+		if (GetAbsVelocity().z < -450.f) //Need to change to adapt to jump height in gamemovement.
 		{
 			m_bIsFallingA = true;
 			SetAnimation(PLAYER_JUMP);
@@ -2982,18 +3024,24 @@ int	CHL2_Player::OnTakeDamage( const CTakeDamageInfo &info )
 {
 	if ( GlobalEntity_GetState( "gordon_invulnerable" ) == GLOBAL_ON )
 		return 0;
-
+//FALL DAMAGE
 	// ignore fall damage if instructed to do so by input
-	if ( ( info.GetDamageType() & DMG_FALL ) && m_flTimeIgnoreFallDamage > gpGlobals->curtime )
+	//if ( ( info.GetDamageType() & DMG_FALL ) && m_flTimeIgnoreFallDamage > gpGlobals->curtime )
+	//{
+	//	// usually, we will reset the input flag after the first impact. However there is another input that
+	//	// prevents this behavior.
+	//	if ( m_bIgnoreFallDamageResetAfterImpact )
+	//	{
+	//		m_flTimeIgnoreFallDamage = 0;
+	//	}
+	//	return 0;
+	//}
+//NO FALL DAMAGE
+	if (info.GetDamageType() & DMG_FALL)
 	{
-		// usually, we will reset the input flag after the first impact. However there is another input that
-		// prevents this behavior.
-		if ( m_bIgnoreFallDamageResetAfterImpact )
-		{
-			m_flTimeIgnoreFallDamage = 0;
-		}
 		return 0;
 	}
+
 
 	if( info.GetDamageType() & DMG_BLAST_SURFACE )
 	{

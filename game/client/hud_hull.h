@@ -28,7 +28,7 @@ protected:
 	virtual void Paint();
 
 private:
-	CPanelAnimationVar(Color, m_HullColor, "HullColor", "255 0 0 255");
+	CPanelAnimationVar(Color, m_HullColor, "HullColor", "224 255 255 255");
 	CPanelAnimationVar(int, m_iHullDisabledAlpha, "HullDisabledAlpha", "50");
 	CPanelAnimationVarAliasType(float, m_flBarInsetX, "BarInsetX", "26", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_flBarInsetY, "BarInsetY", "3", "proportional_float");
