@@ -229,6 +229,8 @@ protected:
 	void			FinishUnDuckJump( trace_t &trace );
 	void			SetDuckedEyeOffset( float duckFraction );
 	void			FixPlayerCrouchStuck( bool moveup );
+	virtual void	DoDuckJump(float flFraction);
+	virtual void	DoUnDuckJump(float flFraction);
 
 	float			SplineFraction( float value, float scale );
 

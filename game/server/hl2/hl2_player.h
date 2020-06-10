@@ -180,11 +180,7 @@ public:
 	bool IsSprinting( void ) { return m_fIsSprinting; }
 	bool CanSprint( void );
 	void EnableSprint( bool bEnable);
-	bool IsFwd = false;
-	bool IsBack = false;
-	bool IsLeft = false;
-	bool IsRight = false;
-	bool IsDoubleTap = false;
+	
 
 	//Double Tap Sprinting
 	void StartAutoRunning(void);
@@ -193,7 +189,10 @@ public:
 
 	bool m_bIsRunning;
 	bool m_bIsAutoRunning;
-	float m_flCanRunTimeWindow;
+	float m_flCanRunTimeWindowFwd;
+	float m_flCanRunTimeWindowBk;
+	float m_flCanRunTimeWindowLt;
+	float m_flCanRunTimeWindowRt;
 	float m_flAutoRunningMinTime;
 
 	bool CanZoom( CBaseEntity *pRequester );

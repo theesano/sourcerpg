@@ -425,7 +425,10 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack3 = false;
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
-	m_flCanRunTimeWindow = 0.0f;
+	m_flCanRunTimeWindowFwd = 0.0f;
+	m_flCanRunTimeWindowBk = 0.0f;
+	m_flCanRunTimeWindowLt = 0.0f;
+	m_flCanRunTimeWindowRt = 0.0f;
 	m_bIsFallingA = false;
 
 
@@ -586,71 +589,66 @@ void CHL2_Player::HandleSpeedChanges( void )
 
 		bWantWalking = true;
 		//SetMaxSpeed(HL2_WALK_SPEED);
-		
 
-		if (bMoveKeysPressed)
+		if (sv_runmode.GetInt() == 0) //wow this looks awful , but i'll fix it later
 		{
+
 			if (m_afButtonPressed & IN_FORWARD)
 			{
-				IsFwd = true;
-				IsBack = false;
-				IsLeft = false;
-				IsRight = false;
+				if (m_flCanRunTimeWindowFwd > gpGlobals->curtime)
+					StartAutoRunning();
 			}
-			else
-				IsFwd = false;
+	
+		
+			if (m_afButtonReleased & IN_FORWARD && (!m_bIsRunning))
+			{
+				m_flCanRunTimeWindowFwd = gpGlobals->curtime + 0.15f;
+			}
 
 			if (m_afButtonPressed & IN_BACK)
 			{
-				IsFwd = false;
-				IsBack = true;
-				IsLeft = false;
-				IsRight = false;
+				if (m_flCanRunTimeWindowBk > gpGlobals->curtime)
+					StartAutoRunning();
 			}
-			else
-				IsBack = false;
+
+
+			if (m_afButtonReleased & IN_BACK && (!m_bIsRunning))
+			{
+				m_flCanRunTimeWindowBk = gpGlobals->curtime + 0.15f;
+			}
 
 			if (m_afButtonPressed & IN_MOVELEFT)
 			{
-				IsFwd = false;
-				IsBack = false;
-				IsLeft = true;
-				IsRight = false;
+				if (m_flCanRunTimeWindowLt > gpGlobals->curtime)
+					StartAutoRunning();
 			}
-			else
-				IsLeft = false;
 
+
+			if (m_afButtonReleased & IN_MOVELEFT && (!m_bIsRunning))
+			{
+				m_flCanRunTimeWindowLt = gpGlobals->curtime + 0.15f;
+
+			}
+		
 			if (m_afButtonPressed & IN_MOVERIGHT)
 			{
-				IsFwd = false;
-				IsBack = false;
-				IsLeft = false;
-				IsRight = true;
-			}
-			else
-				IsRight = false;
-
-		}
-	
-		if (sv_runmode.GetInt() == 0)
-		{
-			if (bMoveKeysReleased && (!m_bIsRunning))
-			{
-				m_flCanRunTimeWindow = gpGlobals->curtime + 0.15f;
+				if (m_flCanRunTimeWindowRt > gpGlobals->curtime)
+					StartAutoRunning();
 			}
 
-			if (bMoveKeysPressed && (m_flCanRunTimeWindow > gpGlobals->curtime))
+
+			if (m_afButtonReleased & IN_MOVERIGHT && (!m_bIsRunning))
 			{
-				StartAutoRunning();
+				m_flCanRunTimeWindowRt = gpGlobals->curtime + 0.15f;
 			}
+
 		
 		}
 		else if (sv_runmode.GetInt() == 1)
 		{
-			if (m_nButtons & IN_SCORE)
+			if (m_afButtonPressed & IN_WALK)
 				StartAutoRunning();
-			else
-				m_nButtons &= ~IN_SCORE;
+
 		}
 		else
 			sv_runmode.SetValue(0);
@@ -949,13 +947,13 @@ void CHL2_Player::PreThink(void)
 	{
 		if (GetStickDist() == 0.0f)
 		{
-			if (gpGlobals->curtime > m_flAutoRunningMinTime)
-				StopRunning();
+				if (gpGlobals->curtime > m_flAutoRunningMinTime)
+					StopRunning();
 		}
 		/*else
 			m_flAutoRunningMinTime = gpGlobals->curtime + 0.5f;*/
 	}
-	
+
 		// If we're ducked and not in the air
 	if ( IsDucked() && GetGroundEntity() != NULL )
 		{
@@ -2336,7 +2334,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		//idealActivity = TranslateTeamActivity( idealActivity );
 	}
 
-	if (!(prevFlag & FL_ONGROUND) && (GetFlags() & FL_ONGROUND)) {
+	if (!(prevFlag & FL_ONGROUND) && (GetFlags() & FL_ONGROUND) && GetStickDist() == 0.0f) {
 		idealActivity = ACT_LAND;
 	}
 
@@ -4513,6 +4511,7 @@ void CHL2_Player::StartAutoRunning()
 	{
 		StartRunning();
 		m_bIsAutoRunning = true;
+		if (sv_runmode.GetInt() == 0)
 		m_flAutoRunningMinTime = gpGlobals->curtime + 0.8f;
 	}
 }
@@ -4527,6 +4526,7 @@ void CHL2_Player::StopRunning(void)
 	m_bIsRunning = false;
 	m_bIsAutoRunning = false;
 	m_flAutoRunningMinTime = 0.0f;
+	
 }
 
 LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
