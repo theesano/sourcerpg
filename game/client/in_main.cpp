@@ -704,6 +704,9 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 	float flTargetViewangle;
 	float flViewAngleTurningSpeed, maxTurningSpeed = thirdperson_turningspeed.GetFloat();
 	float prevViewAngle = viewangles[YAW];
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	float PlayerVel = pPlayer->GetAbsVelocity().Length2D();
+	
 
 	if ( !(in_strafe.state & 1) )
 	{
@@ -723,35 +726,43 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		{
 			if (thirdperson_oldturning.GetInt() == 0)
 			{
-
-			flTargetViewangle = RAD2DEG(atan2(side, forward));
+				if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
+					return;
+				else
+				{
+				flTargetViewangle = RAD2DEG(atan2(side, forward));
 	
-			viewangles[YAW] = flTargetViewangle + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+				viewangles[YAW] = flTargetViewangle + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
 
-			valid(viewangles[YAW]);
-			valid(prevViewAngle);
+				valid(viewangles[YAW]);
+				valid(prevViewAngle);
 
-			float dif = abs(viewangles[YAW] - prevViewAngle);
-			if (abs(viewangles[YAW] - prevViewAngle) > maxTurningSpeed) 
-			{
-				if (dif > 180.1f) 
+				float dif = abs(viewangles[YAW] - prevViewAngle);
+				if (abs(viewangles[YAW] - prevViewAngle) > maxTurningSpeed)
 				{
-					if (viewangles[YAW] > prevViewAngle)  prevViewAngle += 360.f;
-					else viewangles[YAW] += 360.f;
+					if (dif > 180.1f)
+					{
+						if (viewangles[YAW] > prevViewAngle)  prevViewAngle += 360.f;
+						else viewangles[YAW] += 360.f;
+					}
+					float sign = viewangles[YAW] - prevViewAngle;
+					if (sign > 0)
+					{
+						viewangles[YAW] = prevViewAngle + maxTurningSpeed;
+					}
+					else viewangles[YAW] = prevViewAngle - maxTurningSpeed;
 				}
-				float sign = viewangles[YAW] - prevViewAngle;
-				if (sign > 0) 
-				{
-					viewangles[YAW] = prevViewAngle + maxTurningSpeed;
-				}
-				else viewangles[YAW] = prevViewAngle - maxTurningSpeed;
-
 			}
 			
 			}
 			else if (thirdperson_oldturning.GetInt() == 1)
 			{
-				viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+				if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
+					return;
+				else
+				{
+					viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+				}
 			}
 
 		}

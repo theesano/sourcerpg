@@ -2181,6 +2181,7 @@ void CGameMovement::FullWalkMove( )
 	}
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2449,10 +2450,9 @@ void CGameMovement::Dash(void)
 		mv->m_nOldButtons &= ~IN_RIGHT;
 		mv->m_nOldButtons &= ~IN_BACK;
 		
-		pPlayer->AddFlag(FL_GODMODE);
 #ifndef CLIENT_DLL
 		//UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_uDash);
-		
+
 		//int	nAttachment = LookupAttachment("fuse");
 		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", mv->GetAbsOrigin(), false);
 
@@ -2502,10 +2502,7 @@ void CGameMovement::Dash(void)
 		}
 
 	}
-	else
-	{
-		pPlayer->RemoveFlag(FL_GODMODE);
-	}
+	
 	
 }
 //-----------------------------------------------------------------------------

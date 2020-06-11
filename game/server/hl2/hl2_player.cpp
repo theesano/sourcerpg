@@ -707,39 +707,15 @@ void CHL2_Player::ThrowGrenade(void)
 {
 	if (WantThrow)
 	{
-		//CBaseViewModel *vm = GetViewModel(0);
-		//CBaseViewModel *vm2 = GetViewModel(1);
 
-		////2nd viewmodel creation
-		//if (!vm2)
-		//{
-		//	CreateViewModel(1);
-		//	vm2 = GetViewModel(1);
-		//}
-		//Would probably be removed 
-		//HOLSTER SEQUENCING
-		//int sequence1 = vm->SelectWeightedSequence(ACT_VM_HOLSTER);
-		//if ((timeholster == NULL) && (sequence1 >= 0))
 		if (timeholster == NULL)
-		{
-			//vm->SendViewModelMatchingSequence(sequence1);
-			//timeholster = (gpGlobals->curtime + vm->SequenceDuration(sequence1) + 0.5f);
 			timeholster = gpGlobals->curtime;
-		}
 
 		//THROW SEQUENCING
 		if ((timeholster < gpGlobals->curtime) && (timeholster != NULL))
 		{
-			//vm->AddEffects(EF_NODRAW);
-			//vm2->SetWeaponModel("models/weapons/v_grenade.mdl", NULL);
-
-
-			//int sequence2 = vm2->SelectWeightedSequence(ACT_VM_THROW);
-			//if ((timethrow == NULL) && (sequence2 >= 0))
 			if (timethrow == NULL)
 			{
-				//vm2->SendViewModelMatchingSequence(sequence2);
-				//timethrow = (gpGlobals->curtime + vm2->SequenceDuration(sequence2));
 				timethrow = gpGlobals->curtime;
 				CreateGrenade();
 			}
@@ -747,17 +723,8 @@ void CHL2_Player::ThrowGrenade(void)
 
 		if ((timethrow < gpGlobals->curtime) && (timethrow != NULL))
 		{
-			//vm2->SetWeaponModel(NULL, NULL);
-			//UTIL_RemoveImmediate(vm2);
-			//vm->RemoveEffects(EF_NODRAW);
-			//int sequence3 = vm->SelectWeightedSequence(ACT_VM_DRAW);
-			//if ((timedeploy == NULL) && (sequence3 >= 0))
 			if (timedeploy == NULL)
-			{
-				//vm->SendViewModelMatchingSequence(sequence3);
-				//timedeploy = (gpGlobals->curtime + vm->SequenceDuration(sequence3));
 				timedeploy = (gpGlobals->curtime);
-			}
 		}
 
 		if ((timedeploy < gpGlobals->curtime) && (timedeploy != NULL))
@@ -893,6 +860,14 @@ void CHL2_Player::PreThink(void)
 		WaterMove();	
 		return;
 	}
+
+	
+	//When leaping, stop player from pressing any other buttons than IN_FORWARD
+	if (m_bIsRunning && !(GetFlags() & FL_ONGROUND))
+	{
+		DevMsg("Block player movement keys \n");
+	}
+	
 
 	// This is an experiment of mine- autojumping! 
 	// only affects you if sv_autojump is nonzero.
