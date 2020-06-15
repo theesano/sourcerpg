@@ -90,6 +90,8 @@ ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "320" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "1000" );
 ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting, 0(default) = double-tapping; 1 = pressing sprint key
+ConVar sk_evadedistance("sk_evadedistance", "512"); // Set the dash distance.
+ConVar sk_evadestyle("sk_evadestyle", "0");
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
@@ -249,7 +251,7 @@ void CC_ToggleZoom( void )
 
 static ConCommand toggle_zoom("toggle_zoom", CC_ToggleZoom, "Toggles zoom display" );
 
-// ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_CHEAT ); // Links us to the client's version
+ //ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_CHEAT ); // Links us to the client's version
 ConVar xc_crouch_range( "xc_crouch_range", "0.85", FCVAR_ARCHIVE, "Percentarge [1..0] of joystick range to allow ducking within" );	// Only 1/2 of the range is used
 ConVar xc_use_crouch_limiter( "xc_use_crouch_limiter", "0", FCVAR_ARCHIVE, "Use the crouch limiting logic on the controller" );
 
@@ -417,8 +419,6 @@ CHL2_Player::CHL2_Player()
 	m_flArmorReductionTime = 0.0f;
 	m_iArmorReductionFrom = 0;
 	// Sprint handling
-	m_flDelayedUseTime = 0.0f;
-	m_bDelayedUse = false;
 
 	m_bIsAttack1 = true;
 	m_bIsAttack2 = false;
@@ -430,7 +430,9 @@ CHL2_Player::CHL2_Player()
 	m_flCanRunTimeWindowLt = 0.0f;
 	m_flCanRunTimeWindowRt = 0.0f;
 	m_bIsFallingA = false;
-
+	m_bIsEvading = false;
+	m_flDelayedUseTime = 0.0f;
+	m_bDelayedUse = false;
 
 	
 }
@@ -520,16 +522,6 @@ void CHL2_Player::RemoveSuit( void )
 	m_HL2Local.m_bDisplayReticle = false;
 }
 
-void CHL2_Player::DelayedUseTime(void)
-{
-	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
-	{
-		m_bDelayedUse = false;
-		StopSprinting();
-		m_nButtons &= ~IN_SPEED;
-	}
-
-}
 
 
 void CHL2_Player::HandleSpeedChanges( void )
@@ -576,6 +568,10 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 */
 
+	if (m_afButtonPressed & IN_SPEED && !m_bDelayedUse)
+	{
+		Evade();
+	}
 	bool bIsWalking = IsWalking();
 	// have suit, pressing button, not sprinting or ducking
 	bool bWantWalking;
@@ -670,6 +666,93 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 }  
 
+//Delay condition for x
+void CHL2_Player::Evade_DelayedUseTime(void)
+{
+	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
+	{
+		m_bDelayedUse = false;
+	}
+
+}
+
+Vector TargetEvadePoint;
+//-----------------------------------------------------------------------------
+// Purpose: // PROTOTYPE:Moving X units in 6 directions , teleport style.
+//-----------------------------------------------------------------------------
+void CHL2_Player::Evade(void)
+{
+	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
+	if (!pPlayer)
+		return; //Always validate a pointer
+	
+	//Initializing Vector
+	Vector fwd;
+	//Zero out z axis
+	AngleVectors(pPlayer->GetAbsAngles(), &fwd);
+	fwd.z = 0;
+	VectorNormalize(fwd);
+
+	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
+	//Vector EvadeEndPoint_Smoohting = GetAbsOrigin() + fwd * 3.2;
+
+	if (sk_evadestyle.GetInt() == 0)
+	{
+		if (GetAbsVelocity().Length2D() > 0)
+		pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+	}
+	else if (sk_evadestyle.GetInt() == 1)
+	{//pPlayer->SetAbsOrigin(EvadeEndPoint);
+		TargetEvadePoint = EvadeEndPoint;
+		m_bIsEvading = true;
+	}
+	else
+		sk_evadestyle.SetValue(0);
+
+	if (GetAbsVelocity().Length2D() > 1000)// clamp speed
+	{
+		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	}
+
+}
+void CHL2_Player::EvadeHandler(void)
+{
+	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
+	if (!pPlayer)
+		return; //Always validate a pointer
+
+	DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
+	
+	//Initializing Vector
+	Vector fwd;
+	//Zero out z axis
+	AngleVectors(pPlayer->GetAbsAngles(), &fwd);
+	fwd.z = 0;
+	VectorNormalize(fwd);
+
+	/*if (GetAbsVelocity().z > 100 && GetAbsVelocity().Length2D() > 600)
+	{
+		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	}*/
+
+	if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
+	{
+		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	}
+	
+	//Vector EvadeEndPoint_Speed = GetAbsOrigin() + fwd * 48;
+
+	//if (m_bIsEvading &&(GetAbsOrigin() != TargetEvadePoint))
+	//{
+	//	SetAbsOrigin(EvadeEndPoint_Speed);
+	//}
+
+	//if (GetAbsOrigin() == TargetEvadePoint)
+	//{
+	//	m_bIsEvading = false;
+	//}
+
+}
 //-----------------------------------------------------------------------------
 // This happens when we powerdown from the mega physcannon to the regular one
 //-----------------------------------------------------------------------------
@@ -810,6 +893,14 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
+	EvadeHandler();
+	//For use to add delay to Evade() usage
+	//On m_bDelayedUse = 1 run DelayedUseTime();
+	if (m_bDelayedUse)
+	{
+		Evade_DelayedUseTime();
+	}
+
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )
 	{
@@ -862,10 +953,10 @@ void CHL2_Player::PreThink(void)
 	}
 
 	
-	//When leaping, stop player from pressing any other buttons than IN_FORWARD
+	//When leaping, clamp player's movement speed from going wild/
 	if (m_bIsRunning && !(GetFlags() & FL_ONGROUND))
 	{
-		DevMsg("Block player movement keys \n");
+
 	}
 	
 
@@ -1237,39 +1328,6 @@ void CHL2_Player::HandleAdmireGlovesAnimation( void )
 
 #define HL2PLAYER_RELOADGAME_ATTACK_DELAY 1.0f
 
-
-////Dodge function: Player can only reach sprinting speed in 2 second. 
-//void CHL2_Player::Dodge(void)
-//{
-//
-//
-//	if (m_nButtons & IN_SPEED)
-//	{
-//	
-//
-//		if (gpGlobals->curtime + 1.0f)
-//		{
-//
-//			StopSprinting();
-//
-//
-//
-//			CPASAttenuationFilter filter(this, "ItemBattery.Touch");
-//			EmitSound(filter, entindex(), "ItemBattery.Touch");
-//
-//			CSingleUserRecipientFilter user(this);
-//			user.MakeReliable();
-//
-//			UserMessageBegin(user, "ItemPickup");
-//			WRITE_STRING("item_battery");
-//			MessageEnd();
-//
-//		
-//		}
-//
-//	}
-//	
-//}
 
 void CHL2_Player::Activate( void )
 {
@@ -2079,6 +2137,7 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 
 int prevFlag;
 
+
 // Set the activity based on an event or current state
 void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 {
@@ -2089,6 +2148,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	speed = GetAbsVelocity().Length2D();
 	float flPlayRunToIdleAnim = 0.0f;
 
+
+
 	//Select Animation for different attacking stages.
 	
 
@@ -2098,10 +2159,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		playerAnim = PLAYER_IDLE; //Formerly IDLE
 	}
 
-	
 
 	Activity idealActivity = ACT_HL2MP_RUN;
-
 	if (playerAnim == PLAYER_JUMP)
 	{
 		if (HasWeapons())
@@ -2332,53 +2391,34 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		return;
 	}
 
+
 	if (idealActivity == ACT_MELEE_ATTACK2)
 	{
-
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
-		// FIXME: this seems a bit wacked
-		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
-
 		return;
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK3)
 	{
-
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
-		// FIXME: this seems a bit wacked
-		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
-
 		return;
 	}
+
 	if (idealActivity == ACT_MELEE_SKILL_CSLASH)
 	{
-
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
-		// FIXME: this seems a bit wacked
-		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
-
 		return;
 	}
+
 	if (idealActivity == ACT_MELEE_SPEVADE)
 	{
-
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
-		// FIXME: this seems a bit wacked
-		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
-
 		return;
 	}
 
 	if (idealActivity == ACT_LAND)
 	{
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
-		// FIXME: this seems a bit wacked
 		return;
 	}
 

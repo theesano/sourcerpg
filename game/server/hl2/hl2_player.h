@@ -111,11 +111,6 @@ public:
 	virtual void 		ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set );
 	void				SetAnimation(PLAYER_ANIM playerAnim);
 	
-	bool			m_bDelayedUse;
-	float			m_flDelayedUseTime;
-	void			DelayedUseTime(void);
-
-	//virtual void				Dodge(void);
 	void				DrawDebugGeometryOverlays(void);
 
 	virtual Vector		EyeDirection2D( void );
@@ -206,7 +201,18 @@ public:
 	void StartWalking( void );
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
+
+	//Falling
 	bool m_bIsFallingA;
+
+	//Evade
+	void  Evade(void);
+	void  Evade_DelayedUseTime(void);
+	void	EvadeHandler(void);
+	bool	m_bDelayedUse;
+	bool	m_bIsEvading;
+	float	m_flDelayedUseTime;
+
 
 
 	// Aiming heuristics accessors

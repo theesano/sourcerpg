@@ -89,8 +89,6 @@ protected:
 
 	// Set ground data, etc.
 	void			FinishMove( void );
-	void			Dash(void);
-	void			DelayedUseTime(void);
 	
 	virtual float	CalcRoll( const QAngle &angles, const Vector &velocity, float rollangle, float rollspeed );
 

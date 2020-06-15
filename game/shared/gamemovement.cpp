@@ -56,8 +56,6 @@ ConVar player_limit_jump_speed( "player_limit_jump_speed", "1", FCVAR_REPLICATED
 // convar which is ONLY set by the X360 controller menu to tell us which way to bind the
 // duck controls. Its value is meaningless anytime we don't have the options window open.
 ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCHIVE );// 0 = HOLD to duck, 1 = Duck is a toggle
-ConVar debug_dashcoordiff("debug_dashcoordiff", "0");//Print out the value of the differences between the end of the raytraced and the current player's position.
-ConVar sk_dashdistance("sk_dashdistance", "64"); // Set the dash distance.
 
 #ifdef STAGING_ONLY
 #ifdef CLIENT_DLL
@@ -630,9 +628,6 @@ CGameMovement::CGameMovement( void )
 	m_nOnLadder			= 0;
 
 	mv					= NULL;
-
-	m_flDelayedUseTime = 0.0f;
-	m_bDelayedUse = false;
 
 	memset( m_flStuckCheckTime, 0, sizeof(m_flStuckCheckTime) );
 }
@@ -2030,32 +2025,15 @@ void CGameMovement::WalkMove( void )
 
 	StayOnGround();
 }
-//Delay condition for x
-void CGameMovement::DelayedUseTime(void)
-{
-	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
-	{
-		m_bDelayedUse = false;
-	}
 
-}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CGameMovement::FullWalkMove( )
 {
-	
 	//CheckJumpButton();
 	//PROTOTYPING: Dash function. 
-			Dash();
-
-	//For use to add delay to Dash() usage
-	//On m_bDelayedUse = 1 run DelayedUseTime();
-	if (m_bDelayedUse)
-	{
-		DelayedUseTime();
-	}
-
+	
 	if ( !CheckWater() ) 
 	{
 		StartGravity();
@@ -2124,12 +2102,6 @@ void CGameMovement::FullWalkMove( )
 			mv->m_nOldButtons &= ~IN_JUMP;
 		}
 
-		//SUPERDUPERHACK: completely standing still on pressing the button
-		if (mv->m_nButtons & IN_SPEED)
-		{
-			mv->m_vecVelocity.x = 0;
-			mv->m_vecVelocity.y = 0;
-		}
 
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
@@ -2380,131 +2352,7 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: // PROTOTYPE:Moving X units in 6 directions , teleport style.
-//-----------------------------------------------------------------------------
-void CGameMovement::Dash(void)
-{
-	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
-	if (!pPlayer)
-		return; //Always validate a pointer
 
-	// Create Vector for direction
-	Vector vecDir2;
-	// Take the Player's EyeAngles and turn it into a direction
-	AngleVectors(pPlayer->GetAbsAngles(), &vecDir2);
-	// Get the Start/End
-	Vector vecAbsStart = pPlayer->EyePosition();
-
-	//Initializing Vector
-	Vector fwd;
-	Vector AngleOrigin = mv->GetAbsOrigin();
-	Vector TraceEnd = AngleOrigin + (vecDir2 *MAX_TRACE_LENGTH);
-	//Zero out z axis
-	AngleVectors(pPlayer->GetAbsAngles(), &fwd);
-	fwd.z = 0;
-	VectorNormalize(fwd);
-
-	trace_t tr; // Create our trace_t class to hold the end result
-	// Do the TraceLine, and write our results to our trace_t class, tr.
-	//UTIL_TraceLine(vecAbsStart, vecAbsEnd, MASK_ALL, pPlayer, COLLISION_GROUP_NONE, &tr);
-	TracePlayerBBox(mv->GetAbsOrigin(), TraceEnd,PlayerSolidMask() , COLLISION_GROUP_PLAYER_MOVEMENT, tr );
-
-	float m_nDiffOrgTraceEndx = abs( mv->m_vecAbsOrigin.x - tr.endpos.x);
-	float m_nDiffOrgTraceEndy = abs(mv->m_vecAbsOrigin.y - tr.endpos.y);
-	VectorNormalize(TraceEnd);
-	TraceEnd.z = 0;
-	float m_uDash = sk_dashdistance.GetFloat();
-	//&& player->GetGroundEntity() == NULL
-	if (m_nDiffOrgTraceEndx < m_uDash && m_nDiffOrgTraceEndy <m_uDash)
-	{
-			//m_uDash = sk_dashdistance.GetFloat()- (m_nDiffOrgTraceEndx + m_nDiffOrgTraceEndy);
-
-		m_uDash = 0;
-		//return;
-
-		if (tr.m_pEnt)
-		{
-			if (tr.m_pEnt->IsNPC())
-			{
-				m_uDash = sk_dashdistance.GetFloat();
-			}
-		}
-	}	
-	else
-	{
-		m_uDash = sk_dashdistance.GetInt();
-
-	}
-	Vector EvadeEndPoint = AngleOrigin + fwd*m_uDash;
-	if (mv->m_nButtons & IN_SPEED && !m_bDelayedUse)
-	{
-		mv->SetAbsOrigin(EvadeEndPoint);
-		//pPlayer->ApplyAbsVelocityImpulse(fwd*350);
-		
-		float flTimeRemoveTrace = gpGlobals->curtime + 0.15f;
-		
-		mv->m_vecVelocity.x = 0;
-		mv->m_vecVelocity.y = 0;
-		mv->m_nOldButtons &= ~IN_LEFT;
-		mv->m_nOldButtons &= ~IN_RIGHT;
-		mv->m_nOldButtons &= ~IN_BACK;
-		
-#ifndef CLIENT_DLL
-		//UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_uDash);
-
-		//int	nAttachment = LookupAttachment("fuse");
-		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", mv->GetAbsOrigin(), false);
-
-		if (m_pGlowTrail != NULL)
-		{
-			m_pGlowTrail->FollowEntity(pPlayer);
-			m_pGlowTrail->SetAttachment(pPlayer, NULL);
-			m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
-			m_pGlowTrail->SetStartWidth(8.0f);
-			m_pGlowTrail->SetEndWidth(8.0f);
-			m_pGlowTrail->SetLifeTime(0.15f);
-		}
-		
-		UTIL_GetLocalPlayer()->SetAnimation(PLAYER_EVADE);
-		//UTIL_GetLocalPlayer()->ResetSequence(ACT_EVADE);
-#endif
-		m_flDelayedUseTime = gpGlobals->curtime + 0.36f;
-		m_bDelayedUse = true;
-		float fl_KillTraceTime = gpGlobals->curtime + 0.3f;
-
-#ifndef CLIENT_DLL
-
-		if (flTimeRemoveTrace < fl_KillTraceTime)
-		{
-			UTIL_Remove(m_pGlowTrail);
-		}
-#endif
-
-
-		MoveHelper()->PlayerSetAnimation(PLAYER_IDLE);
-		//Display the distance between the player and the object they're looking at 
-		if (debug_dashcoordiff.GetInt() == 1)
-		{
-			DevMsg("Diff X: %.2f \n", m_nDiffOrgTraceEndx);
-			DevMsg("Diff Y: %.2f \n", m_nDiffOrgTraceEndy);
-
-			if (tr.m_pEnt)
-			{
-				if (tr.m_pEnt->IsWorld())
-				{
-					DevMsg("Trace X: %.2f \n", tr.endpos.x);
-					DevMsg("Trace Y: %.2f \n", tr.endpos.y);
-
-				}
-			}
-
-		}
-
-	}
-	
-	
-}
 //-----------------------------------------------------------------------------
 // Checks to see if we should actually jump 
 //-----------------------------------------------------------------------------

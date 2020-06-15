@@ -107,9 +107,9 @@ bool IsInCommentaryMode( void );
 bool IsListeningToCommentary( void );
 
 #if !defined( CSTRIKE_DLL )
-ConVar cl_sidespeed( "cl_sidespeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar cl_sidespeed( "cl_sidespeed", "400", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_forwardspeed( "cl_forwardspeed", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_backspeed( "cl_backspeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
 #endif // CSTRIKE_DLL
 
@@ -2892,15 +2892,7 @@ void CBasePlayer::Duck( )
 	}
 }
 
-void CBasePlayer::Dash()
-{
-	if (m_nButtons & IN_SPEED)
-	{
-		DevMsg("Dash () Working, Playing Evade Animation \n");
-		SetAnimation(PLAYER_EVADE);
-		m_bIsDash = true; 
-	}
-}
+
 //
 // ID's player as such.
 //
@@ -3881,9 +3873,6 @@ void CBasePlayer::PreThink(void)
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
 	}
 
-	//Play Evade Animation lol
-	if (m_nButtons & IN_SPEED)
-		Dash();
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
 
@@ -4580,7 +4569,6 @@ void CBasePlayer::PostThink()
 			// If he's in a vehicle, sit down
 			if (!GetAbsVelocity().x && !GetAbsVelocity().y)
 			{
-				Dash();
 				SetAnimation(PLAYER_IDLE);
 				//BROKEN :Supposed to play the sequence when standing still and pressing the button
 			}
@@ -4592,20 +4580,7 @@ void CBasePlayer::PostThink()
 			}
 			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
 			{
-				/*	int	nAttachment = LookupAttachment("chest");
-					m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
-
-					if (m_pGlowTrail != NULL)
-					{
-						m_pGlowTrail->FollowEntity(this);
-						m_pGlowTrail->SetAttachment(this,NULL);
-						m_pGlowTrail->SetTransparency(kRenderTransAdd, 128, 0, 128, 255, kRenderFxNone);
-						m_pGlowTrail->SetStartWidth(12.0f);
-						m_pGlowTrail->SetEndWidth(12.0f);
-						m_pGlowTrail->SetLifeTime(0.2f);
-
-						return;
-					}*/
+				
 			}
 			else if (GetWaterLevel() > 1)
 				SetAnimation(PLAYER_WALK);

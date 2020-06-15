@@ -299,7 +299,6 @@ public:
 
 	virtual void			Jump( void );
 	virtual void			Duck( void );
-	virtual void			Dash(void);
 
 
 	const char				*GetTracerType( void );
