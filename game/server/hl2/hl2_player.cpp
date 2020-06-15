@@ -721,7 +721,7 @@ void CHL2_Player::EvadeHandler(void)
 	if (!pPlayer)
 		return; //Always validate a pointer
 
-	DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
+	//DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
 	
 	//Initializing Vector
 	Vector fwd;
