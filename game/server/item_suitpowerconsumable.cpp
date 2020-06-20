@@ -34,7 +34,8 @@ public:
 		PrecacheScriptSound("ItemBattery.Touch");
 
 	}
-	bool MyTouch(CBasePlayer *pPlayer)
+
+	bool MyTouch(CBasePlayer *pPlayer) //Gives player Stamina
 	{
 		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>(pPlayer);
 		return (pHL2Player && pHL2Player->ApplySuitPower());

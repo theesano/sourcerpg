@@ -88,10 +88,11 @@ ConVar sv_autojump( "sv_autojump", "0" );
 
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "320" );
-ConVar hl2_sprintspeed( "hl2_sprintspeed", "1000" );
+ConVar hl2_sprintspeed( "hl2_sprintspeed", "400" );
 ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting, 0(default) = double-tapping; 1 = pressing sprint key
 ConVar sk_evadedistance("sk_evadedistance", "512"); // Set the dash distance.
 ConVar sk_evadestyle("sk_evadestyle", "0");
+ConVar sk_evadestaminacost("sk_evadestaminacost", "33.3");
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
@@ -447,7 +448,7 @@ CHL2_Player::CHL2_Player()
 #ifdef HL2MP
 	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 25.0f );				// 100 units in 4 seconds
 #else
-	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 50.0f );				// 100 units in 8 seconds
+	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 33.3f );				// 100 units in 8 seconds
 #endif
 
 #ifdef HL2_EPISODIC
@@ -549,24 +550,9 @@ void CHL2_Player::HandleSpeedChanges( void )
 	//	{
 	//			StopSprinting();
 	//	}
-
 	//		 //Reset key, so it will be activated post whatever is suppressing it.
 	//		m_nButtons &= ~IN_SPEED;
 	//}
-	//if (bIsSprinting && !m_bDelayedUse)
-	//{	
-	//	
-	//	//StopSprinting();
-	//	m_flDelayedUseTime = gpGlobals->curtime + 0.8f;
-	//	m_bDelayedUse = true;
-	//
-	//}
-
-	/*if (m_bDelayedUse)
-	{
-		DelayedUseTime();
-	}
-*/
 
 	if (m_afButtonPressed & IN_SPEED && !m_bDelayedUse)
 	{
@@ -695,19 +681,26 @@ void CHL2_Player::Evade(void)
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
 	//Vector EvadeEndPoint_Smoohting = GetAbsOrigin() + fwd * 3.2;
-
-	if (sk_evadestyle.GetInt() == 0)
+	if (m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
 	{
-		if (GetAbsVelocity().Length2D() > 0)
-		pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
-	}
-	else if (sk_evadestyle.GetInt() == 1)
-	{//pPlayer->SetAbsOrigin(EvadeEndPoint);
-		TargetEvadePoint = EvadeEndPoint;
-		m_bIsEvading = true;
+		if (sk_evadestyle.GetInt() == 0)
+		{
+			if (GetAbsVelocity().Length2D() > 0)
+				pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+			m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
+		}
+		else if (sk_evadestyle.GetInt() == 1)
+		{//pPlayer->SetAbsOrigin(EvadeEndPoint);
+			TargetEvadePoint = EvadeEndPoint;
+			m_bIsEvading = true;
+		}
+		else
+			sk_evadestyle.SetValue(0);
 	}
 	else
-		sk_evadestyle.SetValue(0);
+	{
+		Warning("Insufficient Stamina \n");
+	}
 
 	if (GetAbsVelocity().Length2D() > 1000)// clamp speed
 	{
@@ -721,8 +714,8 @@ void CHL2_Player::EvadeHandler(void)
 	if (!pPlayer)
 		return; //Always validate a pointer
 
-	//DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
-	
+	DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
+
 	//Initializing Vector
 	Vector fwd;
 	//Zero out z axis
@@ -730,27 +723,20 @@ void CHL2_Player::EvadeHandler(void)
 	fwd.z = 0;
 	VectorNormalize(fwd);
 
-	/*if (GetAbsVelocity().z > 100 && GetAbsVelocity().Length2D() > 600)
+	trace_t trace;
+	Vector vecEndPos = GetAbsOrigin() +(fwd* 64); // 64 is a good enough distance to check if player is running up slopes or not.
+
+	//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
+	UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX,MASK_PLAYERSOLID,this,COLLISION_GROUP_PLAYER_MOVEMENT,&trace);
+	if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
 	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
-	}*/
-
+	}
+	//Prevent player from spamming Evade button when falling to achieve big velocity gain.
 	if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
 	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
 	}
-	
-	//Vector EvadeEndPoint_Speed = GetAbsOrigin() + fwd * 48;
-
-	//if (m_bIsEvading &&(GetAbsOrigin() != TargetEvadePoint))
-	//{
-	//	SetAbsOrigin(EvadeEndPoint_Speed);
-	//}
-
-	//if (GetAbsOrigin() == TargetEvadePoint)
-	//{
-	//	m_bIsEvading = false;
-	//}
 
 }
 //-----------------------------------------------------------------------------
@@ -2288,7 +2274,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					{
 						if (HasWeapons())
 						{
-							if (m_afButtonPressed & IN_SPEED)
+							if (m_afButtonPressed & IN_SPEED && m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
 								idealActivity = ACT_EVADE;
 							else
 							{
@@ -2301,10 +2287,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
 							}
 						}
-						else
+						else //NO WEAPON STATE
 						{
-							if (m_afButtonPressed & IN_SPEED)
-								idealActivity = ACT_EVADE;
+							if (m_afButtonPressed & IN_SPEED && m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
+									idealActivity = ACT_EVADE;
 							else
 							{
 
@@ -2312,12 +2298,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								{
 									idealActivity = ACT_RUN;
 									SetPlaybackRate(1.3f);
-
-									/*if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
-									{
-										idealActivity = ACT_LAND;
-									}*/
-
 								}
 								else if (m_fIsWalking && GetStickDist() == 0.0f)
 								{
@@ -2342,23 +2322,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				else
 				{
 					if (HasWeapons())
-						if (m_afButtonPressed & IN_SPEED)
-							idealActivity = ACT_EVADE;
-						else
 						idealActivity = ACT_HL2MP_IDLE;
 					else
-					{
-						if (m_afButtonPressed & IN_SPEED)
-							idealActivity = ACT_EVADE;
-						else
-						{
+					{		
 							if (GetAbsVelocity().z <0 && (GetFlags() & FL_ONGROUND))
 							{
 								idealActivity = ACT_LAND;
 							}
 							idealActivity = ACT_IDLE;
 
-						}
 					}
 
 				}
