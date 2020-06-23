@@ -652,7 +652,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 }  
 
-//Delay condition for x
+//Delay condition for evade
 void CHL2_Player::Evade_DelayedUseTime(void)
 {
 	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
@@ -688,6 +688,7 @@ void CHL2_Player::Evade(void)
 			if (GetAbsVelocity().Length2D() > 0)
 				pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
 			m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
+			SetAnimation(PLAYER_EVADE);
 		}
 		else if (sk_evadestyle.GetInt() == 1)
 		{//pPlayer->SetAbsOrigin(EvadeEndPoint);
@@ -2274,10 +2275,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					{
 						if (HasWeapons())
 						{
-							if (m_afButtonPressed & IN_SPEED && m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
-								idealActivity = ACT_EVADE;
-							else
-							{
 								if (speed > HL2_WALK_SPEED + 20.0f)
 								{
 									idealActivity = ACT_HL2MP_RUN;
@@ -2285,15 +2282,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 								}
 								else
 									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
-							}
+							
 						}
 						else //NO WEAPON STATE
 						{
-							if (m_afButtonPressed & IN_SPEED && m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
-									idealActivity = ACT_EVADE;
-							else
-							{
-
 								if (speed > HL2_WALK_SPEED + 60.0f)
 								{
 									idealActivity = ACT_RUN;
@@ -2314,8 +2306,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 									{
 										idealActivity = ACT_LAND;
 									}
-								}
-							}								
+								}								
 						}
 					}
 				}
@@ -2389,6 +2380,12 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	if (idealActivity == ACT_LAND)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		return;
+	}
+
+	if (idealActivity == ACT_EVADE)
 	{
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
 		return;
