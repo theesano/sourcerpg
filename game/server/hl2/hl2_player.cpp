@@ -426,16 +426,13 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack3 = false;
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
-	m_flCanRunTimeWindowFwd = 0.0f;
-	m_flCanRunTimeWindowBk = 0.0f;
-	m_flCanRunTimeWindowLt = 0.0f;
-	m_flCanRunTimeWindowRt = 0.0f;
+	m_flCanRunTimeWindowFwd = 0.0f;//Do not change
+	m_flCanRunTimeWindowBk = 0.0f;//Do not change
+	m_flCanRunTimeWindowLt = 0.0f;//Do not change
+	m_flCanRunTimeWindowRt = 0.0f;//Do not change
 	m_bIsFallingA = false;
-	m_bIsEvading = false;
-	m_flDelayedUseTime = 0.0f;
-	m_bDelayedUse = false;
+	m_bIsEvade = false;
 
-	
 }
 
 
@@ -529,12 +526,9 @@ void CHL2_Player::HandleSpeedChanges( void )
 {
 	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
-	bool bCanSprint = CanSprint();
-	bool bIsSprinting = IsSprinting();
-	bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
-	bool bMoveKeysPressed = ((m_afButtonPressed & IN_FORWARD) != (m_afButtonPressed & IN_BACK) != (m_afButtonPressed & IN_MOVELEFT) != (m_afButtonPressed & IN_MOVERIGHT));
-	bool bMoveKeysReleased = ((m_afButtonReleased & IN_FORWARD) != (m_afButtonReleased & IN_BACK) != (m_afButtonReleased & IN_MOVELEFT) != (m_afButtonReleased & IN_MOVERIGHT));
-
+	//bool bCanSprint = CanSprint();
+	//bool bIsSprinting = IsSprinting();
+	//bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
 
 	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
 	//{
@@ -554,7 +548,8 @@ void CHL2_Player::HandleSpeedChanges( void )
 	//		m_nButtons &= ~IN_SPEED;
 	//}
 
-	if (m_afButtonPressed & IN_SPEED && !m_bDelayedUse)
+	//if (m_afButtonPressed & IN_SPEED && !m_bEvadeDelayedUse)
+	if (m_afButtonPressed & IN_SPEED)
 	{
 		Evade();
 	}
@@ -652,16 +647,6 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 }  
 
-//Delay condition for evade
-void CHL2_Player::Evade_DelayedUseTime(void)
-{
-	if (m_bDelayedUse && gpGlobals->curtime > m_flDelayedUseTime)
-	{
-		m_bDelayedUse = false;
-	}
-
-}
-
 Vector TargetEvadePoint;
 //-----------------------------------------------------------------------------
 // Purpose: // PROTOTYPE:Moving X units in 6 directions , teleport style.
@@ -681,19 +666,27 @@ void CHL2_Player::Evade(void)
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
 	//Vector EvadeEndPoint_Smoohting = GetAbsOrigin() + fwd * 3.2;
+
 	if (m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
 	{
 		if (sk_evadestyle.GetInt() == 0)
 		{
 			if (GetAbsVelocity().Length2D() > 0)
 				pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+
 			m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
 			SetAnimation(PLAYER_EVADE);
+			m_bIsEvade = true;
+
+			if (m_bIsRunning)
+				m_bWasRunning = true; 
+
+			m_flEvadeHandlerTime = gpGlobals->curtime + 0.3f; //Timer for applying additional evade effect.
 		}
 		else if (sk_evadestyle.GetInt() == 1)
 		{//pPlayer->SetAbsOrigin(EvadeEndPoint);
 			TargetEvadePoint = EvadeEndPoint;
-			m_bIsEvading = true;
+			m_bIsEvade = true;
 		}
 		else
 			sk_evadestyle.SetValue(0);
@@ -711,11 +704,12 @@ void CHL2_Player::Evade(void)
 }
 void CHL2_Player::EvadeHandler(void)
 {
+
 	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
 	if (!pPlayer)
 		return; //Always validate a pointer
 
-	DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
+	//DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
 
 	//Initializing Vector
 	Vector fwd;
@@ -733,10 +727,34 @@ void CHL2_Player::EvadeHandler(void)
 	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
 	}
-	//Prevent player from spamming Evade button when falling to achieve big velocity gain.
+	//Prevent player from getting big velocity boost when spamming the Evade button 
 	if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
 	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	}
+
+	if (m_bIsEvade)
+	{ //make the player invincible and stop moving for a short period of time. 
+		AddFlag(FL_FROZEN);
+		AddFlag(FL_GODMODE);
+
+		if (gpGlobals->curtime >= m_flEvadeHandlerTime)
+		{
+			m_bIsEvade = false;
+			SetAbsVelocity(vec3_origin);
+
+			if (m_bWasRunning)
+			{
+				StartAutoRunning();
+				m_bWasRunning = false;
+			}
+
+			if (GetFlags() & FL_FROZEN || GetFlags() & FL_GODMODE)
+			{	//strip invincibility from the player and let them move again. 
+				RemoveFlag(FL_FROZEN);
+				RemoveFlag(FL_GODMODE);
+			}
+		}
 	}
 
 }
@@ -881,12 +899,6 @@ void CHL2_Player::PreThink(void)
 	}
 
 	EvadeHandler();
-	//For use to add delay to Evade() usage
-	//On m_bDelayedUse = 1 run DelayedUseTime();
-	if (m_bDelayedUse)
-	{
-		Evade_DelayedUseTime();
-	}
 
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )
@@ -898,14 +910,8 @@ void CHL2_Player::PreThink(void)
 	{
 		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
 	}
-
-	//DevMsg("server time : %.2f \n", gpGlobals->curtime);
-		//DevMsg("Is Attack 1,2,3: %i %i %i \n", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3);
-		//DevMsg("m_flAtkAnimationChangingTime %.2f \n", m_flAtkAnimationChangingTime);
-		//if (m_flTimeBetweenAttack <= 0)
-		m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
-		//if (gpGlobals->curtime - m_flAtkAnimationChangingTime <= 0)
-			//Warning("m_flTimeBetweenAttack %.2f \n", m_flTimeBetweenAttack);
+		
+	m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
 
 			if (gpGlobals->curtime - m_flAtkAnimationChangingTime >= 0)
 			{
@@ -2140,11 +2146,11 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	//Select Animation for different attacking stages.
 	
 
-	if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
-	{
-		speed = 0;
-		playerAnim = PLAYER_IDLE; //Formerly IDLE
-	}
+	//if (GetFlags() & (FL_FROZEN | FL_ATCONTROLS))
+	//{
+		//speed = 0;
+		//playerAnim = PLAYER_IDLE; //Formerly IDLE
+	//}
 
 
 	Activity idealActivity = ACT_HL2MP_RUN;

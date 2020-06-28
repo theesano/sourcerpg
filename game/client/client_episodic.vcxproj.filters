@@ -1889,9 +1889,6 @@
     <ClInclude Include="..\server\singleplayer_animstate.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="c_weapon_grapple.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="view.h">
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
@@ -3421,9 +3418,6 @@
       <Filter>Tool Framework</Filter>
     </ClCompile>
     <ClCompile Include="..\server\singleplayer_animstate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="c_weapon_grapple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_hull.cpp">

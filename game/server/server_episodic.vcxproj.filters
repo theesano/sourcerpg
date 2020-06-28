@@ -1787,9 +1787,6 @@
     <ClInclude Include="singleplayer_animstate.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="weapon_grapple.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\client\view.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -3524,9 +3521,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="singleplayer_animstate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="weapon_grapple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="basemeleeweapon.cpp">

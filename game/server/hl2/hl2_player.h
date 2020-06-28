@@ -184,10 +184,7 @@ public:
 
 	bool m_bIsRunning;
 	bool m_bIsAutoRunning;
-	float m_flCanRunTimeWindowFwd;
-	float m_flCanRunTimeWindowBk;
-	float m_flCanRunTimeWindowLt;
-	float m_flCanRunTimeWindowRt;
+	float m_flCanRunTimeWindowFwd, m_flCanRunTimeWindowBk, m_flCanRunTimeWindowLt, m_flCanRunTimeWindowRt;
 	float m_flAutoRunningMinTime;
 
 	bool CanZoom( CBaseEntity *pRequester );
@@ -206,14 +203,12 @@ public:
 	bool m_bIsFallingA;
 
 	//Evade
-	void  Evade(void);
-	void  Evade_DelayedUseTime(void);
+	void	Evade(void);
+	void	Evade_DelayedUseTime(void);
 	void	EvadeHandler(void);
-	bool	m_bDelayedUse;
-	bool	m_bIsEvading;
-	float	m_flDelayedUseTime;
-
-
+	bool	m_bIsEvade;
+	bool	m_bWasRunning;
+	float	m_flEvadeHandlerTime;
 
 	// Aiming heuristics accessors
 	virtual float		GetIdleTime( void ) const { return ( m_flIdleTime - m_flMoveTime ); }

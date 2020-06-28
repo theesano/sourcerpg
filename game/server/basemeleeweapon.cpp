@@ -127,19 +127,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
-	////UTIL_EntitiesInSphere
-
-	//CBaseEntity *pEntity = NULL;
-	//if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
-	//{
-	//	
-	//}
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	QAngle pViewAngles =pOwner->GetAbsAngles();
-	Vector pViewOffset =pOwner->GetViewOffset();
-	//VectorAngles(pViewOffset, pViewAngles);
-	//DevMsg("Player's viewangles offset x y z : %.2f %.2f \n", pViewOffset.x, pViewOffset.y);
-	//DevMsg("Player's viewangles  x y  : %.2f %.2f \n", pViewAngles.x, pViewAngles.y);
 
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
 	{
@@ -154,12 +142,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN);
 		UTIL_GetLocalPlayer()->AddFlag(FL_GODMODE);
-		//UTIL_GetLocalPlayer()->SetAbsAngles(pViewAngles - UTIL_GetLocalPlayer()->GetAbsAngles());
 	}
 	else
 		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN);
 	UTIL_GetLocalPlayer()->RemoveFlag(FL_GODMODE);
-
 
 	if (pOwner->m_nButtons & IN_SCORE)
 	{
@@ -407,15 +393,12 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	Vector fwd;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
-
 	//zero out vector angles
 	fwd.z = 0;
 	VectorNormalize(fwd);
+
 	//Makes weapon produce AoE damage
 	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, pOwner);
-	//Stops player from moving for each swing
-
-	//UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(2.0f);
 	//Hard coded value, should change to SequenceDuration()
@@ -457,8 +440,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	{
 		m_iSecondaryAttacks++;
 	}
-
-	gamestats->Event_WeaponFired(pOwner, !bIsSecondary, GetClassname());
 
 	// -------------------------
 	//	Miss
@@ -520,8 +501,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	}
 
-	/*WeaponSound(SINGLE);
-	pOwner->SetAnimation(PLAYER_ATTACK1);*/
 }
 
 //Secondary Attack Swing
@@ -785,11 +764,10 @@ void CBaseMeleeWeapon::AddSkillMovementImpulse(float magnitude)
 	Vector fwd;
 	//Get the player's viewangle and copy it to the fwd vector
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
-	//Make sure the player won't accelerating forward when using the skill
+	//Make sure the player won't accelerating upward when using the skill
 	fwd.z = 0;
 	//Normalize the vector so as not to making the value used going out of control
 	VectorNormalize(fwd);
-
 	//Give the player the push they need 
 	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
 }
