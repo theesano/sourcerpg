@@ -86,8 +86,8 @@ extern int gEvilImpulse101;
 
 ConVar sv_autojump( "sv_autojump", "0" );
 
-ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
-ConVar hl2_normspeed( "hl2_normspeed", "320" );
+ConVar hl2_walkspeed("hl2_walkspeed", "150", FCVAR_REPLICATED);
+ConVar hl2_normspeed("hl2_normspeed", "280", FCVAR_REPLICATED);
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "400" );
 ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting, 0(default) = double-tapping; 1 = pressing sprint key
 ConVar sk_evadedistance("sk_evadedistance", "512"); // Set the dash distance.
@@ -266,6 +266,9 @@ void CC_ToggleDuck( void )
 
 	// Cannot be frozen
 	if ( pPlayer->GetFlags() & FL_FROZEN )
+		return;
+
+	if (pPlayer->GetFlags() & FL_FROZEN_ACT)
 		return;
 
 	static bool		bChecked = false;
@@ -735,7 +738,7 @@ void CHL2_Player::EvadeHandler(void)
 
 	if (m_bIsEvade)
 	{ //make the player invincible and stop moving for a short period of time. 
-		AddFlag(FL_FROZEN);
+		AddFlag(FL_FROZEN_ACT);
 		AddFlag(FL_GODMODE);
 
 		if (gpGlobals->curtime >= m_flEvadeHandlerTime)
@@ -749,9 +752,9 @@ void CHL2_Player::EvadeHandler(void)
 				m_bWasRunning = false;
 			}
 
-			if (GetFlags() & FL_FROZEN || GetFlags() & FL_GODMODE)
+			if (GetFlags() & FL_FROZEN_ACT || GetFlags() & FL_GODMODE)
 			{	//strip invincibility from the player and let them move again. 
-				RemoveFlag(FL_FROZEN);
+				RemoveFlag(FL_FROZEN_ACT);
 				RemoveFlag(FL_GODMODE);
 			}
 		}
@@ -911,20 +914,35 @@ void CHL2_Player::PreThink(void)
 		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
 	}
 		
-	m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
+	//m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
 
-			if (gpGlobals->curtime - m_flAtkAnimationChangingTime >= 0)
-			{
-				m_bIsAttack1 = true;
-				m_bIsAttack2 = false;
-				m_bIsAttack3 = false;
-			}
+	//		if (gpGlobals->curtime - m_flAtkAnimationChangingTime >= 0)
+	//		{
+	//			m_bIsAttack1 = true;
+	//			m_bIsAttack2 = false;
+	//			m_bIsAttack3 = false;
+	//		}
 
-			if ((m_flTimeBetweenAttack < 0) && (m_afButtonPressed & IN_SPEED))
-			{
-				m_flAtkAnimationChangingTime = gpGlobals->curtime;
-			}
+	//		if ((m_flTimeBetweenAttack < 0) && (m_afButtonPressed & IN_SPEED))
+	//		{
+	//			m_flAtkAnimationChangingTime = gpGlobals->curtime;
+	//		}
 
+	if ((m_flAtkAnimationChangingTime < gpGlobals->curtime) && (!m_bIsAttack1))
+	{
+		m_bIsAttack1 = true;
+		m_bIsAttack2 = false;
+		m_bIsAttack3 = false;
+	}
+
+	if (m_afButtonPressed & IN_SPEED)
+	{
+		m_bIsAttack1 = true;
+		m_bIsAttack2 = false;
+		m_bIsAttack3 = false;
+	}
+
+	//DevMsg("Attack Animation %i %i %i \n", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3);
 
 #endif//HL2_EPISODIC
 
@@ -2176,6 +2194,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 	else if (playerAnim == PLAYER_ATTACK1)
 	{
+		//SetPlaybackRate(2.0f);
 		if (GetActivity() == ACT_HOVER ||
 			GetActivity() == ACT_SWIM ||
 			GetActivity() == ACT_HOP ||
@@ -2186,7 +2205,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 		else
 		{  //Select proper animations for each attack. TODO: Sync Animation time with Weapon Attack Cycle.
-			if ((m_bIsAttack1 == true) && (m_flTimeBetweenAttack >= 0))
+			/*if ((m_bIsAttack1 == true) && (m_flTimeBetweenAttack >= 0))
 			{
 					idealActivity = ACT_MELEE_ATTACK1;
 					m_bIsAttack2 = true;
@@ -2207,7 +2226,34 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					m_bIsAttack1 = true;
 					m_bIsAttack2 = false;
 					m_bIsAttack3 = false;
+			}*/
+
+			if (m_bIsAttack1 == true) 
+			{
+				idealActivity = ACT_MELEE_ATTACK1;
+				m_bIsAttack2 = true;
+				m_bIsAttack1 = false;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+				
 			}
+			else if (m_bIsAttack2 == true) 
+			{
+				idealActivity = ACT_MELEE_ATTACK2;
+				m_bIsAttack2 = false;
+				m_bIsAttack1 = false;
+				m_bIsAttack3 = true;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+
+			}
+			else if (m_bIsAttack3 == true) 
+			{
+				idealActivity = ACT_MELEE_ATTACK3;
+				m_bIsAttack1 = true;
+				m_bIsAttack2 = false;
+				m_bIsAttack3 = false;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+			}
+
 		}
 	}
 	/*else if (playerAnim == PLAYER_RELOAD)
@@ -2219,12 +2265,14 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		idealActivity = ACT_EVADE;
 		if (m_afButtonPressed & IN_ATTACK2)
 		{
-			idealActivity = ACT_MELEE_SPEVADE;
+			//idealActivity = ACT_MELEE_SPEVADE;
+			idealActivity = ACT_MELEE_ATTACK2;
 		}
 	}	
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
-		idealActivity = ACT_MELEE_SKILL_CSLASH;
+		//idealActivity = ACT_MELEE_SKILL_CSLASH;
+		idealActivity = ACT_MELEE_ATTACK2;
 	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
@@ -2281,10 +2329,9 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					{
 						if (HasWeapons())
 						{
-								if (speed > HL2_WALK_SPEED + 20.0f)
+								if (m_bIsRunning)
 								{
 									idealActivity = ACT_HL2MP_RUN;
-									SetPlaybackRate(1.5f);
 								}
 								else
 									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
@@ -2292,7 +2339,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 						}
 						else //NO WEAPON STATE
 						{
-								if (speed > HL2_WALK_SPEED + 60.0f)
+								if (m_bIsRunning)//running 
 								{
 									idealActivity = ACT_RUN;
 									SetPlaybackRate(1.3f);

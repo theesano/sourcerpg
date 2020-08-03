@@ -19,7 +19,7 @@
 #endif
 
 #define	MELEE_RANGE	128.0f
-#define	MELEE_REFIRE	0.5f
+#define	MELEE_REFIRE 0.6f
 
 //-----------------------------------------------------------------------------
 // CWeaponCrowbar

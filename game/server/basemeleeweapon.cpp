@@ -38,6 +38,7 @@ END_SEND_TABLE()
 static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM);
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
+ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -54,6 +55,7 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_bWIsAttack1 = true;
 	m_bWIsAttack2 = false;
 	m_bWIsAttack3 = false;
+	m_SpeedModActiveTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -116,7 +118,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	}
 	else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
 	{
-		SecondaryAttack();
+		//SecondaryAttack();
 	}
 	else
 	{
@@ -129,9 +131,21 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
+	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
+	
+	/*CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);*/
+
+	//Warning("Attack speed %.2f \n", sk_atkspeedmod.GetFloat());
+	if (m_SpeedModActiveTime > gpGlobals->curtime)
+		sk_atkspeedmod.SetValue("0.75");
+	else
+		sk_atkspeedmod.SetValue("1");
+
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
 	{
 		Skill_Evade();
+		m_SpeedModActiveTime = gpGlobals->curtime + 3.0f;
+
 	}
 	
 	//Run the Evil Slash skill code
@@ -139,17 +153,20 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Makes the player stand still when activating a skill
 	if (gpGlobals->curtime < m_nExecutionTime)
 	{
-		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
-		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN);
-		UTIL_GetLocalPlayer()->AddFlag(FL_GODMODE);
+		//UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
+		//AddKnockbackXY(0.3f,2);
 	}
 	else
-		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN);
-	UTIL_GetLocalPlayer()->RemoveFlag(FL_GODMODE);
+		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
 
-	if (pOwner->m_nButtons & IN_SCORE)
+
+	if (pOwner->m_nButtons & IN_SPEED)
 	{
+		m_nExecutionTime = 0.0f;
+		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
 		//Warning("Execution time %.2f \n", gpGlobals->curtime - m_nExecutionTime);
+
 	}
 
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
@@ -165,8 +182,19 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		m_bIsSkCoolDown2 = false;
 	}
 
-
+	SkillStatNotification();
 }
+
+void CBaseMeleeWeapon::SkillStatNotification(void)
+{
+	if (m_nSkCoolDownTime - gpGlobals->curtime >= 0)
+		engine->Con_NPrintf(10, "Skill 1 Cooldown time %6.1f Attack speed %6.1f ", m_nSkCoolDownTime - gpGlobals->curtime, sk_atkspeedmod.GetFloat());
+
+	if (m_nSkCoolDownTime2 - gpGlobals->curtime >= 0)
+		engine->Con_NPrintf(11, "Skill 2 Cooldown time  %6.1f ", m_nSkCoolDownTime2 - gpGlobals->curtime);
+}
+
+
 //------------------------------------------------------------------------------
 // Purpose :
 // Input   :
@@ -177,83 +205,73 @@ void CBaseMeleeWeapon::PrimaryAttack()
 	Swing(false);
 }
 
-//------------------------------------------------------------------------------
-// Purpose :
-// Input   :
-// Output  :
-//------------------------------------------------------------------------------
-void CBaseMeleeWeapon::SecondaryAttack()
-{
-	Swing2(true);
-}
-
 
 //------------------------------------------------------------------------------
 // Purpose: Implement impact function
 //------------------------------------------------------------------------------
-void CBaseMeleeWeapon::Hit(trace_t &traceHit, Activity nHitActivity, bool bIsSecondary)
-{
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-
-	//Do view kick
-	AddViewKick();
-
-	//Make sound for the AI
-	CSoundEnt::InsertSound(SOUND_BULLET_IMPACT, traceHit.endpos, 400, 0.2f, pPlayer);
-
-	// This isn't great, but it's something for when the crowbar hits.
-	pPlayer->RumbleEffect(RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART);
-
-	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
-
-	//Apply damage to a hit target
-	if (pHitEntity != NULL)
-	{
-		float m_nDamageRadius = 128.0f;
-		Vector hit1 = GetAbsOrigin();
-		Vector hitDirection;
-		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
-		VectorNormalize(hitDirection);
-
-		Vector	dir = traceHit.endpos;
-		Vector vecForce = dir * ImpulseScale(75, 700);
-		VectorNormalize(dir);
-		dir *= 500.0f;
-		ApplyAbsVelocityImpulse(dir);
-
-		CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
-		//CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
-
-		//Makes weapon produce AoE damage
-		//RadiusDamage(info, hit1, m_nDamageRadius, CLASS_NONE, NULL);
-
-		if (pPlayer && pHitEntity->IsNPC())
-		{
-			// If bonking an NPC, adjust damage.
-			info.AdjustPlayerDamageInflictedForSkillLevel();
-		}
-
-		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
-
-
-
-		CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );
-
-		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit ); 
-		ApplyMultiDamage();
-
-		// Now hit all triggers along the ray that... 
-		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
-
-		if (ToBaseCombatCharacter(pHitEntity))
-		{
-			gamestats->Event_WeaponHit(pPlayer, !bIsSecondary, GetClassname(), info);
-		}
-	}
-
-	// Apply an impact effect
-	ImpactEffect(traceHit);
-}
+//void CBaseMeleeWeapon::Hit(trace_t &traceHit, Activity nHitActivity, bool bIsSecondary)
+//{
+//	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+//
+//	//Do view kick
+//	AddViewKick();
+//
+//	//Make sound for the AI
+//	CSoundEnt::InsertSound(SOUND_BULLET_IMPACT, traceHit.endpos, 400, 0.2f, pPlayer);
+//
+//	// This isn't great, but it's something for when the crowbar hits.
+//	pPlayer->RumbleEffect(RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART);
+//
+//	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
+//
+//	//Apply damage to a hit target
+//	if (pHitEntity != NULL)
+//	{
+//		float m_nDamageRadius = 128.0f;
+//		Vector hit1 = GetAbsOrigin();
+//		Vector hitDirection;
+//		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+//		VectorNormalize(hitDirection);
+//
+//		Vector	dir = traceHit.endpos;
+//		Vector vecForce = dir * ImpulseScale(75, 700);
+//		VectorNormalize(dir);
+//		dir *= 500.0f;
+//		ApplyAbsVelocityImpulse(dir);
+//
+//		CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+//		//CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
+//
+//		//Makes weapon produce AoE damage
+//		//RadiusDamage(info, hit1, m_nDamageRadius, CLASS_NONE, NULL);
+//
+//		if (pPlayer && pHitEntity->IsNPC())
+//		{
+//			// If bonking an NPC, adjust damage.
+//			info.AdjustPlayerDamageInflictedForSkillLevel();
+//		}
+//
+//		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
+//
+//
+//
+//		CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );
+//
+//		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit ); 
+//		ApplyMultiDamage();
+//
+//		// Now hit all triggers along the ray that... 
+//		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
+//
+//		if (ToBaseCombatCharacter(pHitEntity))
+//		{
+//			gamestats->Event_WeaponHit(pPlayer, !bIsSecondary, GetClassname(), info);
+//		}
+//	}
+//
+//	// Apply an impact effect
+//	ImpactEffect(traceHit);
+//}
 
 Activity CBaseMeleeWeapon::ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner)
 {
@@ -304,56 +322,12 @@ Activity CBaseMeleeWeapon::ChooseIntersectionPointAndActivity(trace_t &hitTrace,
 	return ACT_VM_HITCENTER;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &traceHit - 
-//-----------------------------------------------------------------------------
-bool CBaseMeleeWeapon::ImpactWater(const Vector &start, const Vector &end)
-{
-	//FIXME: This doesn't handle the case of trying to splash while being underwater, but that's not going to look good
-	//		 right now anyway...
-
-	// We must start outside the water
-	if (UTIL_PointContents(start) & (CONTENTS_WATER | CONTENTS_SLIME))
-		return false;
-
-	// We must end inside of water
-	if (!(UTIL_PointContents(end) & (CONTENTS_WATER | CONTENTS_SLIME)))
-		return false;
-
-	trace_t	waterTrace;
-
-	UTIL_TraceLine(start, end, (CONTENTS_WATER | CONTENTS_SLIME), GetOwner(), COLLISION_GROUP_NONE, &waterTrace);
-
-	if (waterTrace.fraction < 1.0f)
-	{
-		CEffectData	data;
-
-		data.m_fFlags = 0;
-		data.m_vOrigin = waterTrace.endpos;
-		data.m_vNormal = waterTrace.plane.normal;
-		data.m_flScale = 8.0f;
-
-		// See if we hit slime
-		if (waterTrace.contents & CONTENTS_SLIME)
-		{
-			data.m_fFlags |= FX_WATER_IN_SLIME;
-		}
-
-		DispatchEffect("watersplash", data);
-	}
-
-	return true;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CBaseMeleeWeapon::ImpactEffect(trace_t &traceHit)
 {
-	// See if we hit water (we don't do the other impact effects in this case)
-	if (ImpactWater(traceHit.startpos, traceHit.endpos))
-		return;
 
 	//FIXME: need new decals
 	UTIL_ImpactTrace(&traceHit, DMG_SLASH);
@@ -374,6 +348,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		return;
 
 	//float flSpeedMod = 1.5f;
+
 	//use g_EntList  to make reference to the npc????
 	float m_nDamageRadius = 128.0f;
 
@@ -382,14 +357,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
 
 	Vector swingEnd = swingStart + forward * GetRange();
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-	//Activity nHitActivity = ACT_VM_HITCENTER;
-	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
-	// Damage info for 
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition( traceHit.startpos );
-	triggerInfo.SetDamageForce( forward );
-	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
 
 	Vector fwd;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
@@ -397,12 +364,19 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	fwd.z = 0;
 	VectorNormalize(fwd);
 
+	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
+	//Activity nHitActivity = ACT_VM_HITCENTER;
+	Activity nHitActivity = ACT_MELEE_ATTACK1;
+	// Damage info for 
+	CTakeDamageInfo dmginfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	dmginfo.SetDamagePosition( traceHit.startpos );
+	//TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, forward );
+
 	//Makes weapon produce AoE damage
-	RadiusDamage(triggerInfo, swingEnd, m_nDamageRadius, CLASS_NONE, pOwner);
+	RadiusDamage(dmginfo, swingEnd, m_nDamageRadius, CLASS_NONE, pOwner);
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(2.0f);
 	//Hard coded value, should change to SequenceDuration()
-	m_nExecutionTime = gpGlobals->curtime +	0.6667f;
 
 	//if ( traceHit.fraction == 1.0 )
 	//{
@@ -438,7 +412,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	}
 	else
 	{
-		m_iSecondaryAttacks++;
+		//m_iSecondaryAttacks++;
 	}
 
 	// -------------------------
@@ -464,144 +438,50 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 	//Set and cycles between attack states, play animation and make sound. 
 	if (m_bWIsAttack1 == true)
 	{
 		m_nDamageRadius = 128.0f;
-		triggerInfo.ScaleDamage(1.0);
+		//triggerInfo.ScaleDamage(1.0);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack2 = true;
 		m_bWIsAttack1 = false;
-		AddKnockbackXY(2.0f);
+		AddKnockbackXY(2.0f,1);
+		m_nExecutionTime = gpGlobals->curtime + (0.6f *sk_atkspeedmod.GetFloat());
+
 	}
 	else if (m_bWIsAttack2 == true)
 	{
 		m_nDamageRadius = 144.0f;
-		triggerInfo.ScaleDamage(1.5);
+		//triggerInfo.ScaleDamage(1.5);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack2 = false;
 		m_bWIsAttack1 = false;
 		m_bWIsAttack3 = true;
-		AddKnockbackXY(3.0f);
+		AddKnockbackXY(2.0f,1);
+		m_nExecutionTime = gpGlobals->curtime + (0.6f *sk_atkspeedmod.GetFloat());
+
 	}
 	else if (m_bWIsAttack3 == true)
 	{
 		m_nDamageRadius = 192.0f;
-		triggerInfo.ScaleDamage(2.0);
+		//triggerInfo.ScaleDamage(2.0);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack1 = true;
 		m_bWIsAttack2 = false;
 		m_bWIsAttack3 = false;
-		AddKnockbackXY(5.0f);
+		AddKnockbackXY(3.0f,1);
+		m_nExecutionTime = gpGlobals->curtime + 0.6f;
 
 	}
 
 }
 
-//Secondary Attack Swing
-//------------------------------------------------------------------------------
-// Purpose : Starts the swing of the weapon and determines the animation
-// Input   : bIsSecondary - is this a secondary attack?
-//------------------------------------------------------------------------------
-void CBaseMeleeWeapon::Swing2(int bIsSecondary)
-{
-	trace_t traceHit;
-
-	// Try a ray
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	if (!pOwner)
-		return;
-
-	pOwner->RumbleEffect(RUMBLE_CROWBAR_SWING, 0, RUMBLE_FLAG_RESTART);
-
-	Vector swingStart = pOwner->Weapon_ShootPosition();
-	Vector forward;
-
-	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
-
-	Vector swingEnd = swingStart + forward * GetRange();
-	UTIL_TraceLine(swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-	Activity nHitActivity = ACT_VM_HITCENTER;
-
-	// Like bullets, bludgeon traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward);
-	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
-
-	if (traceHit.fraction == 1.0)
-	{
-		float bludgeonHullRadius = 1.732f * BLUDGEON_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
-
-		// Back off by hull "radius"
-		swingEnd -= forward * bludgeonHullRadius;
-
-		UTIL_TraceHull(swingStart, swingEnd, g_bludgeonMins, g_bludgeonMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-		if (traceHit.fraction < 1.0 && traceHit.m_pEnt)
-		{
-			Vector vecToTarget = traceHit.m_pEnt->GetAbsOrigin() - swingStart;
-			VectorNormalize(vecToTarget);
-
-			float dot = vecToTarget.Dot(forward);
-
-			// YWB:  Make sure they are sort of facing the guy at least...
-			if (dot < 0.70721f)
-			{
-				// Force amiss
-				traceHit.fraction = 1.0f;
-			}
-			else
-			{
-				nHitActivity = ChooseIntersectionPointAndActivity(traceHit, g_bludgeonMins, g_bludgeonMaxs, pOwner);
-			}
-		}
-	}
-
-	if (!bIsSecondary)
-	{
-		m_iPrimaryAttacks++;
-	}
-	else
-	{
-		m_iSecondaryAttacks++;
-	}
-
-	gamestats->Event_WeaponFired(pOwner, !bIsSecondary, GetClassname());
-
-	// -------------------------
-	//	Miss
-	// -------------------------
-	if (traceHit.fraction == 1.0f)
-	{
-		nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
-
-		// We want to test the first swing again
-		Vector testEnd = swingStart + forward * GetRange();
-
-		// See if we happened to hit water
-		ImpactWater(swingStart, testEnd);
-	}
-	else
-	{
-		Hit(traceHit, nHitActivity, bIsSecondary ? true : false);
-	}
-
-	// Send the anim
-	SendWeaponAnim(nHitActivity);
-
-	//Setup our next attack times
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-
-	//Play swing sound
-	WeaponSound(SINGLE);
-	pOwner->SetAnimation(PLAYER_ATTACK1);
-}
 //Skill: Spinning Demon.
 void CBaseMeleeWeapon::Skill_Evade(void)
 {
@@ -616,7 +496,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	triggerInfo.SetDamagePosition(traceHit.startpos);
 	triggerInfo.SetDamageForce(forward);
 	triggerInfo.ScaleDamage(2.0f);
-	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+
 	float m_nDamageRadius = 192.0f;
 	//Only run when the cooldown time is 0
 
@@ -632,15 +512,18 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 		fwd.z = 0;
 		VectorNormalize(fwd);
 		//AddKnockback(fwd * 350);
-		AddKnockbackXY(3.5f);
+
 		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
 
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 			WeaponSound(SINGLE);
 			pOwner->SetAnimation(PLAYER_EVADE);
 
+
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
+
+		
 	}
 
 }
@@ -667,7 +550,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	triggerInfo.SetDamageForce(forward*10);
 	triggerInfo.ScaleDamage(0.8f);
 	
-	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
+	//TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
 
 	//The area in radius that the skill is going to affect.
 	float m_nDamageRadius = 264.0f;
@@ -679,13 +562,12 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 		{
 			//DevMsg("Evil Slash Hit! \n");
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
-			AddKnockbackXY(4.5f);
 			//HACK! Reset the timer
 			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
 		}
 	}
 
-	if ((pOwner->m_nButtons & IN_RELOAD) && !m_bIsSkCoolDown2)
+	if ((pOwner->m_nButtons & IN_SLOT1) && !m_bIsSkCoolDown2)
 	{
 		if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
 		{
@@ -699,6 +581,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 				WeaponSound(SINGLE);
 				pOwner->SetAnimation(PLAYER_SKILL_USE);
+				AddKnockbackXY(0.3f,1);
 			}
 			m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
 			m_bIsSkCoolDown2 = true;
@@ -714,45 +597,46 @@ void CBaseMeleeWeapon::AddKnockback(Vector dir)
 	CBaseEntity *pEntity = NULL;
 	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
 	{
+		
 		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
 		pCop->ApplyAbsVelocityImpulse(dir);
 
 	}
 
 }
-void CBaseMeleeWeapon::AddKnockbackXY(float magnitude)
+void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 {
+	
 	float flKnockbackVelocity = 128.0f*magnitude;
 	Vector dir;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &dir);
 	dir.z = 0;
 	VectorNormalize(dir);
-
+	
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
-	CBaseEntity *pEntity = NULL;
-	string_t iszMetroPoliceClassname = AllocPooledString("npc_metropolice");
-	
+	string_t iszNPCName = AllocPooledString("npc_metropolice");
+	Vector playernpcdist; 
+
 	for (int i = 0; i < nAIs; i++)
 	{
-		if ((ppAIs[i]->m_iClassname == iszMetroPoliceClassname) && ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL))
-		{
-			//ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
-			CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(ppAIs[i]);
-			if (pCop->GetHealth() != pCop->GetMaxHealth())
+		//if (((pSearch = gEntList.FindEntityGenericNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(),192.0f))))
+
+		if (ppAIs[i]->m_iClassname == iszNPCName)
 			{
-				pCop->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
-				pCop->AddFlag(FL_FROZEN);
+				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
+				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
+				
+				if (playernpcdist.x <= 192.0f && playernpcdist.y <= 192.0f)
+				{
+					ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
+					ppAIs[i]->SetCondition(COND_NPC_FREEZE);
+					//ppAIs[i]->SetMoveType(MOVETYPE_NONE);
+					ppAIs[i]->SetActivity(ACT_IDLE);
+						
+				}
 			}
-		}
 	}
-	//CBaseEntity *pEntity = NULL;
-	//	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
-	//	{
-	//		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
-	//		pCop->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
-	//		pCop->AddFlag(FL_FROZEN);
-	//	}
 	
 }
 //Make the player move forward

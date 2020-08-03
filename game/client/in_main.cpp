@@ -138,13 +138,13 @@ static	kbutton_t	in_up;
 static	kbutton_t	in_down;
 static	kbutton_t	in_duck;
 static	kbutton_t	in_reload;
-static	kbutton_t	in_alt1;
-static	kbutton_t	in_alt2;
+//static	kbutton_t	in_alt1;
+//static	kbutton_t	in_alt2;
 static	kbutton_t	in_score;
 static	kbutton_t	in_break;
 static	kbutton_t	in_zoom;
-static  kbutton_t   in_grenade1;
-static  kbutton_t   in_grenade2;
+//static  kbutton_t   in_grenade1;
+//static  kbutton_t   in_grenade2;
 static	kbutton_t	in_attack3;
 kbutton_t	in_throwgrenade;
 kbutton_t	in_slot1;
@@ -486,18 +486,18 @@ void IN_DuckDown( const CCommand &args ) {KeyDown(&in_duck, args[1] );}
 void IN_DuckUp( const CCommand &args ) {KeyUp(&in_duck, args[1] );}
 void IN_ReloadDown( const CCommand &args ) {KeyDown(&in_reload, args[1] );}
 void IN_ReloadUp( const CCommand &args ) {KeyUp(&in_reload, args[1] );}
-void IN_Alt1Down( const CCommand &args ) {KeyDown(&in_alt1, args[1] );}
-void IN_Alt1Up( const CCommand &args ) {KeyUp(&in_alt1, args[1] );}
-void IN_Alt2Down( const CCommand &args ) {KeyDown(&in_alt2, args[1] );}
-void IN_Alt2Up( const CCommand &args ) {KeyUp(&in_alt2, args[1] );}
+//void IN_Alt1Down( const CCommand &args ) {KeyDown(&in_alt1, args[1] );}
+//void IN_Alt1Up( const CCommand &args ) {KeyUp(&in_alt1, args[1] );}
+//void IN_Alt2Down( const CCommand &args ) {KeyDown(&in_alt2, args[1] );}
+//void IN_Alt2Up( const CCommand &args ) {KeyUp(&in_alt2, args[1] );}
 void IN_GraphDown( const CCommand &args ) {KeyDown(&in_graph, args[1] );}
 void IN_GraphUp( const CCommand &args ) {KeyUp(&in_graph, args[1] );}
 void IN_ZoomDown( const CCommand &args ) {KeyDown(&in_zoom, args[1] );}
 void IN_ZoomUp( const CCommand &args ) {KeyUp(&in_zoom, args[1] );}
-void IN_Grenade1Up( const CCommand &args ) { KeyUp( &in_grenade1, args[1] ); }
-void IN_Grenade1Down( const CCommand &args ) { KeyDown( &in_grenade1, args[1] ); }
-void IN_Grenade2Up( const CCommand &args ) { KeyUp( &in_grenade2, args[1] ); }
-void IN_Grenade2Down( const CCommand &args ) { KeyDown( &in_grenade2, args[1] ); }
+//void IN_Grenade1Up( const CCommand &args ) { KeyUp( &in_grenade1, args[1] ); }
+//void IN_Grenade1Down( const CCommand &args ) { KeyDown( &in_grenade1, args[1] ); }
+//void IN_Grenade2Up( const CCommand &args ) { KeyUp( &in_grenade2, args[1] ); }
+//void IN_Grenade2Down( const CCommand &args ) { KeyDown( &in_grenade2, args[1] ); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 void IN_Attack3Down( const CCommand &args ) { KeyDown(&in_attack3, args[1] );}
 void IN_Attack3Up( const CCommand &args ) { KeyUp(&in_attack3, args[1] );}
@@ -1545,12 +1545,12 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_MOVERIGHT, s_ClearInputState, &in_moveright, bResetState );
 	CalcButtonBits( bits, IN_ATTACK2, s_ClearInputState, &in_attack2, bResetState );
 	CalcButtonBits( bits, IN_RELOAD, s_ClearInputState, &in_reload, bResetState );
-	CalcButtonBits( bits, IN_ALT1, s_ClearInputState, &in_alt1, bResetState );
-	CalcButtonBits( bits, IN_ALT2, s_ClearInputState, &in_alt2, bResetState );
+	//CalcButtonBits( bits, IN_ALT1, s_ClearInputState, &in_alt1, bResetState );
+	//CalcButtonBits( bits, IN_ALT2, s_ClearInputState, &in_alt2, bResetState );
 	CalcButtonBits( bits, IN_SCORE, s_ClearInputState, &in_score, bResetState );
 	CalcButtonBits( bits, IN_ZOOM, s_ClearInputState, &in_zoom, bResetState );
-	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
-	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
+	//CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
+	//CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
 	CalcButtonBits( bits, IN_ATTACK3, s_ClearInputState, &in_attack3, bResetState );
 	CalcButtonBits(bits, IN_THROWGRENADE, s_ClearInputState, &in_throwgrenade, bResetState);
 	CalcButtonBits(bits, IN_SLOT1, s_ClearInputState, &in_slot1, bResetState);
@@ -1694,10 +1694,10 @@ static ConCommand startduck("+duck", IN_DuckDown);
 static ConCommand endduck("-duck", IN_DuckUp);
 static ConCommand startreload("+reload", IN_ReloadDown);
 static ConCommand endreload("-reload", IN_ReloadUp);
-static ConCommand startalt1("+alt1", IN_Alt1Down);
-static ConCommand endalt1("-alt1", IN_Alt1Up);
-static ConCommand startalt2("+alt2", IN_Alt2Down);
-static ConCommand endalt2("-alt2", IN_Alt2Up);
+//static ConCommand startalt1("+alt1", IN_Alt1Down);
+//static ConCommand endalt1("-alt1", IN_Alt1Up);
+//static ConCommand startalt2("+alt2", IN_Alt2Down);
+//static ConCommand endalt2("-alt2", IN_Alt2Up);
 static ConCommand startscore("+score", IN_ScoreDown);
 static ConCommand endscore("-score", IN_ScoreUp);
 static ConCommand startshowscores("+showscores", IN_ScoreDown);
@@ -1710,26 +1710,26 @@ static ConCommand force_centerview("force_centerview", IN_CenterView_f);
 static ConCommand joyadvancedupdate("joyadvancedupdate", IN_Joystick_Advanced_f, "", FCVAR_CLIENTCMD_CAN_EXECUTE);
 static ConCommand startzoom("+zoom", IN_ZoomDown);
 static ConCommand endzoom("-zoom", IN_ZoomUp);
-static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
-static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );
-static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
-static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
+//static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
+//static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );
+//static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
+//static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
 static ConCommand startattack3("+attack3", IN_Attack3Down);
 static ConCommand endattack3("-attack3", IN_Attack3Up);
 static ConCommand startgrenadethrow("+throwgrenade", IN_ThrowGrenadeDown);
 static ConCommand endgrenadethrow("-throwgrenade", IN_ThrowGrenadeUp);
 static ConCommand startslot1("+quickslot1", IN_Slot1Down);
-static ConCommand endslot1("-quickslot1", IN_Slot1Down);
-static ConCommand startslot2("+quickslot2", IN_Slot1Down);
-static ConCommand endslot2("-quickslot2", IN_Slot1Down);
-static ConCommand startslot3("+quickslot3", IN_Slot1Down);
-static ConCommand endslot3("-quickslot3", IN_Slot1Down);
-static ConCommand startslot4("+quickslot4", IN_Slot1Down);
-static ConCommand endslot4("-quickslot4", IN_Slot1Down);
-static ConCommand startslot5("+quickslot5", IN_Slot1Down);
-static ConCommand endslot5("-quickslot5", IN_Slot1Down);
-static ConCommand startslot6("+quickslot6", IN_Slot1Down);
-static ConCommand endslot6("-quickslot6", IN_Slot1Down);
+static ConCommand endslot1("-quickslot1", IN_Slot1Up);
+static ConCommand startslot2("+quickslot2", IN_Slot2Down);
+static ConCommand endslot2("-quickslot2", IN_Slot2Up);
+static ConCommand startslot3("+quickslot3", IN_Slot3Down);
+static ConCommand endslot3("-quickslot3", IN_Slot3Up);
+static ConCommand startslot4("+quickslot4", IN_Slot4Down);
+static ConCommand endslot4("-quickslot4", IN_Slot4Up);
+static ConCommand startslot5("+quickslot5", IN_Slot5Down);
+static ConCommand endslot5("-quickslot5", IN_Slot5Up);
+static ConCommand startslot6("+quickslot6", IN_Slot6Down);
+static ConCommand endslot6("-quickslot6", IN_Slot6Up);
 
 
 

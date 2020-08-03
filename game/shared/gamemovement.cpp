@@ -1056,6 +1056,16 @@ void CGameMovement::CheckParameters( void )
 		mv->m_flUpMove      = 0;
 	}
 
+	if (player->GetFlags() & FL_FROZEN_ACT)
+	{
+		if (!(mv->m_nButtons & IN_SPEED))
+		{
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+		}
+	}
+
 	DecayPunchAngle();
 
 	// Take angles from command.

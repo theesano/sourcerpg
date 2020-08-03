@@ -997,14 +997,14 @@ void CNPC_MetroPolice::AnnounceEnemyType( CBaseEntity *pEnemy )
 			break;
 		}
 
-		m_Sentences.Speak( pSentenceName, SENTENCE_PRIORITY_HIGH );
+		//m_Sentences.Speak( pSentenceName, SENTENCE_PRIORITY_HIGH );
 	}
 	else
 	{
 		if ( m_pSquad->GetLeader() && FOkToMakeSound( SENTENCE_PRIORITY_MEDIUM ) )
 		{
 			// squelch anything that isn't high priority so the leader can speak
-			JustMadeSound( SENTENCE_PRIORITY_MEDIUM );	
+			//JustMadeSound( SENTENCE_PRIORITY_MEDIUM );	
 		}
 	}
 
@@ -1109,7 +1109,7 @@ void CNPC_MetroPolice::AnnounceTakeCoverFromDanger( CSound *pSound )
 	// I hear something dangerous, probably need to take cover.
 	// dangerous sound nearby!, call it out
 	const char *pSentenceName = "METROPOLICE_DANGER";
-	m_Sentences.Speak( pSentenceName, SENTENCE_PRIORITY_HIGH, SENTENCE_CRITERIA_NORMAL );
+	//m_Sentences.Speak( pSentenceName, SENTENCE_PRIORITY_HIGH, SENTENCE_CRITERIA_NORMAL );
 }
 
 
@@ -1573,7 +1573,7 @@ int CNPC_MetroPolice::SetupBurstShotRegulator( float flReactionTime )
 	// We want a certain amount of reaction time before the shots hit the boat
 	int nDesiredShotCount = CountShotsInTime( flReactionTime );
 	GetShotRegulator()->SetBurstShotCountRange( nDesiredShotCount, nDesiredShotCount );
-	GetShotRegulator()->SetRestInterval( 0.7f, 0.9f );
+	GetShotRegulator()->SetRestInterval( 1.5f, 2.0f );
 	GetShotRegulator()->Reset( true );
 	int nShots = GetShotRegulator()->GetBurstShotsRemaining();
 	OnRangeAttack1();
@@ -2485,7 +2485,7 @@ void CNPC_MetroPolice::InputActivateBaton( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::AlertSound( void )
 {
-	m_Sentences.Speak( "METROPOLICE_GO_ALERT" );
+	//m_Sentences.Speak( "METROPOLICE_GO_ALERT" );
 }
 
 
@@ -2498,7 +2498,7 @@ void CNPC_MetroPolice::DeathSound( const CTakeDamageInfo &info )
 	if ( IsOnFire() )
 		return;
 
-	m_Sentences.Speak( "METROPOLICE_DIE", SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS );
+	//m_Sentences.Speak( "METROPOLICE_DIE", SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS );
 }
 
 
@@ -2529,7 +2529,7 @@ void CNPC_MetroPolice::LostEnemySound( void)
 
 	if ( m_Sentences.Speak( pSentence ) >= 0 )
 	{
-		m_flNextLostSoundTime = gpGlobals->curtime + random->RandomFloat(5.0,15.0);
+		//m_flNextLostSoundTime = gpGlobals->curtime + random->RandomFloat(5.0,15.0);
 	}
 }
 
@@ -2546,7 +2546,7 @@ void CNPC_MetroPolice::FoundEnemySound( void)
 	if ( HasSpawnFlags( SF_METROPOLICE_ARREST_ENEMY ) )
 		return;
 
-	m_Sentences.Speak( "METROPOLICE_REFIND_ENEMY", SENTENCE_PRIORITY_HIGH );
+	//m_Sentences.Speak( "METROPOLICE_REFIND_ENEMY", SENTENCE_PRIORITY_HIGH );
 }
 
 
@@ -2867,7 +2867,7 @@ void CNPC_MetroPolice::OnAnimEventShove( void )
 				  forward.z = 0.0f;
 
 			//Push the target back
-			pHurt->ApplyAbsVelocityImpulse( forward * 250.0f );
+			//pHurt->ApplyAbsVelocityImpulse( forward * 5 );
 
 			// Force the player to drop anyting they were holding
 			pPlayer->ForceDropOfCarriedPhysObjects();
@@ -3352,7 +3352,7 @@ int CNPC_MetroPolice::SelectCombatSchedule()
 		{
 			// Stop chasing the player now that we've taken a swing at them
 			m_flChasePlayerTime = 0;
-			m_BatonSwingTimer.Set( 1.0, 1.75 );
+			m_BatonSwingTimer.Set( 2.5, 2.75 );
 			return SCHED_MELEE_ATTACK1;
 		}
 		else
@@ -3379,6 +3379,11 @@ int CNPC_MetroPolice::SelectCombatSchedule()
 			m_Sentences.Speak( "METROPOLICE_SHOOT_COVER" );
 			return SCHED_SHOOT_ENEMY_COVER;
 		}
+	}
+
+	if (HasCondition(COND_LIGHT_DAMAGE))
+	{
+		return SCHED_NONE;
 	}
 
 	if (HasCondition(COND_ENEMY_OCCLUDED))
@@ -3891,7 +3896,7 @@ void CNPC_MetroPolice::AnnounceHarrassment( void )
 		"METROPOLICE_BACK_UP_C",
 	};
 
-	m_Sentences.Speak( pWarnings[ random->RandomInt( 0, ARRAYSIZE(pWarnings)-1 ) ], SENTENCE_PRIORITY_MEDIUM, SENTENCE_CRITERIA_NORMAL );
+	//m_Sentences.Speak( pWarnings[ random->RandomInt( 0, ARRAYSIZE(pWarnings)-1 ) ], SENTENCE_PRIORITY_MEDIUM, SENTENCE_CRITERIA_NORMAL );
 }
 
 //-----------------------------------------------------------------------------
@@ -4939,8 +4944,8 @@ void CNPC_MetroPolice::BuildScheduleTestBits( void )
 	{
 		if ( gpGlobals->curtime - m_flLastDamageFlinchTime < 10.0 )
 		{
-			ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
-			ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
+			//ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
+			//ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
 		}
 	}
 	else if ( HasBaton() && IsCurSchedule( SCHED_COMBAT_FACE ) && !m_BatonSwingTimer.Expired() )
@@ -5021,7 +5026,7 @@ void CNPC_MetroPolice::GatherConditions( void )
 		{
 			if ( m_BatonSwingTimer.Expired() )
 			{
-				m_BatonSwingTimer.Set( 1.0, 1.75 );
+				m_BatonSwingTimer.Set( 2.5, 2.75 );
 
 				Activity activity = TranslateActivity( ACT_MELEE_ATTACK_SWING_GESTURE );
 				Assert( activity != ACT_INVALID );

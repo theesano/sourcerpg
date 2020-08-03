@@ -1772,6 +1772,13 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		playerAnim = PLAYER_IDLE;  //Formerly IDLE
 
 	}
+
+	if (GetFlags() & (FL_FROZEN_ACT))
+	{
+		//speed = 0;
+		playerAnim = PLAYER_IDLE;  //Formerly IDLE
+
+	}
 	Activity idealActivity = ACT_WALK;// TEMP!!!!!
 
 	// This could stand to be redone. Why is playerAnim abstracted from activity? (sjb)
@@ -3664,7 +3671,7 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->upmove = 0;
 		ucmd->buttons = 0;
 		ucmd->impulse = 0;
-		VectorCopy ( pl.v_angle, ucmd->viewangles );
+		//VectorCopy ( pl.v_angle, ucmd->viewangles ); test
 	}
 	else
 	{
@@ -3684,6 +3691,20 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 				ucmd->buttons |= IN_DUCK;
 			}
 		}
+	}
+
+	if (GetFlags() & FL_FROZEN_ACT ||
+		(developer.GetInt() == 0 && gpGlobals->eLoadType == MapLoad_NewGame && gpGlobals->curtime < 3.0))
+	{
+		if (!(m_afButtonPressed & IN_SPEED))
+		{
+			ucmd->forwardmove = 0;
+			ucmd->sidemove = 0;
+			ucmd->upmove = 0;
+		}
+		//ucmd->buttons = 0;
+		ucmd->impulse = 0;
+		//VectorCopy ( pl.v_angle, ucmd->viewangles ); test
 	}
 	
 	PlayerMove()->RunCommand(this, ucmd, moveHelper);
@@ -4584,26 +4605,6 @@ void CBasePlayer::PostThink()
 			}
 			else if (GetWaterLevel() > 1)
 				SetAnimation(PLAYER_WALK);
-
-			// If he's in a vehicle, sit down
-			//if (IsInAVehicle())
-			//	SetAnimation(PLAYER_IN_VEHICLE);
-			//else if (!GetAbsVelocity().x && !GetAbsVelocity().y)
-			//{
-			//	SetAnimation(PLAYER_IDLE);
-			//	//BROKEN :Supposed to play the sequence when standing still and pressing the button
-			//	if (m_nButtons & IN_SPEED)
-			//	{
-			//		SetSequence(ACT_EVADE);
-			//		SetPlaybackRate(10.0f);
-			//	}
-			//}
-			//else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (GetFlags() & FL_ONGROUND))
-			//{
-			//	SetAnimation(PLAYER_WALK);
-			//}
-			//else if (GetWaterLevel() > 1)
-			//	SetAnimation(PLAYER_WALK);
 		}
 
 		// Don't allow bogus sequence on player

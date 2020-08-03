@@ -1161,7 +1161,7 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	}
 
 	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
-	if ( GetFlags() & FL_FROZEN )
+	if ( GetFlags() & FL_FROZEN_ACT )
 	{
 		// Don't stomp the first time we get frozen
 		if ( m_bWasFrozen )
@@ -2382,6 +2382,20 @@ void C_BasePlayer::PhysicsSimulate( void )
 		ctx->cmd.sidemove = 0;
 		ctx->cmd.upmove = 0;
 		ctx->cmd.buttons = 0;
+		ctx->cmd.impulse = 0;
+		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
+	}
+
+	//FL_FROZEN but integrated into gameplay
+	if (GetFlags() & FL_FROZEN_ACT)
+	{
+		if (!(m_afButtonPressed & IN_SPEED))
+		{
+			ctx->cmd.forwardmove = 0;
+			ctx->cmd.sidemove = 0;
+			ctx->cmd.upmove = 0;
+		}
+		//ctx->cmd.buttons = 0;
 		ctx->cmd.impulse = 0;
 		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
 	}

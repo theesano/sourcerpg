@@ -268,7 +268,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 
 					VectorNormalize(dir);
 
-					dir *= 1500.0f;
+					dir *= 128.0f;
 
 					//If not on ground, then don't make them fly!
 					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )

@@ -533,6 +533,9 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	if ( GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
 		return;
 
+	if (GetFlags() & FL_FROZEN_ACT)
+		return;
+
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return;
 

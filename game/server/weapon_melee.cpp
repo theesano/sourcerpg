@@ -25,7 +25,6 @@
 
 ConVar    sk_plr_dmg_melee("sk_plr_dmg_melee", "0");
 ConVar    sk_npc_dmg_melee("sk_npc_dmg_melee", "0");
-ConVar		sk_meleeatkspd("sk_meleeatkspd", "0");
 
 //-----------------------------------------------------------------------------
 // CWeaponMelee
@@ -193,12 +192,6 @@ void CWeaponMelee::HandleAnimEventMeleeHit(animevent_t *pEvent, CBaseCombatChara
 		trace_t traceHit;
 		UTIL_TraceLine(pOperator->Weapon_ShootPosition(), pHurt->GetAbsOrigin(), MASK_SHOT_HULL, pOperator, COLLISION_GROUP_NONE, &traceHit);
 		ImpactEffect(traceHit);
-
-		Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
-		VectorNormalize(dir);
-		dir *= 500.0f;
-		pHurt->ApplyAbsVelocityImpulse(dir);
-		DevMsg("Hit \n");
 	}
 	else
 	{
