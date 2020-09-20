@@ -18,8 +18,10 @@
 #error weapon_crowbar.h must not be included in hl2mp. The windows compiler will use the wrong class elsewhere if it is.
 #endif
 
-#define	MELEE_RANGE	128.0f
-#define	MELEE_REFIRE 0.6f
+ConVar    sk_plr_dmg_melee("sk_plr_dmg_melee", "0");
+ConVar    sk_npc_dmg_melee("sk_npc_dmg_melee", "0");
+ConVar    sk_plr_attackspeed("sk_plr_attackspeed", "0.6");
+ConVar    sk_plr_attackrange("sk_plr_attackrange", "128");
 
 //-----------------------------------------------------------------------------
 // CWeaponCrowbar
@@ -35,8 +37,8 @@ public:
 
 	CWeaponMelee();
 
-	float		GetRange(void)		{ return	MELEE_RANGE; }
-	float		GetFireRate(void)		{ return	MELEE_REFIRE; }
+	float		GetRange(void)		{ return sk_plr_attackrange.GetFloat(); }
+	float		GetFireRate(void)		{ return	sk_plr_attackspeed.GetFloat(); }
 
 	void		AddViewKick(void);
 	float		GetDamageForActivity(Activity hitActivity);

@@ -14,6 +14,7 @@
 #include "hud.h"
 #include "hud_macros.h"
 #include "view.h"
+#include "c_basehlplayer.h"
 
 #include "iclientmode.h"
 
@@ -66,7 +67,7 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 //-----------------------------------------------------------------------------
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudHealth")
 {
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD );
 }
 
 //-----------------------------------------------------------------------------
@@ -94,7 +95,8 @@ void CHudHealth::Reset()
 	}
 	else
 	{
-		SetLabelText(L"HEALTH");
+		SetLabelText(L"STAMINA");
+		//SetLabelText(L"HEALTH");
 	}
 	SetDisplayValue(m_iHealth);
 }
@@ -113,13 +115,17 @@ void CHudHealth::VidInit()
 void CHudHealth::OnThink()
 {
 	int newHealth = 0;
-	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+	//C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+	C_BaseHLPlayer *local = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+
 	if ( local )
 	{
 		// Never below zero
-		newHealth = MAX( local->GetHealth(), 0 );
-	}
+		//newHealth = MAX( local->GetHealth(), 0 );
+		newHealth = MAX(local->m_HL2Local.m_flSuitPower, 0);
 
+	}
+	
 	// Only update the fade if we've changed health
 	if ( newHealth == m_iHealth )
 	{
@@ -127,6 +133,7 @@ void CHudHealth::OnThink()
 	}
 
 	m_iHealth = newHealth;
+	
 
 	if ( m_iHealth >= 20 )
 	{

@@ -38,7 +38,8 @@ END_SEND_TABLE()
 static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM);
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
-ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
+extern ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
+extern ConVar pl_isattacking("pl_isattacking", "0");
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -50,12 +51,13 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_nSkCoolDownTime = 0.0f;
 	m_bIsSkCoolDown2 = false;
 	m_nSkCoolDownTime2 = 0.0f;
-	m_nExecutionTime = 0.0f;
+	m_nExecutionTime = 0.0f;//This Var is Tied to Camera control in "in_camera" , be advised when changing it.
 	m_nSkillHitRefireTime = 0.0f;
 	m_bWIsAttack1 = true;
 	m_bWIsAttack2 = false;
-	m_bWIsAttack3 = false;
+	m_bWIsAttack3 = false; 
 	m_SpeedModActiveTime = 0.0f;
+	m_flNPCFreezeTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -126,7 +128,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 		return;
 	}
 }
-
+//m_nExecutionTime handles freezing the player for a certain amount of time
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
@@ -141,6 +143,15 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	else
 		sk_atkspeedmod.SetValue("1");
 
+	if (m_flNPCFreezeTime > gpGlobals->curtime)
+	{
+		AddKnockbackXY(1.0f, 2);
+	}
+	else
+	{
+		AddKnockbackXY(1.0f, 3);
+	}
+
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
 	{
 		Skill_Evade();
@@ -150,6 +161,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	
 	//Run the Evil Slash skill code
 		Skill_RadialSlash();
+
 	//Makes the player stand still when activating a skill
 	if (gpGlobals->curtime < m_nExecutionTime)
 	{
@@ -183,6 +195,17 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	}
 
 	SkillStatNotification();
+
+	//This is a Hacky way to report if player is attacking.
+	if (m_nExecutionTime > gpGlobals->curtime)
+	{
+		pl_isattacking.SetValue(1);
+	}
+	else
+	{
+		pl_isattacking.SetValue(0);
+	}
+
 }
 
 void CBaseMeleeWeapon::SkillStatNotification(void)
@@ -438,6 +461,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
 	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 	//Set and cycles between attack states, play animation and make sound. 
@@ -455,7 +479,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	}
 	else if (m_bWIsAttack2 == true)
 	{
-		m_nDamageRadius = 144.0f;
+		//m_nDamageRadius = 144.0f;
 		//triggerInfo.ScaleDamage(1.5);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
@@ -468,7 +492,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	}
 	else if (m_bWIsAttack3 == true)
 	{
-		m_nDamageRadius = 192.0f;
+		//m_nDamageRadius = 192.0f;
 		//triggerInfo.ScaleDamage(2.0);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
@@ -477,8 +501,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_bWIsAttack3 = false;
 		AddKnockbackXY(3.0f,1);
 		m_nExecutionTime = gpGlobals->curtime + 0.6f;
-
 	}
+
 
 }
 
@@ -564,6 +588,8 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 			//HACK! Reset the timer
 			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
+			m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
+			AddKnockbackXY(1.5f, 1);
 		}
 	}
 
@@ -581,7 +607,6 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 				WeaponSound(SINGLE);
 				pOwner->SetAnimation(PLAYER_SKILL_USE);
-				AddKnockbackXY(0.3f,1);
 			}
 			m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
 			m_bIsSkCoolDown2 = true;
@@ -627,17 +652,24 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
 				
-				if (playernpcdist.x <= 192.0f && playernpcdist.y <= 192.0f)
+				if (playernpcdist.x <= 128.0f && playernpcdist.y <= 128.0f)
 				{
-					ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
-					ppAIs[i]->SetCondition(COND_NPC_FREEZE);
-					//ppAIs[i]->SetMoveType(MOVETYPE_NONE);
-					ppAIs[i]->SetActivity(ACT_IDLE);
+					if (options == 1)
+					{
+						ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
+					}
+					else if (options == 2)
+					{
+						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
+						//ppAIs[i]->SetMoveType(MOVETYPE_NONE);
+						ppAIs[i]->SetActivity(ACT_IDLE);
+					}
+					else if (options == 3)
+						ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
 						
 				}
 			}
 	}
-	
 }
 //Make the player move forward
 void CBaseMeleeWeapon::AddSkillMovementImpulse(float magnitude)

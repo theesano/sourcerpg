@@ -57,6 +57,7 @@ private:
 	float			m_SpeedModActiveTime;
 	float			m_nExecutionTime;
 	float			m_nSkillHitRefireTime;
+	float			m_flNPCFreezeTime;
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
 	bool			m_bWIsAttack3;

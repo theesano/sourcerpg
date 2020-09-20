@@ -23,8 +23,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar    sk_plr_dmg_melee("sk_plr_dmg_melee", "0");
-ConVar    sk_npc_dmg_melee("sk_npc_dmg_melee", "0");
+
 
 //-----------------------------------------------------------------------------
 // CWeaponMelee

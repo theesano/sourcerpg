@@ -15,6 +15,7 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 
+
 using namespace vgui;
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -24,15 +25,17 @@ DECLARE_HUDELEMENT( CHudSuitPower );
 
 #define SUITPOWER_INIT -1
 
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudSuitPower::CHudSuitPower( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudSuitPower" )
+CHudSuitPower::CHudSuitPower(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudSuitPower")
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
 	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+
 }
 
 //-----------------------------------------------------------------------------
@@ -51,6 +54,17 @@ void CHudSuitPower::Init( void )
 void CHudSuitPower::Reset( void )
 {
 	Init();
+	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_AUX_POWER");
+
+	if (tempString)
+	{
+		SetLabelText(tempString);
+	}
+	else
+	{
+		SetLabelText(L"HEALTH");
+	}
+	SetDisplayValue(suitpower);
 }
 
 //-----------------------------------------------------------------------------
@@ -70,6 +84,7 @@ bool CHudSuitPower::ShouldDraw()
 	bNeedsDraw = ( ( pPlayer->m_HL2Local.m_flSuitPower != m_flSuitPower ) || ( m_AuxPowerColor[3] > 0 ) );
 
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -125,6 +140,9 @@ void CHudSuitPower::OnThink( void )
 			break;
 		}
 	}
+	suitpower = m_flSuitPower;
+
+	SetDisplayValue(m_flSuitPower);
 
 	m_flSuitPower = flCurrentPower;
 }
@@ -185,16 +203,17 @@ void CHudSuitPower::Paint()
 	surface()->DrawSetTextColor(m_AuxPowerColor);
 	surface()->DrawSetTextPos(text_xpos, text_ypos);
 
+	//
 	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_AUX_POWER");
 
-	if (tempString)
+	/*if (tempString)
 	{
 		surface()->DrawPrintText(tempString, wcslen(tempString));
 	}
 	else
 	{
 		surface()->DrawPrintText(L"AUX POWER", wcslen(L"AUX POWER"));
-	}
+	}*/
 
 	if ( m_iActiveSuitDevices )
 	{

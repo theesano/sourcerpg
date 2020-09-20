@@ -81,7 +81,7 @@ ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
 
-ConVar thirdperson_platformer( "thirdperson_platformer", "1", 0, "Player will aim in the direction they are moving." );
+ConVar thirdperson_platformer( "thirdperson_platformer", "1", 0, "Player will aim in the direction which they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
 ConVar thirdperson_oldturning("thirdperson_oldturning", "0");
 ConVar thirdperson_turningspeed("thirdperson_turningspeed", "4.5");
@@ -720,60 +720,73 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 	{
 		float side = KeyState(&in_moveleft) - KeyState(&in_moveright);
 		float forward = KeyState(&in_forward) - KeyState(&in_back);
-		
-		
-		if (side || forward )
+
+		ConVar *pConstrictCameraMovementYaw = cvar->FindVar("pl_isattacking");
+
+		//Stop player's model from turning when attacking.
+		if (pConstrictCameraMovementYaw->GetInt() == 0)
 		{
-			if (thirdperson_oldturning.GetInt() == 0)
+			if (side || forward)
 			{
-				if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
-					return;
-				else
+				if (thirdperson_oldturning.GetInt() == 0)
 				{
-				flTargetViewangle = RAD2DEG(atan2(side, forward));
-	
-				viewangles[YAW] = flTargetViewangle + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
-
-				valid(viewangles[YAW]);
-				valid(prevViewAngle);
-
-				float dif = abs(viewangles[YAW] - prevViewAngle);
-				if (abs(viewangles[YAW] - prevViewAngle) > maxTurningSpeed)
-				{
-					if (dif > 180.1f)
+					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
+						return;
+					else
 					{
-						if (viewangles[YAW] > prevViewAngle)  prevViewAngle += 360.f;
-						else viewangles[YAW] += 360.f;
+						flTargetViewangle = RAD2DEG(atan2(side, forward));
+
+						viewangles[YAW] = flTargetViewangle + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+
+						valid(viewangles[YAW]);
+						valid(prevViewAngle);
+
+						float dif = abs(viewangles[YAW] - prevViewAngle);
+						if (abs(viewangles[YAW] - prevViewAngle) > maxTurningSpeed)
+						{
+							if (dif > 180.1f)
+							{
+								if (viewangles[YAW] > prevViewAngle)  prevViewAngle += 360.f;
+								else viewangles[YAW] += 360.f;
+							}
+							float sign = viewangles[YAW] - prevViewAngle;
+							if (sign > 0)
+							{
+								viewangles[YAW] = prevViewAngle + maxTurningSpeed;
+							}
+							else viewangles[YAW] = prevViewAngle - maxTurningSpeed;
+						}
 					}
-					float sign = viewangles[YAW] - prevViewAngle;
-					if (sign > 0)
-					{
-						viewangles[YAW] = prevViewAngle + maxTurningSpeed;
-					}
-					else viewangles[YAW] = prevViewAngle - maxTurningSpeed;
+
 				}
+				else if (thirdperson_oldturning.GetInt() == 1)
+				{
+					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
+						return;
+					else
+					{
+						viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
+					}
+				}
+
 			}
-			
-			}
-			else if (thirdperson_oldturning.GetInt() == 1)
+
+			if (side || forward || KeyState(&in_right) || KeyState(&in_left))
 			{
-				if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
-					return;
-				else
-				{
-					viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
-				}
+				cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - viewangles[YAW]);
+				//cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - flTargetViewangle);
 			}
+		}
+		else if (pConstrictCameraMovementYaw->GetInt() == 1)
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 
 		}
 		
-		if (side || forward || KeyState(&in_right) || KeyState(&in_left))
-		{
-			cam_idealyaw.SetValue( g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ] - viewangles[ YAW ] );
-			//cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - flTargetViewangle);
-		}
-		
-
 	}
 }
 

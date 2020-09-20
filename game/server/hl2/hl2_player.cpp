@@ -65,6 +65,8 @@
 
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
+extern ConVar animtime("animtime", "0.2"); // the period for selecting the next animation in the combo , it runs out the attack animation will revert back to 1.
+extern ConVar animspeed("animspeed", "1.0");
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -95,6 +97,8 @@ ConVar sk_evadestyle("sk_evadestyle", "0");
 ConVar sk_evadestaminacost("sk_evadestaminacost", "33.3");
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
+
+
 
 #ifdef HL2MP
 	#define	HL2_WALK_SPEED 150
@@ -676,10 +680,15 @@ void CHL2_Player::Evade(void)
 		{
 			if (GetAbsVelocity().Length2D() > 0)
 				pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
-
-			m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
+			
+			if (!sv_infinite_aux_power.GetInt() == 1)
+			{
+				m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
+			}
+			
 			SetAnimation(PLAYER_EVADE);
 			m_bIsEvade = true;
+			RemoveGesture(ACT_MELEE_ATTACK1);
 
 			if (m_bIsRunning)
 				m_bWasRunning = true; 
@@ -903,6 +912,17 @@ void CHL2_Player::PreThink(void)
 
 	EvadeHandler();
 
+	//Set thirdperson turning state. 
+	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
+	if (HasWeapons())
+	{
+		pThirdpersonTurnMode->SetValue(1);
+	}
+	else
+	{
+		pThirdpersonTurnMode->SetValue(0);
+	}
+
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )
 	{
@@ -941,6 +961,8 @@ void CHL2_Player::PreThink(void)
 		m_bIsAttack2 = false;
 		m_bIsAttack3 = false;
 	}
+
+	//DevMsg("Current Animation %d\n", GetSequenceActivity();
 
 	//DevMsg("Attack Animation %i %i %i \n", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3);
 
@@ -2159,6 +2181,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	speed = GetAbsVelocity().Length2D();
 	float flPlayRunToIdleAnim = 0.0f;
 
+	ConVar *pAttackSpeed = cvar->FindVar("sk_plr_attackspeed");
 
 
 	//Select Animation for different attacking stages.
@@ -2170,8 +2193,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		//playerAnim = PLAYER_IDLE; //Formerly IDLE
 	//}
 
-
-	Activity idealActivity = ACT_HL2MP_RUN;
+	Activity idealActivity = ACT_IDLE;
 	if (playerAnim == PLAYER_JUMP)
 	{
 		if (HasWeapons())
@@ -2194,7 +2216,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 	else if (playerAnim == PLAYER_ATTACK1)
 	{
-		//SetPlaybackRate(2.0f);
 		if (GetActivity() == ACT_HOVER ||
 			GetActivity() == ACT_SWIM ||
 			GetActivity() == ACT_HOP ||
@@ -2227,13 +2248,14 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					m_bIsAttack2 = false;
 					m_bIsAttack3 = false;
 			}*/
-
+			
 			if (m_bIsAttack1 == true) 
 			{
 				idealActivity = ACT_MELEE_ATTACK1;
 				m_bIsAttack2 = true;
 				m_bIsAttack1 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat()+ animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
 				
 			}
 			else if (m_bIsAttack2 == true) 
@@ -2242,7 +2264,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack2 = false;
 				m_bIsAttack1 = false;
 				m_bIsAttack3 = true;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
 
 			}
 			else if (m_bIsAttack3 == true) 
@@ -2251,7 +2274,9 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack1 = true;
 				m_bIsAttack2 = false;
 				m_bIsAttack3 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
+
 			}
 
 		}
@@ -2312,7 +2337,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				else
 				{
 					if (HasWeapons())
-						idealActivity = ACT_HL2MP_IDLE_CROUCH;
+					{
+						idealActivity = ACT_MELEE_ATTACK1;
+						//idealActivity = ACT_HL2MP_IDLE_CROUCH;
+					}
 					else
 					{
 						//idealActivity = ACT_COVER_LOW;
@@ -2325,56 +2353,61 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			{
 				//MOVEMENT CODES GOES HERE
 				if (speed > 0)
-				{
+				{ 
+					if (playerAnim != PLAYER_ATTACK1)
 					{
 						if (HasWeapons())
 						{
-								if (m_bIsRunning)
-								{
-									idealActivity = ACT_HL2MP_RUN;
-								}
-								else
-									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
-							
+							if (m_bIsRunning)
+							{
+								idealActivity = ACT_HL2MP_RUN;
+							}
+							else
+								idealActivity = ACT_WALK; //This is NOT the actual walk animation.
 						}
 						else //NO WEAPON STATE
 						{
-								if (m_bIsRunning)//running 
+							if (m_bIsRunning)//running 
+							{
+								idealActivity = ACT_RUN;
+								SetPlaybackRate(1.3f);
+							}
+							else if (m_fIsWalking && GetStickDist() == 0.0f)
+							{
+								idealActivity = ACT_RUNTOIDLE;
+							}
+							else if (m_bIsRunning && GetStickDist() == 0.0f)
+							{
+								idealActivity = ACT_RUNTOIDLE;
+							}
+							else
+							{
+								idealActivity = ACT_RUN;
+								if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
 								{
-									idealActivity = ACT_RUN;
-									SetPlaybackRate(1.3f);
+									idealActivity = ACT_LAND;
 								}
-								else if (m_fIsWalking && GetStickDist() == 0.0f)
-								{
-									idealActivity = ACT_RUNTOIDLE;
-								}
-								else if (m_bIsRunning && GetStickDist() == 0.0f)
-								{
-									idealActivity = ACT_RUNTOIDLE;
-								}
-								else
-								{
-									idealActivity = ACT_RUN;
-									if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
-									{
-										idealActivity = ACT_LAND;
-									}
-								}								
+							}
 						}
 					}
+					
 				}
 				else
 				{
-					if (HasWeapons())
-						idealActivity = ACT_HL2MP_IDLE;
-					else
-					{		
-							if (GetAbsVelocity().z <0 && (GetFlags() & FL_ONGROUND))
+					if (playerAnim != PLAYER_ATTACK1)
+					{
+
+						if (HasWeapons())
+							idealActivity = ACT_HL2MP_IDLE;
+						else
+						{
+							if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
 							{
 								idealActivity = ACT_LAND;
 							}
 							idealActivity = ACT_IDLE;
 
+						}
 					}
 
 				}
@@ -2398,25 +2431,26 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	if (idealActivity == ACT_MELEE_ATTACK1)
 	{
-
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
-
+		AddGesture(Weapon_TranslateActivity(idealActivity));
 		// FIXME: this seems a bit wacked
-		Weapon_SetActivity(Weapon_TranslateActivity(ACT_RANGE_ATTACK1), 0);
-
+		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		Weapon_SetActivity(Weapon_TranslateActivity(ACT_MELEE_ATTACK1), 0);
 		return;
 	}
 
-
 	if (idealActivity == ACT_MELEE_ATTACK2)
 	{
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		SetLayerPlaybackRate(1, animspeed.GetFloat());
 		return;
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK3)
 	{
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		SetLayerPlaybackRate(2, animspeed.GetFloat());
 		return;
 	}
 
@@ -2489,7 +2523,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (GetSequence() == animDesired)
 		return;
 
-	//Msg( "Set animation to %d\n", animDesired );
+	DevMsg( "Set animation to %d\n", animDesired );
 	// Reset to first frame of desired animation
 	ResetSequence(animDesired);
 	SetCycle(0);

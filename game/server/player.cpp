@@ -3693,8 +3693,7 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		}
 	}
 
-	if (GetFlags() & FL_FROZEN_ACT ||
-		(developer.GetInt() == 0 && gpGlobals->eLoadType == MapLoad_NewGame && gpGlobals->curtime < 3.0))
+	if (GetFlags() & FL_FROZEN_ACT)
 	{
 		if (!(m_afButtonPressed & IN_SPEED))
 		{
@@ -4599,9 +4598,8 @@ void CBasePlayer::PostThink()
 
 					SetAnimation(PLAYER_WALK);
 			}
-			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (m_nButtons & IN_SPEED))
+			else if ((GetAbsVelocity().x || GetAbsVelocity().y) && (m_nButtons & IN_ATTACK))
 			{
-				
 			}
 			else if (GetWaterLevel() > 1)
 				SetAnimation(PLAYER_WALK);

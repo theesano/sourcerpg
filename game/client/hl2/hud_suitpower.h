@@ -17,9 +17,10 @@
 //-----------------------------------------------------------------------------
 // Purpose: Shows the sprint power bar
 //-----------------------------------------------------------------------------
-class CHudSuitPower : public CHudElement, public vgui::Panel
+class CHudSuitPower : public CHudElement, public CHudNumericDisplay //public vgui::Panel
 {
-	DECLARE_CLASS_SIMPLE( CHudSuitPower, vgui::Panel );
+	DECLARE_CLASS_SIMPLE(CHudSuitPower, CHudNumericDisplay);
+	//	DECLARE_CLASS_SIMPLE(CHudSuitPower, vgui::Panel);
 
 public:
 	CHudSuitPower( const char *pElementName );
@@ -52,6 +53,8 @@ private:
 	float m_flSuitPower;
 	int m_nSuitPowerLow;
 	int m_iActiveSuitDevices;
+	int suitpower;
+
 };	
 
 #endif // HUD_SUITPOWER_H
