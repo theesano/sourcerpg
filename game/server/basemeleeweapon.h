@@ -43,32 +43,46 @@ public:
 
 	virtual int		CapabilitiesGet(void);
 	virtual	int		WeaponMeleeAttack1Condition(float flDot, float flDist);
+
+	bool			m_bIsSkCoolDown;
 	float			m_nSkCoolDownTime;
+
+	bool			m_bIsSkCoolDown2;
 	float			m_nSkCoolDownTime2;
+
+	bool			m_bIsSkCoolDown3;
+	float			m_nSkCoolDownTime3;
+
+	float			m_flSkillAttributeRange;
+
+	int				m_iEnemyHealth;
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
 
 private:
 	CHandle<CSpriteTrail>	m_pGlowTrail;
-	bool			m_bIsSkCoolDown;
-	//float m_nSkCoolDownTime;
-	bool			m_bIsSkCoolDown2;
-	//float m_nSkCoolDownTime2;
+
 	float			m_SpeedModActiveTime;
 	float			m_nExecutionTime;
 	float			m_nSkillHitRefireTime;
 	float			m_flNPCFreezeTime;
+
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
 	bool			m_bWIsAttack3;
+
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);
 	void			AddKnockbackXY(float magnitude,int options);
 	void			AddSkillMovementImpulse(float magnitude);
 	void			Swing(int bIsSecondary);
+
 	void			Skill_Evade(void);
 	void			Skill_RadialSlash(void);
+	void			Skill_Grenade(void);
+	void			Skill_GrenadeEX(void);
 	void			SkillStatNotification(void);
+
 	Activity		ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner);
 };
 

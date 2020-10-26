@@ -1097,7 +1097,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			return 0;
 		}
 	}
-
+	
 	// Early out if there's no damage
 	if ( !info.GetDamage() )
 		return 0;
@@ -1216,10 +1216,11 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// add to the damage total for clients, which will be sent as a single
 	// message at the end of the frame
 	// todo: remove after combining shotgun blasts?
-	if ( info.GetInflictor() && info.GetInflictor()->edict() )
-		m_DmgOrigin = info.GetInflictor()->GetAbsOrigin();
+// NO red screen fade damage indicator
+	//if ( info.GetInflictor() && info.GetInflictor()->edict() )
+	//	m_DmgOrigin = info.GetInflictor()->GetAbsOrigin();
 
-	m_DmgTake += (int)info.GetDamage();
+	//m_DmgTake += (int)info.GetDamage();
 	
 	// Reset damage time countdown for each type of time based damage player just sustained
 	for (int i = 0; i < CDMG_TIMEBASED; i++)
@@ -1234,7 +1235,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	// Display any effect associate with this damage type
-	DamageEffect(info.GetDamage(),bitsDamage);
+	//DamageEffect(info.GetDamage(),bitsDamage);
 
 	// how bad is it, doc?
 	ftrivial = (m_iHealth > 75 || m_lastDamageAmount < 5);
@@ -1350,7 +1351,7 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	float flPunch = -2;
-
+	
 	if( hl2_episodic.GetBool() && info.GetAttacker() && !FInViewCone( info.GetAttacker() ) )
 	{
 		if( info.GetDamage() > 10.0f )
@@ -1373,7 +1374,6 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	
 	if (fTookDamage && !ftrivial && fcritical && flHealthPrev < 75)
 	{
-
 		// already took major damage, now it's critical...
 		if (m_iHealth < 6)
 			SetSuitUpdate("!HEV_HLTH3", false, SUIT_NEXT_IN_10MIN);	// near death
@@ -1599,24 +1599,24 @@ int CBasePlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( !attacker )
 		return 0;
+//NO flinching back on getting damage
+	//Vector vecDir = vec3_origin;
+	//if ( info.GetInflictor() )
+	//{
+	//	vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0, 0, 10 ) - WorldSpaceCenter();
+	//	VectorNormalize( vecDir );
+	//}
 
-	Vector vecDir = vec3_origin;
-	if ( info.GetInflictor() )
-	{
-		vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0, 0, 10 ) - WorldSpaceCenter();
-		VectorNormalize( vecDir );
-	}
-
-	if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
-		( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
-	{
-		Vector force = vecDir * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
-		if ( force.z > 250.0f )
-		{
-			force.z = 250.0f;
-		}
-		ApplyAbsVelocityImpulse( force );
-	}
+	//if ( info.GetInflictor() && (GetMoveType() == MOVETYPE_WALK) && 
+	//	( !attacker->IsSolidFlagSet(FSOLID_TRIGGER)) )
+	//{
+	//	Vector force = vecDir * -DamageForce( WorldAlignSize(), info.GetBaseDamage() );
+	//	if ( force.z > 250.0f )
+	//	{
+	//		force.z = 250.0f;
+	//	}
+	//	ApplyAbsVelocityImpulse( force );
+	//}
 
 	// fire global game event
 
@@ -1773,12 +1773,6 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 
 	}
 
-	if (GetFlags() & (FL_FROZEN_ACT))
-	{
-		//speed = 0;
-		playerAnim = PLAYER_IDLE;  //Formerly IDLE
-
-	}
 	Activity idealActivity = ACT_WALK;// TEMP!!!!!
 
 	// This could stand to be redone. Why is playerAnim abstracted from activity? (sjb)
@@ -3693,18 +3687,29 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		}
 	}
 
-	if (GetFlags() & FL_FROZEN_ACT)
-	{
-		if (!(m_afButtonPressed & IN_SPEED))
-		{
-			ucmd->forwardmove = 0;
-			ucmd->sidemove = 0;
-			ucmd->upmove = 0;
-		}
-		//ucmd->buttons = 0;
-		ucmd->impulse = 0;
-		//VectorCopy ( pl.v_angle, ucmd->viewangles ); test
-	}
+	//if (GetFlags() & FL_FROZEN_ACT)
+	//{
+	//	if (!(m_afButtonPressed & IN_SPEED))
+	//	{
+	//		ucmd->forwardmove = 0;
+	//		ucmd->sidemove = 0;
+	//		ucmd->upmove = 0;
+	//		//ucmd->buttons = 0;
+	//		//ucmd->impulse = 0;
+	//		//VectorCopy ( pl.v_angle, ucmd->viewangles ); test
+	//	}
+	//	else if (m_afButtonPressed & IN_SPEED)
+	//	{
+	//		////Initializing Vector
+	//		//Vector fwd;
+	//		////Zero out z axis
+	//		//AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+	//		//fwd.z = 0;
+	//		//VectorNormalize(fwd);
+
+	//		//UTIL_GetLocalPlayer()->ApplyAbsVelocityImpulse(fwd * 512);
+	//	}
+	//}
 	
 	PlayerMove()->RunCommand(this, ucmd, moveHelper);
 }

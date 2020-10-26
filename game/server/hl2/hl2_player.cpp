@@ -570,7 +570,6 @@ void CHL2_Player::HandleSpeedChanges( void )
 	}
 	else
 	{
-
 		bWantWalking = true;
 		//SetMaxSpeed(HL2_WALK_SPEED);
 
@@ -656,7 +655,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 
 Vector TargetEvadePoint;
 //-----------------------------------------------------------------------------
-// Purpose: // PROTOTYPE:Moving X units in 6 directions , teleport style.
+// Purpose: For dodging
 //-----------------------------------------------------------------------------
 void CHL2_Player::Evade(void)
 {
@@ -672,28 +671,40 @@ void CHL2_Player::Evade(void)
 	VectorNormalize(fwd);
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
-	//Vector EvadeEndPoint_Smoohting = GetAbsOrigin() + fwd * 3.2;
-
+	
+	
 	if (m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
 	{
 		if (sk_evadestyle.GetInt() == 0)
 		{
 			if (GetAbsVelocity().Length2D() > 0)
-				pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+			{
+				if (m_afButtonPressed & IN_BACK)
+				{
+					fwd.Negate();
+					pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat()*GetAbsVelocity());
+				}
+				else
+				{
+					pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+				}
+
+			}
 			
 			if (!sv_infinite_aux_power.GetInt() == 1)
-			{
 				m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
-			}
 			
 			SetAnimation(PLAYER_EVADE);
 			m_bIsEvade = true;
 			RemoveGesture(ACT_MELEE_ATTACK1);
+			RemoveGesture(ACT_MELEE_ATTACK2);
+			RemoveGesture(ACT_MELEE_ATTACK3);
 
 			if (m_bIsRunning)
 				m_bWasRunning = true; 
 
 			m_flEvadeHandlerTime = gpGlobals->curtime + 0.3f; //Timer for applying additional evade effect.
+			
 		}
 		else if (sk_evadestyle.GetInt() == 1)
 		{//pPlayer->SetAbsOrigin(EvadeEndPoint);
@@ -716,7 +727,6 @@ void CHL2_Player::Evade(void)
 }
 void CHL2_Player::EvadeHandler(void)
 {
-
 	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
 	if (!pPlayer)
 		return; //Always validate a pointer
@@ -731,19 +741,17 @@ void CHL2_Player::EvadeHandler(void)
 	VectorNormalize(fwd);
 
 	trace_t trace;
-	Vector vecEndPos = GetAbsOrigin() +(fwd* 64); // 64 is a good enough distance to check if player is running up slopes or not.
+	Vector vecEndPos = GetAbsOrigin() + (fwd * 64); // 64 is a good enough distance to check if player is running up slopes or not.
 
 	//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
 	UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX,MASK_PLAYERSOLID,this,COLLISION_GROUP_PLAYER_MOVEMENT,&trace);
 	if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
-	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
-	}
+
 	//Prevent player from getting big velocity boost when spamming the Evade button 
 	if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
-	{
 		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
-	}
+	
 
 	if (m_bIsEvade)
 	{ //make the player invincible and stop moving for a short period of time. 
@@ -753,7 +761,7 @@ void CHL2_Player::EvadeHandler(void)
 		if (gpGlobals->curtime >= m_flEvadeHandlerTime)
 		{
 			m_bIsEvade = false;
-			SetAbsVelocity(vec3_origin);
+			//SetAbsVelocity(vec3_origin);
 
 			if (m_bWasRunning)
 			{
@@ -912,6 +920,8 @@ void CHL2_Player::PreThink(void)
 
 	EvadeHandler();
 
+	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
+
 	//Set thirdperson turning state. 
 	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
 	if (HasWeapons())
@@ -922,6 +932,12 @@ void CHL2_Player::PreThink(void)
 	{
 		pThirdpersonTurnMode->SetValue(0);
 	}
+
+	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
+	if (pIsPlayerAttacking->GetInt() == 1)
+		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
+	else
+		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
 
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )

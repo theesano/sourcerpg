@@ -67,7 +67,7 @@ DECLARE_HUD_MESSAGE( CHudHealth, Damage );
 //-----------------------------------------------------------------------------
 CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName ), CHudNumericDisplay(NULL, "HudHealth")
 {
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
 }
 
 //-----------------------------------------------------------------------------
@@ -95,8 +95,8 @@ void CHudHealth::Reset()
 	}
 	else
 	{
-		SetLabelText(L"STAMINA");
-		//SetLabelText(L"HEALTH");
+		//SetLabelText(L"STAMINA");
+		SetLabelText(L"HEALTH");
 	}
 	SetDisplayValue(m_iHealth);
 }
@@ -121,8 +121,8 @@ void CHudHealth::OnThink()
 	if ( local )
 	{
 		// Never below zero
-		//newHealth = MAX( local->GetHealth(), 0 );
-		newHealth = MAX(local->m_HL2Local.m_flSuitPower, 0);
+		newHealth = MAX( local->GetHealth(), 0 );
+		//newHealth = MAX(local->m_HL2Local.m_flSuitPower, 0);
 
 	}
 	

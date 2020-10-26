@@ -722,10 +722,11 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		float forward = KeyState(&in_forward) - KeyState(&in_back);
 
 		ConVar *pConstrictCameraMovementYaw = cvar->FindVar("pl_isattacking");
-
+		
+		//Experiment:
 		//Stop player's model from turning when attacking.
-		if (pConstrictCameraMovementYaw->GetInt() == 0)
-		{
+		//if (pConstrictCameraMovementYaw->GetInt() == 0)
+		//{
 			if (side || forward)
 			{
 				if (thirdperson_oldturning.GetInt() == 0)
@@ -776,17 +777,16 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - viewangles[YAW]);
 				//cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - flTargetViewangle);
 			}
-		}
-		else if (pConstrictCameraMovementYaw->GetInt() == 1)
-		{
-			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
-
-			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
-			viewangles[YAW] = vTempOffset[YAW];
-			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
-
-		}
-		
+		//}
+		//else if (pConstrictCameraMovementYaw->GetInt() == 1)
+		//{
+		//	Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+		//	//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+		//	viewangles[YAW] = vTempOffset[YAW];
+		//	cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		//	
+		//}
+		//
 	}
 }
 

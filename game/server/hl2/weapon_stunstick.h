@@ -13,7 +13,7 @@
 #include "basebludgeonweapon.h"
 
 #define	STUNSTICK_RANGE		75.0f
-#define	STUNSTICK_REFIRE	1.0f
+#define	STUNSTICK_REFIRE	2.0f
 
 class CWeaponStunStick : public CBaseHLBludgeonWeapon
 {

@@ -24,7 +24,9 @@
 #include "npc_metropolice.h"
 #include "ai_eventresponse.h"
 #include "ai_basenpc.h"
-
+#include "grenade_frag.h"
+#include "grenade_ar2.h"
+#include "prop_combine_ball.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -40,6 +42,7 @@ static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEO
 
 extern ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
 extern ConVar pl_isattacking("pl_isattacking", "0");
+extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "75");
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -58,6 +61,7 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_bWIsAttack3 = false; 
 	m_SpeedModActiveTime = 0.0f;
 	m_flNPCFreezeTime = 0.0f;
+	m_flSkillAttributeRange = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -162,36 +166,63 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Run the Evil Slash skill code
 		Skill_RadialSlash();
 
+		if (gpGlobals->curtime - m_nExecutionTime < 0)
+			Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
+		
+		if ((pOwner->m_nButtons & IN_SLOT2) && !m_bIsSkCoolDown3)
+		{
+			Skill_GrenadeEX();
+		}
+
 	//Makes the player stand still when activating a skill
-	if (gpGlobals->curtime < m_nExecutionTime)
-	{
-		//UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
-		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
-		//AddKnockbackXY(0.3f,2);
-	}
-	else
-		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
 
 
 	if (pOwner->m_nButtons & IN_SPEED)
-	{
 		m_nExecutionTime = 0.0f;
-		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
-		//Warning("Execution time %.2f \n", gpGlobals->curtime - m_nExecutionTime);
-
-	}
-
+	//Skill 1 CoolDown
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
 	{
 		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime;
 		//DevMsg("Spinning Demon %.2f \n ", cdtimer);
 		m_bIsSkCoolDown = false;
 	}
+	
+	//Skill 2 CoolDown
 	if (gpGlobals->curtime - m_nSkCoolDownTime2 < 0)
 	{
 		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime2;
 		//DevMsg("Evil Slash CD  %.2f \n ", cdtimer);
 		m_bIsSkCoolDown2 = false;
+	}
+
+	//Skill 3 CoolDown
+	if (gpGlobals->curtime - m_nSkCoolDownTime3 < 0)
+	{
+		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime3;
+		//DevMsg("Nade CD  %.2f \n ", cdtimer);
+		m_bIsSkCoolDown3 = false;
+	}
+	
+	//Skill 3 Grenade Detonate
+	if (pOwner->m_nButtons & IN_USE)
+	{
+		CBaseEntity *pEntity = NULL;
+
+		//while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
+		while ((pEntity = gEntList.FindEntityByClassname(pEntity, "prop_combine_ball")) != NULL)
+		{
+			/*CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
+			if (pFrag->m_bIsLive && pFrag->GetThrower() && GetOwner() && pFrag->GetThrower() == GetOwner())
+			{
+				pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
+				pFrag->SetTimer(0, 0);
+
+			}*/
+			CPropCombineBall *pBall = dynamic_cast<CPropCombineBall *>(pEntity);
+			if (pBall->IsAlive())
+				pBall->ExplodeThink();
+
+		}
 	}
 
 	SkillStatNotification();
@@ -206,6 +237,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		pl_isattacking.SetValue(0);
 	}
 
+	
 }
 
 void CBaseMeleeWeapon::SkillStatNotification(void)
@@ -215,6 +247,11 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	if (m_nSkCoolDownTime2 - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(11, "Skill 2 Cooldown time  %6.1f ", m_nSkCoolDownTime2 - gpGlobals->curtime);
+
+	if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
+		engine->Con_NPrintf(12, "Skill 3 Cooldown time  %6.1f  Press USE to Detonate Now ", m_nSkCoolDownTime3 - gpGlobals->curtime);
+	
+		engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
 }
 
 
@@ -468,39 +505,42 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	if (m_bWIsAttack1 == true)
 	{
 		m_nDamageRadius = 128.0f;
+		m_flSkillAttributeRange = m_nDamageRadius;
 		//triggerInfo.ScaleDamage(1.0);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack2 = true;
 		m_bWIsAttack1 = false;
 		AddKnockbackXY(2.0f,1);
-		m_nExecutionTime = gpGlobals->curtime + (0.6f *sk_atkspeedmod.GetFloat());
+		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
 
 	}
 	else if (m_bWIsAttack2 == true)
 	{
 		//m_nDamageRadius = 144.0f;
 		//triggerInfo.ScaleDamage(1.5);
+		m_flSkillAttributeRange = m_nDamageRadius;
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack2 = false;
 		m_bWIsAttack1 = false;
 		m_bWIsAttack3 = true;
 		AddKnockbackXY(2.0f,1);
-		m_nExecutionTime = gpGlobals->curtime + (0.6f *sk_atkspeedmod.GetFloat());
+		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
 
 	}
 	else if (m_bWIsAttack3 == true)
 	{
 		//m_nDamageRadius = 192.0f;
 		//triggerInfo.ScaleDamage(2.0);
+		m_flSkillAttributeRange = m_nDamageRadius;
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack1 = true;
 		m_bWIsAttack2 = false;
 		m_bWIsAttack3 = false;
 		AddKnockbackXY(3.0f,1);
-		m_nExecutionTime = gpGlobals->curtime + 0.6f;
+		m_nExecutionTime = gpGlobals->curtime + 0.6666f;
 	}
 
 
@@ -547,7 +587,6 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
 
-		
 	}
 
 }
@@ -581,16 +620,30 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	//HACK! 
 	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -7) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -5.5f))
 	{
+		m_flSkillAttributeRange = m_nDamageRadius;
 		//HACK! This is a really hacky way to do DPS , Todo: make a proper system or function so every skills can be added dps property easily.
-		if (gpGlobals->curtime > m_nSkillHitRefireTime)
+		if (gpGlobals->curtime >= m_nSkillHitRefireTime)
 		{
 			//DevMsg("Evil Slash Hit! \n");
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 			//HACK! Reset the timer
-			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
+			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
 			m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
-			AddKnockbackXY(1.5f, 1);
+			//AddKnockbackXY(1.1f, 4);
 		}
+	}
+	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -5.5f) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -5.0f))
+	{ //Doesnt work because it pushes the enemy outside the player's damage range
+		m_flSkillAttributeRange = m_nDamageRadius;
+
+		if (gpGlobals->curtime >= m_nSkillHitRefireTime)
+		{
+			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
+			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
+			m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
+			AddKnockbackXY(10, 4);
+		}
+
 	}
 
 	if ((pOwner->m_nButtons & IN_SLOT1) && !m_bIsSkCoolDown2)
@@ -601,7 +654,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			AddSkillMovementImpulse(1.0f);
 			m_nExecutionTime = gpGlobals->curtime + 2.0f;
 			//HACK! Fire the timer
-			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f;
+			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
 			if (gpGlobals->curtime - m_nExecutionTime < 0)
 			{
 				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
@@ -615,6 +668,70 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 
 }
 
+void CBaseMeleeWeapon::Skill_Grenade(void)
+{
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
+	Vector	vecEye = pPlayer->EyePosition();
+	Vector	vForward, vRight;
+
+	pPlayer->EyeVectors(&vForward, &vRight, NULL);
+	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
+	//CheckThrowPosition(pPlayer, vecEye, vecSrc);
+	//	vForward[0] += 0.1f;
+	vForward[2] += 0.1f;
+
+	Vector vecThrow;
+	pPlayer->GetVelocity(&vecThrow, NULL);
+	vecThrow += vForward * 1200;
+	//Fraggrenade_Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, GRENADE_TIMER, false );
+	if (!m_bIsSkCoolDown3 && gpGlobals->curtime > m_nSkCoolDownTime3)
+	{
+		m_nExecutionTime = 1.0f;
+		CGrenadeFrag *pFrag = (CGrenadeFrag*)Create("npc_grenade_frag", vecSrc, vec3_angle, GetOwner());
+		pFrag->SetThrower(GetOwner());
+		pFrag->ApplyAbsVelocityImpulse(vecThrow);
+		pFrag->SetLocalAngularVelocity(QAngle(0, 400, 0));
+		pFrag->m_bIsLive = true;
+		pFrag->SetTimer(2, 2);
+
+		WeaponSound(SINGLE);
+		pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+		m_nSkCoolDownTime3 = gpGlobals->curtime + 3.0f;
+		m_bIsSkCoolDown3 = true;
+	}
+
+	
+}
+
+void CBaseMeleeWeapon::Skill_GrenadeEX(void)
+{
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+
+	// Fire the bullets
+	Vector vecSrc = pOwner->Weapon_ShootPosition();
+	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	Vector impactPoint = vecSrc + (vecAiming * MAX_TRACE_LENGTH);
+
+	// Fire the bullets
+	Vector vecVelocity = vecAiming * 1000.0f;
+
+	// Fire the combine ball
+	if (!m_bIsSkCoolDown3 && gpGlobals->curtime > m_nSkCoolDownTime3)
+	{
+		m_nExecutionTime = 1.0f;
+		
+		CreateCombineBall(vecSrc,vecVelocity,10,150,1.5,pOwner);
+
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_SKILL_USE);
+
+		m_nSkCoolDownTime3 = gpGlobals->curtime + 3.0f;
+		m_bIsSkCoolDown3 = true;
+	}
+}
+
 void CBaseMeleeWeapon::AddKnockback(Vector dir)
 {
 	//UTIL_EntitiesInSphere
@@ -622,16 +739,13 @@ void CBaseMeleeWeapon::AddKnockback(Vector dir)
 	CBaseEntity *pEntity = NULL;
 	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
 	{
-		
 		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
 		pCop->ApplyAbsVelocityImpulse(dir);
-
 	}
 
 }
 void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 {
-	
 	float flKnockbackVelocity = 128.0f*magnitude;
 	Vector dir;
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &dir);
@@ -641,34 +755,51 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
-	Vector playernpcdist; 
+	Vector playernpcdist;
 
 	for (int i = 0; i < nAIs; i++)
 	{
-		//if (((pSearch = gEntList.FindEntityGenericNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(),192.0f))))
-
 		if (ppAIs[i]->m_iClassname == iszNPCName)
-			{
+		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
-				
-				if (playernpcdist.x <= 128.0f && playernpcdist.y <= 128.0f)
+
+				if (playernpcdist.x <= m_flSkillAttributeRange && playernpcdist.y <= m_flSkillAttributeRange)
 				{
+					m_iEnemyHealth = ppAIs[i]->GetHealth();
+
+					int NPCHealth = ppAIs[i]->GetHealth();
 					if (options == 1)
 					{
+						ppAIs[i]->SetRenderMode(kRenderTransColor);
+						ppAIs[i]->SetRenderColor(128,128,128,128);
+						if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
 						ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
 					}
 					else if (options == 2)
 					{
+						if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
 						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
 						//ppAIs[i]->SetMoveType(MOVETYPE_NONE);
 						ppAIs[i]->SetActivity(ACT_IDLE);
 					}
 					else if (options == 3)
-						ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
+					{
+						if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
+							ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
+
+						ppAIs[i]->SetRenderMode(kRenderNormal);
+					}
+					else if (options == 4)
+					{
+						//m_iEnemyHealth = ppAIs[i]->GetHealth();
+						ppAIs[i]->SetRenderMode(kRenderTransColor);
+						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
+						ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
+					}
 						
 				}
-			}
+		}
 	}
 }
 //Make the player move forward

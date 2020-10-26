@@ -1161,30 +1161,30 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	}
 
 	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
-	if ( GetFlags() & FL_FROZEN_ACT )
-	{
-		// Don't stomp the first time we get frozen
-		if ( m_bWasFrozen )
-		{
-			// Stomp the new viewangles with old ones
-			//pCmd->viewangles = m_vecOldViewAngles;
-			//engine->SetViewAngles( pCmd->viewangles );
-			engine->ClientCmd("thirdperson_platformer 0");
-			
-		}
-		else
-		{
-			m_bWasFrozen = true;
-			engine->ClientCmd("thirdperson_platformer 1");
+	//if ( GetFlags() & FL_FROZEN_ACT )
+	//{
+	//	// Don't stomp the first time we get frozen
+	//	if ( m_bWasFrozen )
+	//	{
+	//		// Stomp the new viewangles with old ones
+	//		//pCmd->viewangles = m_vecOldViewAngles;
+	//		//engine->SetViewAngles( pCmd->viewangles );
+	//		engine->ClientCmd("thirdperson_platformer 0");
+	//		
+	//	}
+	//	else
+	//	{
+	//		m_bWasFrozen = true;
+	//		engine->ClientCmd("thirdperson_platformer 1");
 
-		}
-	}
-	else
-	{
-		m_bWasFrozen = false;
-		engine->ClientCmd("thirdperson_platformer 1");
+	//	}
+	//}
+	//else
+	//{
+	//	m_bWasFrozen = false;
+	//	engine->ClientCmd("thirdperson_platformer 1");
 
-	}
+	//}
 
 	m_vecOldViewAngles = pCmd->viewangles;
 	
@@ -2387,18 +2387,31 @@ void C_BasePlayer::PhysicsSimulate( void )
 	}
 
 	//FL_FROZEN but integrated into gameplay
-	if (GetFlags() & FL_FROZEN_ACT)
-	{
-		if (!(m_afButtonPressed & IN_SPEED))
-		{
-			ctx->cmd.forwardmove = 0;
-			ctx->cmd.sidemove = 0;
-			ctx->cmd.upmove = 0;
-		}
-		//ctx->cmd.buttons = 0;
-		ctx->cmd.impulse = 0;
-		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
-	}
+	//if (GetFlags() & FL_FROZEN_ACT)
+	//{
+	//	if (!(m_afButtonPressed & IN_SPEED))
+	//	{
+	//		ctx->cmd.forwardmove = 0;
+	//		ctx->cmd.sidemove = 0;
+	//		ctx->cmd.upmove = 0;
+
+	//		//ctx->cmd.buttons = 0;
+	//		//ctx->cmd.impulse = 0;
+	//		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
+	//	}
+	//	else if (m_afButtonPressed & IN_SPEED)
+	//	{
+	//		////Initializing Vector
+	//		//Vector fwd;
+	//		////Zero out z axis
+	//		//AngleVectors(GetLocalPlayer()->GetAbsAngles(), &fwd);
+	//		//fwd.z = 0;
+	//		//VectorNormalize(fwd);
+
+	//		//GetLocalPlayer()->ApplyAbsVelocityImpulse(fwd * 512);
+	//	}
+	//	
+	//}
 
 	// Run the next command
 	prediction->RunCommand( 

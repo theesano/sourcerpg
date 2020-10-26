@@ -536,6 +536,8 @@ void CNPC_MetroPolice::PrescheduleThink( void )
 		m_nRecentDamage = 0;
 		m_flRecentDamageTime = 0;
 	}
+
+
 }
 
 //-----------------------------------------------------------------------------
@@ -640,6 +642,7 @@ void CNPC_MetroPolice::Spawn( void )
 	if (!m_bSimpleCops)
 	{
 		m_iHealth = sk_metropolice_health.GetFloat();
+
 	}
 	else
 	{

@@ -35,7 +35,7 @@ private:
 	CPanelAnimationVarAliasType(float, m_flBarWidth, "BarWidth", "84", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_flBarHeight, "BarHeight", "4", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_flBarChunkWidth, "BarChunkWidth", "2", "proportional_float");
-	CPanelAnimationVarAliasType(float, m_flBarChunkGap, "BarChunkGap", "1", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarChunkGap, "BarChunkGap", "0", "proportional_float");
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "HUDBarText");
 	CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "2", "proportional_float");

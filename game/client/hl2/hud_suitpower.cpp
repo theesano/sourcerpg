@@ -62,9 +62,10 @@ void CHudSuitPower::Reset( void )
 	}
 	else
 	{
-		SetLabelText(L"HEALTH");
+		SetLabelText(L"STAMINA");
 	}
 	SetDisplayValue(suitpower);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -199,6 +200,7 @@ void CHudSuitPower::Paint()
 	}
 
 	// draw our name
+	surface()->DrawPrintText(L"STAMINA", wcslen(L"STAMINA"));
 	surface()->DrawSetTextFont(m_hTextFont);
 	surface()->DrawSetTextColor(m_AuxPowerColor);
 	surface()->DrawSetTextPos(text_xpos, text_ypos);

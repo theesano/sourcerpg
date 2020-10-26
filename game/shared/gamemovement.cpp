@@ -983,6 +983,7 @@ float CGameMovement::ComputeConstraintSpeedFactor( void )
 
 	float flSpeedFactor = Lerp( flFrac, 1.0f, mv->m_flConstraintSpeedFactor ); 
 	return flSpeedFactor;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1062,8 +1063,9 @@ void CGameMovement::CheckParameters( void )
 		{
 			mv->m_flForwardMove = 0;
 			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_flUpMove = 0;				
 		}
+
 	}
 
 	DecayPunchAngle();

@@ -250,42 +250,43 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 				}
 				
 				// Punch angles
-				if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE) )
-				{
-					float yawKick = random->RandomFloat( -48, -24 );
+				//if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE) )
+				//{
+				//	float yawKick = random->RandomFloat( -48, -24 );
 
-					//Kick the player angles
-					pPlayer->ViewPunch( QAngle( -16, yawKick, 2 ) );
+				//	//Kick the player angles
+				//	pPlayer->ViewPunch( QAngle( -16, yawKick, 2 ) );
 
-					Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
+				//	Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
 
-					// If the player's on my head, don't knock him up
-					if ( pPlayer->GetGroundEntity() == pOperator )
-					{
-						dir = vecDirection;
-						dir.z = 0;
-					}
+				//	// If the player's on my head, don't knock him up
+				//	if ( pPlayer->GetGroundEntity() == pOperator )
+				//	{
+				//		dir = vecDirection;
+				//		dir.z = 0;
+				//	}
 
-					VectorNormalize(dir);
+				//	//VectorNormalize(dir);
 
-					dir *= 128.0f;
+				//	//dir *= 128.0f;
 
-					//If not on ground, then don't make them fly!
-					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
-						 dir.z = 0.0f;
+				//	//If not on ground, then don't make them fly!
+				//	if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
+				//		 dir.z = 0.0f;
 
-					//Push the target back
-					pHurt->ApplyAbsVelocityImpulse( dir );
+				//	//Push the target back
+				//	//pHurt->ApplyAbsVelocityImpulse( dir );
 
-					if ( !bFlashed )
-					{
-						color32 red = {128,0,0,128};
-						UTIL_ScreenFade( pPlayer, red, 0.5f, 0.1f, FFADE_IN );
-					}
-					
-					// Force the player to drop anyting they were holding
-					pPlayer->ForceDropOfCarriedPhysObjects();
-				}
+				//	if ( !bFlashed )
+				//	{
+				//		//color32 red = {128,0,0,128};
+				//		//color32 red = { 256, 256, 256, 128 };
+				//		//UTIL_ScreenFade( pPlayer, red, 0.5f, 0.1f, FFADE_IN );
+				//	}
+				//	
+				//	// Force the player to drop anyting they were holding
+				//	pPlayer->ForceDropOfCarriedPhysObjects();
+				//}
 				
 				// do effect?
 			}
