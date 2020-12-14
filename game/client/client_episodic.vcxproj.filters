@@ -1894,6 +1894,9 @@
     </ClInclude>
     <ClInclude Include="..\server\baseentity.h" />
     <ClInclude Include="hud_hull.h" />
+    <ClInclude Include="c_skills_weaponthrow.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3422,6 +3425,9 @@
     </ClCompile>
     <ClCompile Include="hud_hull.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_skills_weaponthrow.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

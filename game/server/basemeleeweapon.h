@@ -53,6 +53,9 @@ public:
 	bool			m_bIsSkCoolDown3;
 	float			m_nSkCoolDownTime3;
 
+	bool			m_bIsSkCoolDown4;
+	float			m_nSkCoolDownTime4;
+
 	float			m_flSkillAttributeRange;
 
 	int				m_iEnemyHealth;
@@ -81,6 +84,7 @@ private:
 	void			Skill_RadialSlash(void);
 	void			Skill_Grenade(void);
 	void			Skill_GrenadeEX(void);
+	void			Skill_HealSlash(void);
 	void			SkillStatNotification(void);
 
 	Activity		ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner);

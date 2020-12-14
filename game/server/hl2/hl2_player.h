@@ -19,6 +19,8 @@
 
 class CAI_Squad;
 class CPropCombineBall;
+class CWeaponThrowingSkills;
+
 
 extern int TrainSpeed(int iSpeed, int iMax);
 extern void CopyToBodyQue( CBaseAnimating *pCorpse );

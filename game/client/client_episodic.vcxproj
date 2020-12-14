@@ -378,6 +378,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
     <ClInclude Include="..\server\baseentity.h" />
     <ClInclude Include="..\server\singleplayer_animstate.h" />
+    <ClInclude Include="c_skills_weaponthrow.h" />
     <ClInclude Include="game_controls\baseviewport.h" />
     <ClInclude Include="game_controls\clientscoreboarddialog.h" />
     <ClInclude Include="game_controls\commandmenu.h" />
@@ -864,6 +865,7 @@ if ERRORLEVEL 1 exit /b 1
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\server\singleplayer_animstate.cpp" />
+    <ClCompile Include="c_skills_weaponthrow.cpp" />
     <ClCompile Include="hud_hull.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />

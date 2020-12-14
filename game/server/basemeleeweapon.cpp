@@ -21,12 +21,11 @@
 #include "te_effect_dispatch.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
-#include "npc_metropolice.h"
 #include "ai_eventresponse.h"
 #include "ai_basenpc.h"
 #include "grenade_frag.h"
 #include "grenade_ar2.h"
-#include "prop_combine_ball.h"
+#include "Skills_WeaponThrow.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -168,10 +167,15 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 		if (gpGlobals->curtime - m_nExecutionTime < 0)
 			Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
-		
+		// Run the Grenade code
 		if ((pOwner->m_nButtons & IN_SLOT2) && !m_bIsSkCoolDown3)
 		{
 			Skill_GrenadeEX();
+		}
+
+		if ((pOwner->m_nButtons & IN_SLOT3) && !m_bIsSkCoolDown4)
+		{
+			Skill_HealSlash();
 		}
 
 	//Makes the player stand still when activating a skill
@@ -203,27 +207,36 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		m_bIsSkCoolDown3 = false;
 	}
 	
-	//Skill 3 Grenade Detonate
-	if (pOwner->m_nButtons & IN_USE)
+	if (gpGlobals->curtime - m_nSkCoolDownTime4 < 0)
 	{
-		CBaseEntity *pEntity = NULL;
-
-		//while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
-		while ((pEntity = gEntList.FindEntityByClassname(pEntity, "prop_combine_ball")) != NULL)
-		{
-			/*CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
-			if (pFrag->m_bIsLive && pFrag->GetThrower() && GetOwner() && pFrag->GetThrower() == GetOwner())
-			{
-				pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
-				pFrag->SetTimer(0, 0);
-
-			}*/
-			CPropCombineBall *pBall = dynamic_cast<CPropCombineBall *>(pEntity);
-			if (pBall->IsAlive())
-				pBall->ExplodeThink();
-
-		}
+		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime4;
+		//DevMsg("Nade CD  %.2f \n ", cdtimer);
+		m_bIsSkCoolDown4 = false;
 	}
+
+	//Skill 3 Grenade Detonate/Properties
+	//if (pOwner->m_nButtons & IN_USE)
+	//if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
+	//{
+	//	CBaseEntity *pEntity = NULL;
+
+	//	//while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
+	//	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "skills_weaponthrow")) != NULL)
+	//	{
+	//		/*CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
+	//		if (pFrag->m_bIsLive && pFrag->GetThrower() && GetOwner() && pFrag->GetThrower() == GetOwner())
+	//		{
+	//			pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
+	//			pFrag->SetTimer(0, 0);
+
+	//		}*/
+	//		CWeaponThrowingSkills *pSkWpnThrow = dynamic_cast<CWeaponThrowingSkills *>(pEntity);
+	//		if (pSkWpnThrow->IsAlive())
+	//			AddKnockbackXY(3.0f, 5);
+	//			//pSkWpnThrow->ExplodeThink();
+
+	//	}
+	//}
 
 	SkillStatNotification();
 
@@ -250,6 +263,9 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(12, "Skill 3 Cooldown time  %6.1f  Press USE to Detonate Now ", m_nSkCoolDownTime3 - gpGlobals->curtime);
+
+	if (m_nSkCoolDownTime4 - gpGlobals->curtime >= 0)
+		engine->Con_NPrintf(13, "Skill 4 Cooldown time  %6.1f   ", m_nSkCoolDownTime4 - gpGlobals->curtime);
 	
 		engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
 }
@@ -720,16 +736,79 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	// Fire the combine ball
 	if (!m_bIsSkCoolDown3 && gpGlobals->curtime > m_nSkCoolDownTime3)
 	{
-		m_nExecutionTime = 1.0f;
-		
-		CreateCombineBall(vecSrc,vecVelocity,10,150,1.5,pOwner);
+		m_nExecutionTime = gpGlobals->curtime + 1.0f;
+		AddSkillMovementImpulse(2.0f);
+		CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
 
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_SKILL_USE);
 
+
 		m_nSkCoolDownTime3 = gpGlobals->curtime + 3.0f;
 		m_bIsSkCoolDown3 = true;
 	}
+}
+
+void CBaseMeleeWeapon::Skill_HealSlash(void)
+{
+	trace_t traceHit;
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+	Vector forward;
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+	Activity nHitActivity = ACT_VM_HITCENTER;
+
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward);
+	triggerInfo.ScaleDamage(2.0f);
+
+	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+	int nAIs = g_AI_Manager.NumAIs();
+	string_t iszNPCName = AllocPooledString("npc_metropolice");
+	Vector playernpcdist;
+
+	
+
+	float m_nDamageRadius = 128.0f;
+	//Only run when the cooldown time is 0
+
+	if (!m_bIsSkCoolDown4 && gpGlobals->curtime > m_nSkCoolDownTime4)
+	{
+		m_nExecutionTime = gpGlobals->curtime + 1.5f;
+		CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+		if (!pOwner)
+			return;
+
+		Vector fwd;
+		AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &fwd);
+		fwd.z = 0;
+		VectorNormalize(fwd);
+		
+		AddKnockbackXY(10.0f, 5);
+		RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_SKILL_USE);
+		for (int i = 0; i < nAIs; i++)
+		{
+			if (ppAIs[i]->m_iClassname == iszNPCName)
+			{
+				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
+				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
+
+				if (playernpcdist.x <= m_flSkillAttributeRange && playernpcdist.y <= m_flSkillAttributeRange)
+				{
+					pOwner->SetHealth(pOwner->GetHealth() + 25);
+				}
+			}
+		}
+
+		m_nSkCoolDownTime4 = gpGlobals->curtime + 5.0f;
+		m_bIsSkCoolDown4 = true;
+
+	}
+
 }
 
 void CBaseMeleeWeapon::AddKnockback(Vector dir)
@@ -739,8 +818,8 @@ void CBaseMeleeWeapon::AddKnockback(Vector dir)
 	CBaseEntity *pEntity = NULL;
 	if ((pEntity = gEntList.FindEntityByClassnameNearest("npc_metropolice", UTIL_GetLocalPlayer()->GetAbsOrigin(), 192.0f)) != NULL)
 	{
-		CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
-		pCop->ApplyAbsVelocityImpulse(dir);
+		//CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pEntity);
+		//pCop->ApplyAbsVelocityImpulse(dir);
 	}
 
 }
@@ -756,6 +835,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
 	Vector playernpcdist;
+	Vector WpnThrowdist;
 
 	for (int i = 0; i < nAIs; i++)
 	{
@@ -799,6 +879,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					}
 						
 				}
+
 		}
 	}
 }

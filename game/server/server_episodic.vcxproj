@@ -420,6 +420,7 @@ exit 1
     <ClInclude Include="..\..\game\shared\shareddefs.h" />
     <ClInclude Include="..\..\game\shared\sharedInterface.h" />
     <ClInclude Include="..\..\game\shared\shot_manipulator.h" />
+    <ClInclude Include="Skills_WeaponThrow.h" />
     <ClInclude Include="SkyCamera.h" />
     <ClInclude Include="..\..\public\soundchars.h" />
     <ClInclude Include="..\..\game\shared\soundenvelope.h" />
@@ -1233,6 +1234,7 @@ exit 1
     <ClCompile Include="..\..\game\shared\simtimer.cpp" />
     <ClCompile Include="..\..\game\shared\singleplay_gamerules.cpp" />
     <ClCompile Include="singleplayer_animstate.cpp" />
+    <ClCompile Include="Skills_WeaponThrow.cpp" />
     <ClCompile Include="SkyCamera.cpp" />
     <ClCompile Include="slideshow_display.cpp" />
     <ClCompile Include="sound.cpp" />
