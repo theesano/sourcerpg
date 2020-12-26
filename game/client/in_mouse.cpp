@@ -467,6 +467,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 
 		}
+
 		if (vgui::input()->IsMouseDown(MOUSE_RIGHT))
 		{
 			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
@@ -475,6 +476,8 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			viewangles[YAW] = vTempOffset[YAW];
 			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 		}
+
+		
 	}
 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
 	{

@@ -82,7 +82,7 @@ CBaseEntity *CreateWpnThrowSkill(const Vector &origin, const Vector &velocity, f
 
 	pSkWpnThrow->SetState(CWeaponThrowingSkills::STATE_THROWN);
 	pSkWpnThrow->SetSpeed(velocity.Length());
-	
+
 	//! CHANGE
 	pSkWpnThrow->EmitSound("NPC_CombineBall.Launch");
 
@@ -261,8 +261,9 @@ void CWeaponThrowingSkills::Precache(void)
 	PrecacheModel(WPNTHROW_MODEL);
 	PrecacheModel(WPNTHROW_SPRITE_TRAIL);
 
-	s_nExplosionTextureWpnThrow = PrecacheModel("sprites/lgtning.vmt");
 
+	s_nExplosionTextureWpnThrow = PrecacheModel("sprites/lgtning.vmt");
+	
 	PrecacheScriptSound("NPC_CombineBall.Launch");
 	PrecacheScriptSound("NPC_CombineBall.KillImpact");
 
@@ -1024,7 +1025,9 @@ void CWeaponThrowingSkills::DoExplosion()
 
 	//Shockring
 	CBroadcastRecipientFilter filter2;
+	filter2.AddAllPlayers();
 
+	
 	if (OutOfBounces() == false)
 	{
 		if (hl2_episodic.GetBool())
@@ -1043,6 +1046,8 @@ void CWeaponThrowingSkills::DoExplosion()
 		data.m_vOrigin = GetAbsOrigin();
 
 		DispatchEffect("cball_explode", data);
+	
+		
 
 		te->BeamRingPoint(filter2, 0, GetAbsOrigin(),	//origin
 			m_flRadius,	//start radius
@@ -1071,7 +1076,7 @@ void CWeaponThrowingSkills::DoExplosion()
 			0,			//halo index
 			0,			//start frame
 			2,			//framerate
-			0.5f,		//life
+			5.0f,		//life
 			64,			//width
 			0,			//spread
 			0,			//amplitude
@@ -1082,6 +1087,8 @@ void CWeaponThrowingSkills::DoExplosion()
 			0,		//speed
 			FBEAM_FADEOUT
 			);
+
+		
 	}
 	else
 	{
@@ -1574,7 +1581,7 @@ void CWeaponThrowingSkills::VPhysicsCollision(int index, gamevcollisionevent_t *
 	Vector preVelocity = pEvent->preVelocity[index];
 	//float flSpeed = VectorNormalize(preVelocity);
 	float flSpeed = 0;
-	
+
 	
 	if (m_nMaxBounces == -1)
 	{
@@ -1601,6 +1608,7 @@ void CWeaponThrowingSkills::VPhysicsCollision(int index, gamevcollisionevent_t *
 			PhysSetGameFlags(VPhysicsGetObject(), FVPHYSICS_CONSTRAINT_STATIC);
 			VPhysicsGetObject()->EnableMotion(false);
 			PhysCallbackSetVelocity(pEvent->pObjects[index], vec3_origin);
+			DispatchParticleEffect("aoehint", GetAbsOrigin(), vec3_angle);
 			return;
 	}
 
@@ -1703,6 +1711,7 @@ void CWeaponThrowingSkills::StartSkillsStat(void)
 	AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(), &dir);
 	dir.z = 0;
 	VectorNormalize(dir);
+	m_flSkillsRange = 128.0f;
 	// Start our animation cycle. Use the random to avoid everything thinking the same frame
 	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + random->RandomFloat(0.0f, 0.1f), s_pSkillsStatsThinkContext);
 }
@@ -1744,7 +1753,7 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 				}
 			}
 
-			if (WpnThrowdist.x <= 192 && WpnThrowdist.y <= 192)
+			if (WpnThrowdist.x <= m_flSkillsRange && WpnThrowdist.y <= m_flSkillsRange)
 			{
 				ppAIs[i]->SetRenderMode(kRenderTransColor);
 				ppAIs[i]->SetRenderColor(128, 128, 128, 128);
@@ -1754,7 +1763,7 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 		}
 	}
 	CTakeDamageInfo infosk1(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_npc_dmg_wpnthrow.GetFloat(), DMG_SLASH);
-	RadiusDamage(infosk1, GetAbsOrigin(), 192, CLASS_NONE, UTIL_GetLocalPlayer());
+	RadiusDamage(infosk1, GetAbsOrigin(), m_flSkillsRange, CLASS_NONE, UTIL_GetLocalPlayer());
 
 	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + 0.1f, s_pSkillsStatsThinkContext);
 
