@@ -53,6 +53,7 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_nSkCoolDownTime = 0.0f;
 	m_bIsSkCoolDown2 = false;
 	m_nSkCoolDownTime2 = 0.0f;
+
 	m_nExecutionTime = 0.0f;//This Var is Tied to Camera control in "in_camera" , be advised when changing it.
 	m_nSkillHitRefireTime = 0.0f;
 	m_bWIsAttack1 = true;
@@ -181,10 +182,14 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 			Skill_HealSlash();
 		}
 
-		if ((pOwner->m_nButtons & IN_SLOT4) && !m_bIsSkCoolDown5)
+		/*if ((pOwner->m_nButtons & IN_SLOT4) && !m_bIsSkCoolDown5)
 		{
 			Skill_Trapping();
-		}
+		}*/
+
+		Skill_Trapping();
+
+
 
 	//Makes the player stand still when activating a skill
 
@@ -221,11 +226,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		m_bIsSkCoolDown4 = false;
 	}
 
-	if (gpGlobals->curtime - m_nSkCoolDownTime5 < 0)
+	/*if (gpGlobals->curtime - m_nSkCoolDownTime5 <= 0)
 	{
-		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime5;
 		m_bIsSkCoolDown5 = false;
-	}
+	}*/
 
 	//Skill 3 Grenade Detonate/Properties
 	//if (pOwner->m_nButtons & IN_USE)
@@ -279,11 +283,26 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	if (m_nSkCoolDownTime4 - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(13, "Skill 4 Cooldown time  %6.1f   ", m_nSkCoolDownTime4 - gpGlobals->curtime);
-	
-		engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
-	
+
+	engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
+
 	if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 0)
+	{
 		engine->Con_NPrintf(14, "Skill 5 Cooldown time  %6.1f   ", m_nSkCoolDownTime5 - gpGlobals->curtime);
+	}
+	else
+	{
+		m_bIsSkCoolDown5 = false;	
+	}
+
+
+		if (m_bIsSkCoolDown5)
+			engine->Con_NPrintf(13, "Skill 5 is in cooldown");
+		else if (!m_bIsSkCoolDown5)
+			engine->Con_NPrintf(13, "Skill 5 is NOT in cooldown");
+
+
+
 }
 
 
@@ -830,6 +849,8 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 
 }
 
+Vector effectpos;
+bool bCanPullEnemies = false;
 void CBaseMeleeWeapon::Skill_Trapping()
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
@@ -841,57 +862,93 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	fwd.z = 0;
 	VectorNormalize(fwd);
 
-	float fmagnitude = 350;
-	Vector effectpos;
-	effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
-	effectpos.z = 0;
-
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
 	Vector SkillOriginNPCdist;
+	
+	/*if (!m_bIsSkCoolDown5 && gpGlobals->curtime > m_nSkCoolDownTime5)
+	{
+		DevMsg("NOT cooldown \n");
+		
 
-			if (!m_bIsSkCoolDown5 && gpGlobals->curtime > m_nSkCoolDownTime5)
+	}
+	else*/ 
+	if (m_bIsSkCoolDown5 && gpGlobals->curtime < m_nSkCoolDownTime5)
+	{
+		for (int i = 0; i < nAIs; i++)
+		{
+			if (ppAIs[i]->m_iClassname == iszNPCName)
 			{
-				//CODE here:
-			
-				for (int i = 0; i < nAIs; i++)
-				{
-					if (ppAIs[i]->m_iClassname == iszNPCName)
-					{
-						SkillOriginNPCdist.x = abs(effectpos.x - ppAIs[i]->GetAbsOrigin().x);
-						SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
-						SkillOriginNPCdist.z = 0;
+				SkillOriginNPCdist.x = abs(effectpos.x - ppAIs[i]->GetAbsOrigin().x);
+				SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
+				SkillOriginNPCdist.z = 0;
 
-						if (SkillOriginNPCdist.x <= 32.0f && SkillOriginNPCdist.y <= 32.0f)
-						{
-							ppAIs[i]->SetCondition(COND_NPC_FREEZE);
-							ppAIs[i]->SetRenderMode(kRenderTransColor);
-							ppAIs[i]->SetRenderColor(128, 128, 128, 128);
-							ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
-							//DevMsg("Skill5Vector32: x %.2f, y %.2f, z %.2f  \n", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
-						}
-						else if (SkillOriginNPCdist.x <= 192.0f && SkillOriginNPCdist.y <= 192.0f)
-						{
-							ppAIs[i]->SetCondition(COND_NPC_FREEZE);
-							ppAIs[i]->SetRenderMode(kRenderTransColor);
-							ppAIs[i]->SetRenderColor(128, 128, 128, 128);
-							ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin())*8.5f);
-							//DevMsg("Skill5Vector192: x %.2f,y %.2f,z %.2f \n ", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
-						}
+				if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 1.0f)
+				{
+					DevMsg("Freeze \n");
+					if (SkillOriginNPCdist.x <= 192.0f && SkillOriginNPCdist.y <= 192.0f)
+					{
+						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
+						ppAIs[i]->SetRenderMode(kRenderTransColor);
+						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
 					}
 				}
-				DispatchParticleEffect("aoehint", effectpos, vec3_angle);
+				else if (m_nSkCoolDownTime5 - gpGlobals->curtime <= 1.0f)
+				{
+					if (SkillOriginNPCdist.x <= 222.0f && SkillOriginNPCdist.y <= 222.0f)
+					{
+						DevMsg("Unfreeze \n");
+						ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
+						ppAIs[i]->SetRenderMode(kRenderNormal);
+						return;
+					}
+				}
 
+				if ((m_nSkCoolDownTime5 - gpGlobals->curtime <= 2.5f) && (m_nSkCoolDownTime5 - gpGlobals->curtime >= 2.4f))
+					bCanPullEnemies = true;
 
-				//Init Cooldown
-				m_nSkCoolDownTime5 = gpGlobals->curtime + 3.0f;
-				m_bIsSkCoolDown5 = true;
+				if (bCanPullEnemies) //Need to make run once only
+				{
+					DevMsg("pull enemies \n");
+
+					if (SkillOriginNPCdist.x <= 32.0f && SkillOriginNPCdist.y <= 32.0f)
+					{
+						ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
+						//DevMsg("Skill5Vector32: x %.2f, y %.2f, z %.2f  \n", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
+					}
+					else if (SkillOriginNPCdist.x <= 192.0f && SkillOriginNPCdist.y <= 192.0f)
+					{
+						ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
+						//ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin())*8.5);
+						//DevMsg("Skill5Vector192: x %.2f,y %.2f,z %.2f \n ", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
+					}
+					bCanPullEnemies = false;
+					return;
+					
+				}
+			
 			}
 
+		}
+	}
 
+	if (pOwner->m_nButtons & IN_SLOT4 && !m_bIsSkCoolDown5)
+	{
+		float fmagnitude = 350;
+		effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
+		effectpos.z = 0;
+		DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 
+		//Init Cooldown
+		m_nSkCoolDownTime5 = gpGlobals->curtime + 3.0f;
+		m_bIsSkCoolDown5 = true;
+	}
+
+		
 }
+	
+
 
 void CBaseMeleeWeapon::AddKnockback(Vector dir)
 {
