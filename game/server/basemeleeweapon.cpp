@@ -171,12 +171,14 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 		if (gpGlobals->curtime - m_nExecutionTime < 0)
 			Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
-		// Run the Grenade code
+		
+		// Skill 3 loop
 		if ((pOwner->m_nButtons & IN_SLOT2) && !m_bIsSkCoolDown3)
 		{
 			Skill_GrenadeEX();
 		}
-
+		
+		//Skill 4 loop
 		if ((pOwner->m_nButtons & IN_SLOT3) && !m_bIsSkCoolDown4)
 		{
 			Skill_HealSlash();
@@ -187,7 +189,11 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 			Skill_Trapping();
 		}*/
 
+		//Skill 5 loop
 		Skill_Trapping();
+
+		//Skill 6 loop
+		Skill_Tornado();
 
 
 
@@ -295,11 +301,24 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 		m_bIsSkCoolDown5 = false;	
 	}
 
+	if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 0)
+	{
+		engine->Con_NPrintf(15, "Skill 6 Cooldown time  %6.1f   ", m_nSkCoolDownTime6 - gpGlobals->curtime);
+	}
+	else
+	{
+		m_bIsSkCoolDown6 = false;
+	}
 
 		if (m_bIsSkCoolDown5)
 			engine->Con_NPrintf(13, "Skill 5 is in cooldown");
 		else if (!m_bIsSkCoolDown5)
 			engine->Con_NPrintf(13, "Skill 5 is NOT in cooldown");
+
+		if (m_bIsSkCoolDown6)
+			engine->Con_NPrintf(16, "Skill 6 is in cooldown");
+		else if (!m_bIsSkCoolDown6)
+			engine->Con_NPrintf(16, "Skill 6 is NOT in cooldown");
 
 
 
@@ -696,7 +715,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
 			m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
-			AddKnockbackXY(10, 4);
+			AddKnockbackXY(10, 1);
 		}
 
 	}
@@ -822,7 +841,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 		if (!pOwner)
 			return;
 		
-		AddKnockbackXY(10.0f, 4);
+		AddKnockbackXY(10.0f, 1);
 		RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_SKILL_USE);
@@ -849,6 +868,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 
 }
 
+
 Vector effectpos;
 bool bCanPullEnemies = false;
 void CBaseMeleeWeapon::Skill_Trapping()
@@ -857,6 +877,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	if (!pOwner)
 		return;
 
+	float skillrange = 192.0f;
 	Vector fwd;
 	AngleVectors(pOwner->GetAbsAngles(), &fwd);
 	fwd.z = 0;
@@ -866,7 +887,18 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
 	Vector SkillOriginNPCdist;
+
+	trace_t traceHit;
+
+	Vector forward;
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+	Activity nHitActivity = ACT_VM_HITCENTER;
 	
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward);
+	triggerInfo.ScaleDamage(2.0f);
+
 	/*if (!m_bIsSkCoolDown5 && gpGlobals->curtime > m_nSkCoolDownTime5)
 	{
 		DevMsg("NOT cooldown \n");
@@ -886,8 +918,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 
 				if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 1.0f)
 				{
-					DevMsg("Freeze \n");
-					if (SkillOriginNPCdist.x <= 192.0f && SkillOriginNPCdist.y <= 192.0f)
+					if (SkillOriginNPCdist.x <= skillrange && SkillOriginNPCdist.y <= skillrange)
 					{
 						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
 						ppAIs[i]->SetRenderMode(kRenderTransColor);
@@ -896,12 +927,10 @@ void CBaseMeleeWeapon::Skill_Trapping()
 				}
 				else if (m_nSkCoolDownTime5 - gpGlobals->curtime <= 1.0f)
 				{
-					if (SkillOriginNPCdist.x <= 222.0f && SkillOriginNPCdist.y <= 222.0f)
+					if (SkillOriginNPCdist.x <= skillrange + 30 && SkillOriginNPCdist.y <= skillrange + 30)
 					{
-						DevMsg("Unfreeze \n");
 						ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
 						ppAIs[i]->SetRenderMode(kRenderNormal);
-						return;
 					}
 				}
 
@@ -910,24 +939,13 @@ void CBaseMeleeWeapon::Skill_Trapping()
 
 				if (bCanPullEnemies) //Need to make run once only
 				{
-					DevMsg("pull enemies \n");
-
-					if (SkillOriginNPCdist.x <= 32.0f && SkillOriginNPCdist.y <= 32.0f)
-					{
+					if (SkillOriginNPCdist.x <= skillrange && SkillOriginNPCdist.y <= skillrange)
 						ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
-						//DevMsg("Skill5Vector32: x %.2f, y %.2f, z %.2f  \n", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
-					}
-					else if (SkillOriginNPCdist.x <= 192.0f && SkillOriginNPCdist.y <= 192.0f)
-					{
-						ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
-						//ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin())*8.5);
-						//DevMsg("Skill5Vector192: x %.2f,y %.2f,z %.2f \n ", SkillOriginNPCdist.x, SkillOriginNPCdist.y, SkillOriginNPCdist.z);
-					}
+					
 					bCanPullEnemies = false;
-					return;
 					
 				}
-			
+
 			}
 
 		}
@@ -938,6 +956,12 @@ void CBaseMeleeWeapon::Skill_Trapping()
 		float fmagnitude = 350;
 		effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
 		effectpos.z = 0;
+		
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_SKILL_USE);
+		RadiusDamage(triggerInfo, effectpos, 192.0f, CLASS_NONE, pOwner);
+		m_nExecutionTime = gpGlobals->curtime + 1.0f;
+
 		DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 
 		//Init Cooldown
@@ -947,7 +971,69 @@ void CBaseMeleeWeapon::Skill_Trapping()
 
 		
 }
-	
+
+
+
+float flTorSkillRefireTime;
+void CBaseMeleeWeapon::Skill_Tornado(void)
+{
+	//LOOP
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	float skillrange = 224.0f;
+
+	trace_t traceHit;
+
+	Vector forward;
+	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
+	Activity nHitActivity = ACT_VM_HITCENTER;
+
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	triggerInfo.SetDamagePosition(traceHit.startpos);
+	triggerInfo.SetDamageForce(forward);
+	triggerInfo.ScaleDamage(1.5f);
+
+
+	if (m_bIsSkCoolDown6 && gpGlobals->curtime < m_nSkCoolDownTime6)
+	{
+		if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 1.0f)
+		{
+			m_flSkillAttributeRange = skillrange;
+
+			if (gpGlobals->curtime >= flTorSkillRefireTime)
+			{
+				AddKnockbackXY(1, 4);
+				RadiusDamage(triggerInfo, pOwner->GetAbsOrigin(), skillrange, CLASS_PLAYER, pOwner);
+				flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
+			}
+		}
+		else if (m_nSkCoolDownTime6 - gpGlobals->curtime <= 1.0f)
+		{
+			m_flSkillAttributeRange = skillrange;
+			AddKnockbackXY(1, 3);
+		}
+
+		
+	}
+
+	if (pOwner->m_nButtons & IN_SLOT5 && !m_bIsSkCoolDown6)
+	{
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_SKILL_USE);
+		m_flSkillAttributeRange = skillrange;
+
+		DispatchParticleEffect("aoehint", pOwner->GetAbsOrigin(), vec3_angle);
+		GetPlayerPosOnce();
+		//Init Cooldown
+		flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
+		m_nSkCoolDownTime6 = gpGlobals->curtime + 4.0f;
+		m_bIsSkCoolDown6 = true;
+	}
+
+
+}
 
 
 void CBaseMeleeWeapon::AddKnockback(Vector dir)
@@ -971,6 +1057,11 @@ void CBaseMeleeWeapon::GetPlayerAnglesOnce(void)
 	VectorNormalize(dirkb);
 }
 
+Vector playerPos;
+void CBaseMeleeWeapon::GetPlayerPosOnce(void)
+{
+	playerPos = UTIL_GetLocalPlayer()->GetAbsOrigin();
+}
 void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 {
 	float flKnockbackVelocity = 128.0f*magnitude;
@@ -979,7 +1070,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
 	Vector playernpcdist;
-	
+	Vector staticplayernpcdist;
 
 	for (int i = 0; i < nAIs; i++)
 	{
@@ -987,6 +1078,9 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
+
+				staticplayernpcdist.x = abs(playerPos.x - ppAIs[i]->GetAbsOrigin().x);
+				staticplayernpcdist.y = abs(playerPos.y - ppAIs[i]->GetAbsOrigin().y);
 
 				if (playernpcdist.x <= m_flSkillAttributeRange && playernpcdist.y <= m_flSkillAttributeRange)
 				{
@@ -1014,14 +1108,19 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 
 						ppAIs[i]->SetRenderMode(kRenderNormal);
 					}
-					else if (options == 4)
+						
+				}
+				
+				if (staticplayernpcdist.x <= m_flSkillAttributeRange && staticplayernpcdist.y <= m_flSkillAttributeRange)
+				{
+					if (options == 4)
 					{
 						//m_iEnemyHealth = ppAIs[i]->GetHealth();
+						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
 						ppAIs[i]->SetRenderMode(kRenderTransColor);
 						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
-						ppAIs[i]->ApplyAbsVelocityImpulse(dirkb*flKnockbackVelocity);
+						ppAIs[i]->ApplyAbsVelocityImpulse(Vector(0, 0, 212));
 					}
-						
 				}
 
 		}

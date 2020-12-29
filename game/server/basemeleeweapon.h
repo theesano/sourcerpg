@@ -59,9 +59,13 @@ public:
 	bool			m_bIsSkCoolDown5;
 	float			m_nSkCoolDownTime5;
 
+	bool			m_bIsSkCoolDown6;
+	float			m_nSkCoolDownTime6;
+
 	float			m_flSkillAttributeRange;
 
 	int				m_iEnemyHealth;
+
 
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
@@ -90,10 +94,11 @@ private:
 	void			Skill_GrenadeEX(void);
 	void			Skill_HealSlash(void);
 	void			Skill_Trapping(void);
+	void			Skill_Tornado(void);
 	void			SkillStatNotification(void);
 
 	void	GetPlayerAnglesOnce(void);
-
+	void	GetPlayerPosOnce(void);
 
 	Activity		ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner);
 };
