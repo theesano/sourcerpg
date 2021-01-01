@@ -3,7 +3,8 @@
 // Purpose: 
 //
 // $NoKeywords: $
-//
+// NOTE:  m_nExecutionTime which is used freeze the player during skill use is bugged, when it reaches below .20 ,using evade will not give players additional speed boost
+// which is why m_nExecutionTimeFix is used in combination to temporary fix it until a better solution is written.
 //=============================================================================//
 
 #include "cbase.h"
@@ -172,6 +173,12 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		if (gpGlobals->curtime - m_nExecutionTime < 0)
 			Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
 		
+
+		//A stupid hack to temporary fix the problem when the Execution timer goes below .20 and the player press evade they don't receive the bonus velocity boost.
+		//if ((gpGlobals->curtime - m_nExecutionTime >= -0.20f) && (gpGlobals->curtime - m_nExecutionTime <= 0))
+			//m_nExecutionTime = 0;
+
+		
 		// Skill 3 loop
 		if ((pOwner->m_nButtons & IN_SLOT2) && !m_bIsSkCoolDown3)
 		{
@@ -201,6 +208,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	if (pOwner->m_nButtons & IN_SPEED)
 		m_nExecutionTime = 0.0f;
+
 	//Skill 1 CoolDown
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
 	{
@@ -319,6 +327,8 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 			engine->Con_NPrintf(16, "Skill 6 is in cooldown");
 		else if (!m_bIsSkCoolDown6)
 			engine->Con_NPrintf(16, "Skill 6 is NOT in cooldown");
+
+		engine->Con_NPrintf(16,"Is player attacking? : %i", pl_isattacking.GetInt());
 
 
 
@@ -652,10 +662,9 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 		UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
 
-			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
-			WeaponSound(SINGLE);
-			pOwner->SetAnimation(PLAYER_EVADE);
-
+		RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+		WeaponSound(SINGLE);
+		pOwner->SetAnimation(PLAYER_EVADE);
 
 		m_nSkCoolDownTime = gpGlobals->curtime + 5.0f;
 		m_bIsSkCoolDown = true;
@@ -956,11 +965,11 @@ void CBaseMeleeWeapon::Skill_Trapping()
 		float fmagnitude = 350;
 		effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
 		effectpos.z = 0;
-		
+		 
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_SKILL_USE);
 		RadiusDamage(triggerInfo, effectpos, 192.0f, CLASS_NONE, pOwner);
-		m_nExecutionTime = gpGlobals->curtime + 1.0f;
+		m_nExecutionTime = gpGlobals->curtime + 1.0f ;
 
 		DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 

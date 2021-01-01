@@ -672,7 +672,6 @@ void CHL2_Player::Evade(void)
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
 	
-	
 	if (m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
 	{
 		if (sk_evadestyle.GetInt() == 0)
@@ -903,6 +902,9 @@ void CHL2_Player::FragDetonate()
 	}
 
 }
+
+float flReturnSpeed;
+float flReturnSpeedAfterEvaded;
 //-----------------------------------------------------------------------------
 // Purpose: Allow pre-frame adjustments on the player
 //-----------------------------------------------------------------------------
@@ -925,19 +927,33 @@ void CHL2_Player::PreThink(void)
 	//Set thirdperson turning state. 
 	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
 	if (HasWeapons())
-	{
 		pThirdpersonTurnMode->SetValue(1);
-	}
 	else
-	{
 		pThirdpersonTurnMode->SetValue(0);
-	}
 
 	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
 	if (pIsPlayerAttacking->GetInt() == 1)
+	{
 		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
+		//HACK! : This is a temporary patch job for the evade bug, ala whenever a skill that requires the player to stand still for a certain amount of time , using evade wouldn't give them the speed boost.
+		SetMaxSpeed(600);
+		if (m_afButtonPressed & IN_SPEED)
+			flReturnSpeedAfterEvaded = gpGlobals->curtime + 0.3f;
+		
+		//HACK! Evade bug
+		flReturnSpeed = gpGlobals->curtime + 0.3f;
+
+	}
 	else
+	{
 		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
+		//HACK! Evade bug
+		if ((gpGlobals->curtime >= flReturnSpeedAfterEvaded) && (gpGlobals->curtime <= flReturnSpeedAfterEvaded + 0.1f))
+			StartWalking();
+		//HACK! Evade bug
+		if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
+			StartWalking();
+	}
 
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )
@@ -1069,20 +1085,21 @@ void CHL2_Player::PreThink(void)
 			m_flAutoRunningMinTime = gpGlobals->curtime + 0.5f;*/
 	}
 
+	//!!temp
 		// If we're ducked and not in the air
-	if ( IsDucked() && GetGroundEntity() != NULL )
-		{
-			StopSprinting();
-		}
+	//if ( IsDucked() && GetGroundEntity() != NULL )
+	//	{
+	//		StopSprinting();
+	//	}
 		
-	 if ( IsSprinting() )
-	{
-		// Disable sprint while ducked unless we're in the air (jumping)
-		if ( IsDucked() && ( GetGroundEntity() != NULL ) )
-		{
-			StopSprinting();
-		}
-	}
+	// if ( IsSprinting() )
+	//{
+	//	// Disable sprint while ducked unless we're in the air (jumping)
+	//	if ( IsDucked() && ( GetGroundEntity() != NULL ) )
+	//	{
+	//		StopSprinting();
+	//	}
+	//}
 
 	VPROF_SCOPE_END();
 
@@ -1381,7 +1398,7 @@ void CHL2_Player::HandleAdmireGlovesAnimation( void )
 void CHL2_Player::Activate( void )
 {
 	BaseClass::Activate();
-	InitSprinting();
+	//InitSprinting();
 
 #ifdef HL2_EPISODIC
 
@@ -2610,10 +2627,11 @@ void CHL2_Player::SuitPower_Update( void )
 		if( !SuitPower_Drain( flPowerLoad * gpGlobals->frametime ) )
 		{
 			// TURN OFF ALL DEVICES!!
-			if( IsSprinting() )
-			{
-				StopSprinting();
-			}
+			 //!!temp
+			//if( IsSprinting() )
+			//{
+			//	StopSprinting();
+			//}
 
 			if ( Flashlight_UseLegacyVersion() )
 			{
