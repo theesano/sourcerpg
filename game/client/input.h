@@ -138,6 +138,7 @@ private:
 	void		ScaleMouse( float *x, float *y );
 	void		ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float mouse_y );
 	void		MouseMove ( CUserCmd *cmd );
+	void		MovementFreezeThink(void);
 
 	// Joystick  movement input helpers
 	void		ControllerMove ( float frametime, CUserCmd *cmd );

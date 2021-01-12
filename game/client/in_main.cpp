@@ -699,6 +699,22 @@ void valid(float& a) {
 	if (a >= 360.f) a -= 360.f;
 }
 
+bool bIsFreezingMovement;
+float flFreezingMovementTime;
+
+void CInput::MovementFreezeThink(void)
+{
+	if (KeyState(&in_attack2))
+	{
+		bIsFreezingMovement = true;
+		flFreezingMovementTime = gpGlobals->curtime + 1.0f;
+	}
+	else if (gpGlobals->curtime > flFreezingMovementTime)
+	{
+		bIsFreezingMovement = false;
+	}
+}
+
 void CInput::AdjustYaw( float speed, QAngle& viewangles )
 {
 	float flTargetViewangle;
@@ -764,6 +780,10 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				{
 					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
 						return;
+					else if (bIsFreezingMovement)
+					{
+						return;
+					}
 					else
 					{
 						viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[YAW];
@@ -774,6 +794,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 
 			if (side || forward || KeyState(&in_right) || KeyState(&in_left))
 			{
+
 				cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - viewangles[YAW]);
 				//cam_idealyaw.SetValue(g_ThirdPersonManager.GetCameraOffsetAngles()[YAW] - flTargetViewangle);
 			}
@@ -870,7 +891,7 @@ void CInput::AdjustAngles ( float frametime )
 	{
 		return;
 	}
-
+	MovementFreezeThink();
 	// Retrieve latest view direction from engine
 	engine->GetViewAngles( viewangles );
 
@@ -885,6 +906,7 @@ void CInput::AdjustAngles ( float frametime )
 
 	// Store new view angles into engine view direction
 	engine->SetViewAngles( viewangles );
+	
 }
 
 /*

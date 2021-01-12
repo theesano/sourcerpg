@@ -44,6 +44,8 @@ public:
 	virtual int		CapabilitiesGet(void);
 	virtual	int		WeaponMeleeAttack1Condition(float flDot, float flDist);
 
+	bool			m_bIsEnemyInAtkRange;
+
 	bool			m_bIsSkCoolDown;
 	float			m_nSkCoolDownTime;
 
@@ -63,9 +65,13 @@ public:
 	float			m_nSkCoolDownTime6;
 
 	float			m_flSkillAttributeRange;
+	float			m_flPlayerMPRestoreInterval;
+
 
 	int				m_iEnemyHealth;
 
+	int				m_iPlayerMP;
+	int				m_iPlayerMPMax;
 
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
@@ -82,6 +88,8 @@ private:
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
 	bool			m_bWIsAttack3;
+
+	void			HandlePlayerMP(void);
 
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);
@@ -100,6 +108,9 @@ private:
 
 	void	GetPlayerAnglesOnce(void);
 	void	GetPlayerPosOnce(void);
+
+	//Use with GetPlayerAnglesOnce
+	Vector dirkb;
 
 	Activity		ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner);
 };

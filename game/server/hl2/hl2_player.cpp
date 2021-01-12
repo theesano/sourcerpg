@@ -950,9 +950,12 @@ void CHL2_Player::PreThink(void)
 		//HACK! Evade bug
 		if ((gpGlobals->curtime >= flReturnSpeedAfterEvaded) && (gpGlobals->curtime <= flReturnSpeedAfterEvaded + 0.1f))
 			StartWalking();
-		//HACK! Evade bug
+		//HACK! Evade bug, attacked but does not evade 
 		if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
-			StartWalking();
+		{ 
+			//Attention needed
+				StartAutoRunning();
+		}
 	}
 
 #ifdef HL2_EPISODIC

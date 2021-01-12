@@ -3185,6 +3185,7 @@ void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRa
 	// the implementation of radius damage into gamerules. All existing code calls
 	// this method, which calls the game rules method
 	g_pGameRules->RadiusDamage( info, vecSrc, flRadius, iClassIgnore, pEntityIgnore );
+	
 
 	// Let the world know if this was an explosion.
 	if( info.GetDamageType() & DMG_BLAST )

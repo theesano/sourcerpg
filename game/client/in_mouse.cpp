@@ -458,17 +458,65 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 	//when pressing down the left mouse key.
 	if (CAM_IsThirdPerson() && thirdperson_platformer.GetInt())
 	{
+		// TODO: make a proper system that bound the player's viewangle to the direction the third person camera's facing
 		if (vgui::input()->IsMouseDown(MOUSE_LEFT))
 		{
 			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 
 			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
 			viewangles[YAW] = vTempOffset[YAW];
+			//viewangles[PITCH] = 0;
 			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
 
 		}
 
-		if (vgui::input()->IsMouseDown(MOUSE_RIGHT))
+
+		if (vgui::input()->IsKeyDown(KEY_1))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		}
+
+		if (vgui::input()->IsKeyDown(KEY_2))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		}
+
+		if (vgui::input()->IsKeyDown(KEY_3))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		}
+
+		if (vgui::input()->IsKeyDown(KEY_4))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		}
+
+		if (vgui::input()->IsKeyDown(KEY_5))
+		{
+			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
+			//viewangles[YAW] -= CAM_CapYaw(m_yaw.GetFloat() * mouse_x);
+			viewangles[YAW] = vTempOffset[YAW];
+			cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+		}
+
+		if (vgui::input()->IsKeyDown(KEY_6))
 		{
 			Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 

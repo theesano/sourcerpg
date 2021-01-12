@@ -40,7 +40,13 @@ typedef enum {
 	TAUNT,
 	DEPLOY,
 
+
+
 	// Add new shoot sound types here
+	ATTACK1,
+	ATTACK2,
+	ATTACK3,
+
 
 	NUM_SHOOT_SOUND_TYPES,
 } WeaponSound_t;
