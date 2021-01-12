@@ -44,7 +44,7 @@ extern ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
 extern ConVar pl_isattacking("pl_isattacking", "0");
 extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 extern ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
-extern ConVar sk_plr_mp_restore("sk_plr_mp_restore", "8");
+extern ConVar sk_plr_mp_restore("sk_plr_mp_restore", "3");
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -620,8 +620,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	SendWeaponAnim(nHitActivity);
 	GetPlayerAnglesOnce();
 	//Setup our next attack times
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 	m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
+	UTIL_ScreenShake(GetAbsOrigin(), 1.8f, 100.0, 0.5, 256.0f, SHAKE_START);
 
 	//Give the player MP for each enemy hit
 	if (m_bIsEnemyInAtkRange)
@@ -673,6 +673,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		AddKnockbackXY(1, 5); //for npc hitting sound
 		m_nExecutionTime = gpGlobals->curtime + 0.6666f;
 	}
+	
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 
 
 }
@@ -709,6 +711,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	//	//AddKnockback(fwd * 350);
 
 		UTIL_GetLocalPlayer()->SetAbsVelocity(dirkb*nStepVelocity);
+		UTIL_ScreenShake(GetAbsOrigin(), 2.0f, 100.0, 0.7, 256.0f, SHAKE_START);
 
 		RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 		WeaponSound(SINGLE);
@@ -726,7 +729,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 //Skill:Evil Slash
 void CBaseMeleeWeapon::Skill_RadialSlash(void)
-{	
+{
 	trace_t traceHit;
 	//Initialize the player pointer
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
@@ -743,15 +746,19 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	//Setting up the damage info for the skill
 	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward*10);
+	triggerInfo.SetDamageForce(forward * 10);
 	triggerInfo.ScaleDamage(0.8f);
-	
+
 	//TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
 
 	//The area in radius that the skill is going to affect.
 	float m_nDamageRadius = 264.0f;
 	//HACK! 
-	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -7) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -5.5f))
+
+	if (m_nExecutionTime > gpGlobals->curtime)
+	{
+	
+	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -10) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -8.5f))
 	{
 		m_flSkillAttributeRange = m_nDamageRadius;
 		//HACK! This is a really hacky way to do DPS , Todo: make a proper system or function so every skills can be added dps property easily.
@@ -760,6 +767,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			//DevMsg("Evil Slash Hit! \n");
 			RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
 			AddKnockbackXY(1, 5); //for npc hitting sound
+			UTIL_ScreenShake(GetAbsOrigin(), 1.5f, 100.0, 0.5, 256.0f, SHAKE_START);
 
 			//HACK! Reset the timer
 			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
@@ -768,7 +776,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 		}
 	}
 
-	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -5.5f) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -5.0f))
+	if ((gpGlobals->curtime - m_nSkCoolDownTime2 > -8.5f) && (gpGlobals->curtime - m_nSkCoolDownTime2 < -8.0f))
 	{ //Doesnt work because it pushes the enemy outside the player's damage range
 		m_flSkillAttributeRange = m_nDamageRadius;
 
@@ -780,31 +788,39 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
 			m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
 			AddKnockbackXY(10, 1);
+			UTIL_ScreenShake(GetAbsOrigin(), 2.5f, 115.0, 0.6, 256.0f, SHAKE_START);
 		}
 
+	}
 	}
 
 	if ((pOwner->m_nButtons & IN_SLOT1) && !m_bIsSkCoolDown2)
 	{
-		if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
+		if (m_iPlayerMP > 30)
 		{
-			//Initialize the variable for moving the player on each attack
-			AddSkillMovementImpulse(1.0f);
-			GetPlayerAnglesOnce();
-			m_nExecutionTime = gpGlobals->curtime + 2.0f;
-			//HACK! Fire the timer
-			m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
-			if (gpGlobals->curtime - m_nExecutionTime < 0)
+			if (!m_bIsSkCoolDown2 && gpGlobals->curtime > m_nSkCoolDownTime2)
 			{
-				RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
-				WeaponSound(SINGLE);
-				pOwner->SetAnimation(PLAYER_SKILL_USE);
-				DispatchParticleEffect("aoehint", GetAbsOrigin(), vec3_angle);
-				m_iPlayerMP -= 15;
+				//Initialize the variable for moving the player on each attack
+				AddSkillMovementImpulse(1.0f);
+				GetPlayerAnglesOnce();
+				m_nExecutionTime = gpGlobals->curtime + 2.0f;
+				//HACK! Fire the timer
+				m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
+				if (gpGlobals->curtime - m_nExecutionTime < 0)
+				{
+					RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner); //Attack
+					WeaponSound(SINGLE);
+					pOwner->SetAnimation(PLAYER_SKILL_USE);
+					DispatchParticleEffect("aoehint", GetAbsOrigin(), vec3_angle);
+					m_iPlayerMP -= 30;
+				}
+				m_nSkCoolDownTime2 = gpGlobals->curtime + 10.0f;
+				m_bIsSkCoolDown2 = true;
 			}
-			m_nSkCoolDownTime2 = gpGlobals->curtime + 7.0f;
-			m_bIsSkCoolDown2 = true;
 		}
+		else
+			Warning("You don't have enough SG to execute this skill \n");
+
 	}
 
 }
@@ -845,7 +861,7 @@ void CBaseMeleeWeapon::Skill_Grenade(void)
 
 	
 }
-
+//Death Grinder
 void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
@@ -858,20 +874,22 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	// Fire the bullets
 	Vector vecVelocity = vecAiming * 1000.0f;
 
-	// Fire the combine ball
+	// Fire!
 	if (!m_bIsSkCoolDown3 && gpGlobals->curtime > m_nSkCoolDownTime3)
 	{
-		if (m_iPlayerMP > 20)
+		if (m_iPlayerMP > 25)
 		{
 			m_nExecutionTime = gpGlobals->curtime + 1.0f;
 			AddSkillMovementImpulse(2.0f);
 			CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
+			UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
 
-			m_iPlayerMP -= 20;
+
+			m_iPlayerMP -= 25;
 			WeaponSound(SINGLE);
 			pOwner->SetAnimation(PLAYER_SKILL_USE);
 
-			m_nSkCoolDownTime3 = gpGlobals->curtime + 3.0f;
+			m_nSkCoolDownTime3 = gpGlobals->curtime + 15.0f;
 			m_bIsSkCoolDown3 = true;
 		}
 		else
@@ -935,7 +953,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 		}
 		m_iPlayerMP -= 50;
 
-		m_nSkCoolDownTime4 = gpGlobals->curtime + 5.0f;
+		m_nSkCoolDownTime4 = gpGlobals->curtime + 15.0f;
 		m_bIsSkCoolDown4 = true;
 
 	}
@@ -990,7 +1008,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 				SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
 				SkillOriginNPCdist.z = 0;
 
-				if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 1.0f)
+				if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 14.0f)
 				{
 					if (SkillOriginNPCdist.x <= skillrange && SkillOriginNPCdist.y <= skillrange)
 					{
@@ -999,7 +1017,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
 					}
 				}
-				else if (m_nSkCoolDownTime5 - gpGlobals->curtime <= 1.0f)
+				else if ((m_nSkCoolDownTime5 - gpGlobals->curtime <= 14.0f) && (m_nSkCoolDownTime5 - gpGlobals->curtime >= 13.9f))
 				{
 					if (SkillOriginNPCdist.x <= skillrange + 30 && SkillOriginNPCdist.y <= skillrange + 30)
 					{
@@ -1008,13 +1026,15 @@ void CBaseMeleeWeapon::Skill_Trapping()
 					}
 				}
 
-				if ((m_nSkCoolDownTime5 - gpGlobals->curtime <= 2.5f) && (m_nSkCoolDownTime5 - gpGlobals->curtime >= 2.4f))
+				if ((m_nSkCoolDownTime5 - gpGlobals->curtime <= 15.5f) && (m_nSkCoolDownTime5 - gpGlobals->curtime >= 15.4f))
 					bCanPullEnemies = true;
 
 				if (bCanPullEnemies) //Need to make run once only
 				{
 					if (SkillOriginNPCdist.x <= skillrange && SkillOriginNPCdist.y <= skillrange)
 						ppAIs[i]->ApplyAbsVelocityImpulse((effectpos - ppAIs[i]->GetAbsOrigin()));
+					UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
+
 					
 					bCanPullEnemies = false;
 					
@@ -1027,7 +1047,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 
 	if (pOwner->m_nButtons & IN_SLOT4 && !m_bIsSkCoolDown5)
 	{
-		if (m_iPlayerMP > 10)
+		if (m_iPlayerMP > 30)
 		{
 			float fmagnitude = 350;
 			effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
@@ -1037,11 +1057,11 @@ void CBaseMeleeWeapon::Skill_Trapping()
 			pOwner->SetAnimation(PLAYER_SKILL_USE);
 			RadiusDamage(triggerInfo, effectpos, 192.0f, CLASS_NONE, pOwner);
 			m_nExecutionTime = gpGlobals->curtime + 1.0f;
-			m_iPlayerMP -= 10;
+			m_iPlayerMP -= 30;
 			DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 
 			//Init Cooldown
-			m_nSkCoolDownTime5 = gpGlobals->curtime + 3.0f;
+			m_nSkCoolDownTime5 = gpGlobals->curtime + 16.0f;
 			m_bIsSkCoolDown5 = true;
 		}
 		else
@@ -1102,13 +1122,13 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 
 	if (pOwner->m_nButtons & IN_SLOT5 && !m_bIsSkCoolDown6)
 	{
-		if (m_iPlayerMP > 35)
+		if (m_iPlayerMP > 50)
 		{
 			WeaponSound(SINGLE);
 			pOwner->SetAnimation(PLAYER_SKILL_USE);
 			m_flSkillAttributeRange = skillrange;
 			m_nExecutionTime = gpGlobals->curtime + 1.0f;
-			m_iPlayerMP -= 35;
+			m_iPlayerMP -= 50;
 
 			skpos = pOwner->GetAbsOrigin();
 
