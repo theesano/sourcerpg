@@ -45,6 +45,13 @@ extern ConVar pl_isattacking("pl_isattacking", "0");
 extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 extern ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
 extern ConVar sk_plr_mp_restore("sk_plr_mp_restore", "3");
+extern ConVar sk_plr_skills_2_cd("sk_plr_skills_2_cd", "0");
+extern ConVar sk_plr_skills_3_cd("sk_plr_skills_3_cd", "0");
+extern ConVar sk_plr_skills_4_cd("sk_plr_skills_4_cd", "0");
+extern ConVar sk_plr_skills_5_cd("sk_plr_skills_5_cd", "0");
+extern ConVar sk_plr_skills_6_cd("sk_plr_skills_6_cd", "0");
+extern ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
+
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -324,11 +331,30 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 void CBaseMeleeWeapon::SkillStatNotification(void)
 {
+	int skill2cdtimer = m_nSkCoolDownTime2 - gpGlobals->curtime;
+	sk_plr_skills_2_cd.SetValue(skill2cdtimer);
+
+	int skill3cdtimer = m_nSkCoolDownTime3 - gpGlobals->curtime;
+	sk_plr_skills_3_cd.SetValue(skill3cdtimer);
+
+	int skill4cdtimer = m_nSkCoolDownTime4 - gpGlobals->curtime;
+	sk_plr_skills_4_cd.SetValue(skill4cdtimer);
+
+	int skill5cdtimer = m_nSkCoolDownTime5 - gpGlobals->curtime;
+	sk_plr_skills_5_cd.SetValue(skill5cdtimer);
+
+	int skill6cdtimer = m_nSkCoolDownTime6 - gpGlobals->curtime;
+	sk_plr_skills_6_cd.SetValue(skill6cdtimer);
+
+	sk_plr_current_mp.SetValue(m_iPlayerMP);
+
 	if (m_nSkCoolDownTime - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(10, "Skill 1 Cooldown time %6.1f Attack speed %6.1f ", m_nSkCoolDownTime - gpGlobals->curtime, sk_atkspeedmod.GetFloat());
 
+
 	if (m_nSkCoolDownTime2 - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(11, "Skill 2 Cooldown time  %6.1f ", m_nSkCoolDownTime2 - gpGlobals->curtime);
+
 
 	if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
 		engine->Con_NPrintf(12, "Skill 3 Cooldown time  %6.1f  Press USE to Detonate Now ", m_nSkCoolDownTime3 - gpGlobals->curtime);
@@ -1075,6 +1101,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 
 Vector skpos;
 float flTorSkillRefireTime;
+float flSkillActiveTime;
 void CBaseMeleeWeapon::Skill_Tornado(void)
 {
 	//LOOP
@@ -1098,25 +1125,27 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 
 	if (m_bIsSkCoolDown6 && gpGlobals->curtime < m_nSkCoolDownTime6)
 	{
-		if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 1.0f)
+		if (flSkillActiveTime > gpGlobals->curtime)
 		{
-			m_flSkillAttributeRange = skillrange;
-
-			if (gpGlobals->curtime >= flTorSkillRefireTime)
+			if (flSkillActiveTime - gpGlobals->curtime >= 1.0f)
 			{
-				AddKnockbackXY(1, 4);
-				RadiusDamage(triggerInfo, skpos, skillrange, CLASS_PLAYER, pOwner);
-				AddKnockbackXY(1, 5); //for npc hitting sound
+				m_flSkillAttributeRange = skillrange;
 
-				flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
+				if (gpGlobals->curtime >= flTorSkillRefireTime)
+				{
+					AddKnockbackXY(1, 4);
+					RadiusDamage(triggerInfo, skpos, skillrange, CLASS_PLAYER, pOwner);
+					AddKnockbackXY(1, 5); //for npc hitting sound
+
+					flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
+				}
+			}
+			else if (flSkillActiveTime - gpGlobals->curtime <= 1.0f)
+			{
+				m_flSkillAttributeRange = skillrange;
+				AddKnockbackXY(1, 3);
 			}
 		}
-		else if (m_nSkCoolDownTime6 - gpGlobals->curtime <= 1.0f)
-		{
-			m_flSkillAttributeRange = skillrange;
-			AddKnockbackXY(1, 3);
-		}
-
 		
 	}
 
@@ -1136,7 +1165,8 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 			GetPlayerPosOnce();
 			//Init Cooldown
 			flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
-			m_nSkCoolDownTime6 = gpGlobals->curtime + 4.0f;
+			m_nSkCoolDownTime6 = gpGlobals->curtime + 30.0f;
+			flSkillActiveTime = gpGlobals->curtime + 4.0f;
 			m_bIsSkCoolDown6 = true;
 		}
 		else

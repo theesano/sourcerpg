@@ -1,0 +1,274 @@
+#include "cbase.h" 
+#include "hud.h" 
+#include "hud_macros.h" 
+#include "c_baseplayer.h" 
+#include "hud_skillcd.h" 
+#include "iclientmode.h" 
+#include "vgui_controls/controls.h"
+#include "vgui/ISurface.h"
+#include <vgui_controls/Label.h>
+#include "IGameUIFuncs.h"
+#include <vgui/IInput.h>
+#include <vgui_controls/AnimationController.h>
+
+
+using namespace vgui;
+
+#include "tier0/memdbgon.h" 
+
+DECLARE_HUDELEMENT(CHudSkillCooldown);
+
+# define HULL_INIT 80 
+
+//------------------------------------------------------------------------
+// Purpose: Constructor
+//------------------------------------------------------------------------
+
+CHudSkillCooldown::CHudSkillCooldown(const char * pElementName) :
+CHudElement(pElementName), BaseClass(NULL, "HudSkillCooldown")
+{
+	vgui::Panel * pParent = g_pClientMode->GetViewport();
+	SetParent(pParent);
+
+	//m_nSkillImage1 = surface()->CreateNewTextureID();
+	//surface()->DrawSetTextureFile(m_nSkillImage1, "UI/skills/icon_tornado", true, true);
+
+	SetHiddenBits(HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD);
+
+
+}
+
+//------------------------------------------------------------------------
+// Purpose:
+//------------------------------------------------------------------------
+
+void CHudSkillCooldown::Init()
+{
+	Reset();
+}
+
+//------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------
+
+void CHudSkillCooldown::Reset(void)
+{
+	SetBgColor(Color(0, 0, 0, 128));
+}
+
+
+//------------------------------------------------------------------------
+// Purpose:
+//------------------------------------------------------------------------
+
+void CHudSkillCooldown::OnThink(void)
+{
+	C_BasePlayer * local = C_BasePlayer::GetLocalPlayer();
+
+	if (!local)
+		return;
+	ConVar *pGetPlayerMP = cvar->FindVar("sk_plr_current_mp");
+	m_iGetPlayerMP = pGetPlayerMP->GetInt();
+
+	ConVar *pSkill2cdtimer = cvar->FindVar("sk_plr_skills_2_cd");
+	m_flHudSk2Timer = pSkill2cdtimer->GetInt();
+
+	ConVar *pSkill3cdtimer = cvar->FindVar("sk_plr_skills_3_cd");
+	m_flHudSk3Timer = pSkill3cdtimer->GetInt();
+
+	ConVar *pSkill4cdtimer = cvar->FindVar("sk_plr_skills_4_cd");
+	m_flHudSk4Timer = pSkill4cdtimer->GetInt();
+
+	ConVar *pSkill5cdtimer = cvar->FindVar("sk_plr_skills_5_cd");
+	m_flHudSk5Timer = pSkill5cdtimer->GetInt();
+
+	ConVar *pSkill6cdtimer = cvar->FindVar("sk_plr_skills_6_cd");
+	m_flHudSk6Timer = pSkill6cdtimer->GetInt();
+
+
+	if (m_flHudSk3Timer > 0)
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
+	else if (m_iGetPlayerMP < 50)
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2NoMP");
+	}
+	else
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2");
+
+	}
+
+	if (m_flHudSk4Timer > 0)
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
+	else if (m_iGetPlayerMP < 50)
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3NoMP");
+	}
+	else
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3");
+
+	}
+	
+	if (m_flHudSk5Timer > 0)
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
+	else if (m_iGetPlayerMP < 50)
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4NoMP");
+	}
+	else
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4");
+
+	}
+
+	if (m_flHudSk6Timer > 0)
+	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
+	else if (m_iGetPlayerMP < 50)
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5NoMP");
+	}
+	else
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5");
+
+	}
+
+}
+
+
+//------------------------------------------------------------------------
+// Purpose: draws
+//------------------------------------------------------------------------
+
+void CHudSkillCooldown::Paint()
+{
+
+	SetPaintBorderEnabled(false);
+
+	if (m_flHudSk2Timer > 0)
+	{
+		surface()->DrawSetTexture(m_nIconTextureId_2);
+		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+	}
+	else if (m_iGetPlayerMP < 30)
+	{
+		surface()->DrawSetTexture(m_nIconTextureId_3);
+		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+	}
+	else
+	{
+		surface()->DrawSetTexture(m_nIconTextureId);
+		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+	}
+
+	if (m_flHudSk3Timer > 0)
+	{
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
+		
+	}
+	else
+	{
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
+	}
+
+	surface()->DrawSetTexture(m_nIconTextureId3);
+	surface()->DrawTexturedRect(m_iIconX3, m_iIconY3, m_iIconWide3, m_iIconTall3);
+
+	surface()->DrawSetTexture(m_nIconTextureId4);
+	surface()->DrawTexturedRect(m_iIconX4, m_iIconY4, m_iIconWide4, m_iIconTall4);
+	
+	surface()->DrawSetColor(m_Icon5Color);
+	surface()->DrawSetTexture(m_nIconTextureId5);
+	surface()->DrawTexturedRect(m_iIconX5, m_iIconY5, m_iIconWide5, m_iIconTall5);
+
+	//surface()->DrawSetTexture(m_nSkillImage1);
+//surface()->DrawTexturedRect(2, 2, 48, 48);
+
+	//Example:
+	//	nFps = static_cast<int>( 1.0f / realFrameTime );
+	//GetFPSColor(nFps, ucColor);
+	//g_pMatSystemSurface->DrawColoredText(m_hFont, x, 2, ucColor[0], ucColor[1], ucColor[2], 255, "%3i fps on %s", nFps, engine->GetLevelName());
+
+	//TODO: read the keybind directly from the keyboard list.
+	wchar_t sz[64];
+	V_swprintf_safe(sz, L"%i",m_flHudSk2Timer);
+	//Skill #2
+	surface()->DrawSetTextFont(m_hTextFont);
+	if (m_flHudSk2Timer > 0)
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz, wcslen(sz));
+
+	}
+	else
+	{
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(L"1", wcslen(L"1"));
+	}
+
+	//Skill #3
+	V_swprintf_safe(sz, L"%i", m_flHudSk3Timer);
+	if (m_flHudSk3Timer > 0)
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else
+	{
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(L"2", wcslen(L"2"));
+	}
+
+	//Skill #4
+	V_swprintf_safe(sz, L"%i", m_flHudSk4Timer);
+	if (m_flHudSk4Timer > 0)
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else
+	{
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(L"3", wcslen(L"3"));
+	}
+	//Skill #5
+	V_swprintf_safe(sz, L"%i", m_flHudSk5Timer);
+	if (m_flHudSk5Timer > 0)
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else
+	{
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(L"4", wcslen(L"4"));
+	}
+	//Skill #6
+	V_swprintf_safe(sz, L"%i", m_flHudSk6Timer);
+	if (m_flHudSk6Timer > 0)
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else
+	{
+		
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(L"5", wcslen(L"5"));
+	}
+
+	
+}

@@ -1243,8 +1243,8 @@ void AnimationController::RunCmd_SetTexture( PostedMessage_t &msg )
 	KeyValues *inputData = new KeyValues(g_ScriptSymbols.String(msg.variable));
 	inputData->SetString(g_ScriptSymbols.String(msg.variable), g_ScriptSymbols.String(msg.variable2));
 	if (!panel->SetInfo(inputData))
-	{
-	//	Assert(!("Unhandlable var in AnimationController::SetValue())"));
+	{ 
+		//Assert(!("Unhandlable var in AnimationController::SetValue())"));
 	}
 	inputData->deleteThis();
 }
