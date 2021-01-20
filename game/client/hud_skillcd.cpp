@@ -10,6 +10,9 @@
 #include "IGameUIFuncs.h"
 #include <vgui/IInput.h>
 #include <vgui_controls/AnimationController.h>
+#include <vgui/KeyCode.h>
+#include "inputsystem/iinputsystem.h"
+
 
 
 using namespace vgui;
@@ -134,6 +137,7 @@ void CHudSkillCooldown::OnThink(void)
 
 	}
 
+
 }
 
 
@@ -206,9 +210,17 @@ void CHudSkillCooldown::Paint()
 	}
 	else
 	{
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname1;
+		keyname1 = gameuifuncs->GetButtonCodeForBind("quickslot1"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot1 = g_pInputSystem->ButtonCodeToString(keyname1);
+		V_swprintf_safe(sz, L"%s", keyNameSlot1); //convert the string to wchar_t for DrawPrintText 
+
 		surface()->DrawSetTextColor(m_TextColor);
 		surface()->DrawSetTextPos(text_xpos, text_ypos);
-		surface()->DrawPrintText(L"1", wcslen(L"1"));
+		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 
 	//Skill #3
@@ -221,9 +233,17 @@ void CHudSkillCooldown::Paint()
 	}
 	else
 	{
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname2;
+		keyname2 = gameuifuncs->GetButtonCodeForBind("quickslot2"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot2 = g_pInputSystem->ButtonCodeToString(keyname2);
+		V_swprintf_safe(sz, L"%s", keyNameSlot2); //convert the string to wchar_t for DrawPrintText 
+
 		surface()->DrawSetTextColor(m_TextColor);
 		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
-		surface()->DrawPrintText(L"2", wcslen(L"2"));
+		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 
 	//Skill #4
@@ -236,9 +256,17 @@ void CHudSkillCooldown::Paint()
 	}
 	else
 	{
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname3;
+		keyname3 = gameuifuncs->GetButtonCodeForBind("quickslot3"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot3 = g_pInputSystem->ButtonCodeToString(keyname3);
+		V_swprintf_safe(sz, L"%s", keyNameSlot3); //convert the string to wchar_t for DrawPrintText 
+
 		surface()->DrawSetTextColor(m_TextColor);
 		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
-		surface()->DrawPrintText(L"3", wcslen(L"3"));
+		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 	//Skill #5
 	V_swprintf_safe(sz, L"%i", m_flHudSk5Timer);
@@ -250,9 +278,17 @@ void CHudSkillCooldown::Paint()
 	}
 	else
 	{
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname4;
+		keyname4 = gameuifuncs->GetButtonCodeForBind("quickslot4"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot4 = g_pInputSystem->ButtonCodeToString(keyname4);
+		V_swprintf_safe(sz, L"%s", keyNameSlot4); //convert the string to wchar_t for DrawPrintText 
+
 		surface()->DrawSetTextColor(m_TextColor);
 		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
-		surface()->DrawPrintText(L"4", wcslen(L"4"));
+		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 	//Skill #6
 	V_swprintf_safe(sz, L"%i", m_flHudSk6Timer);
@@ -264,10 +300,17 @@ void CHudSkillCooldown::Paint()
 	}
 	else
 	{
-		
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname5;
+		keyname5 = gameuifuncs->GetButtonCodeForBind("quickslot5"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot5 = g_pInputSystem->ButtonCodeToString(keyname5);
+		V_swprintf_safe(sz, L"%s", keyNameSlot5); //convert the string to wchar_t for DrawPrintText 
+
 		surface()->DrawSetTextColor(m_TextColor);
 		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
-		surface()->DrawPrintText(L"5", wcslen(L"5"));
+		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 
 	
