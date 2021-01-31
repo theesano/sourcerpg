@@ -1893,7 +1893,6 @@
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\server\baseentity.h" />
-    <ClInclude Include="hud_hull.h" />
     <ClInclude Include="c_skills_weaponthrow.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
@@ -1905,6 +1904,10 @@
     </ClInclude>
     <ClInclude Include="hud_skillcd.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hud_playerquickstats.h" />
+    <ClInclude Include="hud_stamina.h">
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3432,9 +3435,6 @@
     <ClCompile Include="..\server\singleplayer_animstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hud_hull.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="c_skills_weaponthrow.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
@@ -3443,6 +3443,12 @@
     </ClCompile>
     <ClCompile Include="hud_skillcd.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_playerquickstats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_stamina.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

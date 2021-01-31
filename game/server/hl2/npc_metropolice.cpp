@@ -4877,6 +4877,10 @@ int CNPC_MetroPolice::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		m_flRecentDamageTime = gpGlobals->curtime;
 	}
 
+	char tempstr[512];
+	Q_snprintf(tempstr, sizeof(tempstr), "%i", GetHealth());
+	EntityText(5, tempstr, 1);
+
 	return BaseClass::OnTakeDamage_Alive( info ); 
 }
 

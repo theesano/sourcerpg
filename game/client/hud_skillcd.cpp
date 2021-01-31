@@ -188,13 +188,6 @@ void CHudSkillCooldown::Paint()
 	surface()->DrawSetTexture(m_nIconTextureId5);
 	surface()->DrawTexturedRect(m_iIconX5, m_iIconY5, m_iIconWide5, m_iIconTall5);
 
-	//surface()->DrawSetTexture(m_nSkillImage1);
-//surface()->DrawTexturedRect(2, 2, 48, 48);
-
-	//Example:
-	//	nFps = static_cast<int>( 1.0f / realFrameTime );
-	//GetFPSColor(nFps, ucColor);
-	//g_pMatSystemSurface->DrawColoredText(m_hFont, x, 2, ucColor[0], ucColor[1], ucColor[2], 255, "%3i fps on %s", nFps, engine->GetLevelName());
 
 	//TODO: read the keybind directly from the keyboard list.
 	wchar_t sz[64];

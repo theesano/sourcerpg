@@ -34,7 +34,7 @@ CHudSuitPower::CHudSuitPower(const char *pElementName) : CHudElement(pElementNam
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	SetHiddenBits( HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT);
 
 }
 

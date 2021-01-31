@@ -98,4 +98,4 @@ private:
 
 };
 
-#endif // HUD_SUITPOWER_H
+#endif 

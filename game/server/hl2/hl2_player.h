@@ -323,6 +323,8 @@ public:
 	bool m_bIsAttack1;
 	bool m_bIsAttack2;
 	bool m_bIsAttack3;
+	bool m_bIsAttack4;
+	bool m_bIsAttack5;
 	
 
 protected:

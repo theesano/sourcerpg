@@ -88,6 +88,8 @@ private:
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
 	bool			m_bWIsAttack3;
+	bool			m_bWIsAttack4;
+	bool			m_bWIsAttack5;
 
 	void			HandlePlayerMP(void);
 

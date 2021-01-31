@@ -2288,30 +2288,57 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			if (m_bIsAttack1 == true) 
 			{
 				idealActivity = ACT_MELEE_ATTACK1;
-				m_bIsAttack2 = true;
 				m_bIsAttack1 = false;
+				m_bIsAttack2 = true;
 				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat()+ animtime.GetFloat();
-				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
+				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
 				
 			}
 			else if (m_bIsAttack2 == true) 
 			{
 				idealActivity = ACT_MELEE_ATTACK2;
-				m_bIsAttack2 = false;
 				m_bIsAttack1 = false;
+				m_bIsAttack2 = false;
 				m_bIsAttack3 = true;
+				m_bIsAttack4 = false;
+				m_bIsAttack5 = false;
 				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
-				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
+				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
 
 			}
 			else if (m_bIsAttack3 == true) 
 			{
 				idealActivity = ACT_MELEE_ATTACK3;
+				m_bIsAttack1 = false;
+				m_bIsAttack2 = false;
+				m_bIsAttack3 = false;
+				m_bIsAttack4 = true;
+				m_bIsAttack5 = false;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
+				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
+
+			}
+			else if (m_bIsAttack4 == true)
+			{
+				idealActivity = ACT_MELEE_ATTACK4;
+				m_bIsAttack1 = false;
+				m_bIsAttack2 = false;
+				m_bIsAttack3 = false;
+				m_bIsAttack4 = false;
+				m_bIsAttack5 = true;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + (animtime.GetFloat() + 0.4);
+				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK4));
+			}
+			else if (m_bIsAttack5 == true)
+			{
+				idealActivity = ACT_MELEE_ATTACK5;
 				m_bIsAttack1 = true;
 				m_bIsAttack2 = false;
 				m_bIsAttack3 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
-				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
+				m_bIsAttack4 = false;
+				m_bIsAttack5 = false;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + (animtime.GetFloat() + 0.4);
+				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK5));
 
 			}
 
@@ -2326,14 +2353,37 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		idealActivity = ACT_EVADE;
 		if (m_afButtonPressed & IN_ATTACK2)
 		{
-			//idealActivity = ACT_MELEE_SPEVADE;
-			idealActivity = ACT_MELEE_ATTACK2;
+			idealActivity = ACT_MELEE_SPEVADE;
 		}
 	}	
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
 		//idealActivity = ACT_MELEE_SKILL_CSLASH;
-		idealActivity = ACT_MELEE_ATTACK2;
+		
+		if (m_afButtonPressed & IN_SLOT1)
+		{
+			idealActivity = ACT_MELEE_ATTACK5;
+		}
+		else if (m_afButtonPressed & IN_SLOT2)
+		{
+			idealActivity = ACT_MELEE_ATTACK2;
+		}
+		else if (m_afButtonPressed & IN_SLOT3)
+		{
+			idealActivity = ACT_MELEE_ATTACK2;
+		}
+		else if (m_afButtonPressed & IN_SLOT4)
+		{
+			idealActivity = ACT_MELEE_ATTACK2;
+		}
+		else if (m_afButtonPressed & IN_SLOT5)
+		{
+			idealActivity = ACT_MELEE_ATTACK4;
+		}
+		else
+		{
+			idealActivity = ACT_MELEE_ATTACK2;
+		}
 	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
 	{
@@ -2483,6 +2533,22 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK3)
+	{
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		return;
+	}
+
+	if (idealActivity == ACT_MELEE_ATTACK4)
+	{
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		return;
+	}
+
+	if (idealActivity == ACT_MELEE_ATTACK5)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
 		SetLayerPlaybackRate(0, animspeed.GetFloat());

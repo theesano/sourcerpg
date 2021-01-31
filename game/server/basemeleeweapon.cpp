@@ -215,8 +215,8 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Run the Evil Slash skill code
 		Skill_RadialSlash();
 
-		if (gpGlobals->curtime - m_nExecutionTime < 0)
-			Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
+		//if (gpGlobals->curtime - m_nExecutionTime < 0)
+			//Warning("Execution time %.2f \n", abs(gpGlobals->curtime - m_nExecutionTime));
 		
 
 		//A stupid hack to temporary fix the problem when the Execution timer goes below .20 and the player press evade they don't receive the bonus velocity boost.
@@ -663,11 +663,13 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		//triggerInfo.ScaleDamage(1.0);
 		WeaponSound(ATTACK1);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
-		m_bWIsAttack2 = true;
 		m_bWIsAttack1 = false;
+		m_bWIsAttack2 = true;
 		AddKnockbackXY(2.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
 		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+
 
 	}
 	else if (m_bWIsAttack2 == true)
@@ -677,12 +679,14 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_flSkillAttributeRange = m_nDamageRadius;
 		WeaponSound(ATTACK2);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
-		m_bWIsAttack2 = false;
 		m_bWIsAttack1 = false;
+		m_bWIsAttack2 = false;
 		m_bWIsAttack3 = true;
 		AddKnockbackXY(2.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
 		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+
 
 	}
 	else if (m_bWIsAttack3 == true)
@@ -692,15 +696,47 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_flSkillAttributeRange = m_nDamageRadius;
 		WeaponSound(ATTACK3);
 		pOwner->SetAnimation(PLAYER_ATTACK1);
-		m_bWIsAttack1 = true;
+		m_bWIsAttack1 = false;
 		m_bWIsAttack2 = false;
 		m_bWIsAttack3 = false;
+		m_bWIsAttack4 = true;
+		m_bWIsAttack5 = false;
 		AddKnockbackXY(3.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
 		m_nExecutionTime = gpGlobals->curtime + 0.6666f;
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+
+	}
+	else if (m_bWIsAttack4 == true)
+	{
+		WeaponSound(ATTACK1);
+		pOwner->SetAnimation(PLAYER_ATTACK1);
+		m_bWIsAttack1 = false;
+		m_bWIsAttack2 = false;
+		m_bWIsAttack3 = false;
+		m_bWIsAttack4 = false;
+		m_bWIsAttack5 = true;
+		AddKnockbackXY(3.0f, 1);
+		m_nExecutionTime = gpGlobals->curtime + 1.0f;
+		AddKnockbackXY(1, 5); //for npc hitting sound
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+
+	}
+	else if (m_bWIsAttack5 == true)
+	{
+		WeaponSound(ATTACK2);
+		pOwner->SetAnimation(PLAYER_ATTACK1);
+		m_bWIsAttack1 = true; // end of the chain
+		m_bWIsAttack2 = false;
+		m_bWIsAttack3 = false;
+		m_bWIsAttack4 = false;
+		m_bWIsAttack5 = false;
+		AddKnockbackXY(3.0f, 1);
+		AddKnockbackXY(1, 5); //for npc hitting sound
+		m_nExecutionTime = gpGlobals->curtime + 1.0f;
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 	}
 	
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 
 
 }
@@ -1230,8 +1266,15 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					m_iEnemyHealth = ppAIs[i]->GetHealth();
 
 					if (ppAIs[i]->IsAlive())
-					m_bIsEnemyInAtkRange = true;
 
+					{
+						m_bIsEnemyInAtkRange = true;
+
+						// display text if they are within range
+						
+
+					}
+					
 					int NPCHealth = ppAIs[i]->GetHealth();
 					if (options == 1)
 					{
