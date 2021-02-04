@@ -20,7 +20,7 @@
 
 ConVar    sk_plr_dmg_melee("sk_plr_dmg_melee", "0");
 ConVar    sk_npc_dmg_melee("sk_npc_dmg_melee", "0");
-ConVar    sk_plr_attackspeed("sk_plr_attackspeed", "0.6");
+ConVar    sk_plr_attackinterval("sk_plr_attackinterval", "0.6");
 ConVar    sk_plr_attackrange("sk_plr_attackrange", "128");
 
 //-----------------------------------------------------------------------------
@@ -38,7 +38,7 @@ public:
 	CWeaponMelee();
 
 	float		GetRange(void)		{ return sk_plr_attackrange.GetFloat(); }
-	float		GetFireRate(void)		{ return	sk_plr_attackspeed.GetFloat(); }
+	float		GetFireRate(void)		{ return	sk_plr_attackinterval.GetFloat(); }
 
 	void		AddViewKick(void);
 	float		GetDamageForActivity(Activity hitActivity);

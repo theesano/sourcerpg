@@ -65,7 +65,7 @@
 
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
-extern ConVar animtime("animtime", "0.2"); // the period for selecting the next animation in the combo , it runs out the attack animation will revert back to 1.
+extern ConVar animtime("animtime", "0.2"); // the period for selecting the next animation in the combo , if runs out the attack animation will revert back to the first animation in the chain.
 extern ConVar animspeed("animspeed", "1.0");
 
 // Do not touch with without seeing me, please! (sjb)
@@ -431,6 +431,8 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack1 = true;
 	m_bIsAttack2 = false;
 	m_bIsAttack3 = false;
+	m_bIsAttack4 = false;
+	m_bIsAttack5 = false;
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
 	m_flCanRunTimeWindowFwd = 0.0f;//Do not change
@@ -969,25 +971,13 @@ void CHL2_Player::PreThink(void)
 		m_HL2Local.m_vecLocatorOrigin = vec3_invalid; // This tells the client we have no locator target.
 	}
 		
-	//m_flTimeBetweenAttack = gpGlobals->curtime - m_flAtkAnimationChangingTime;
-
-	//		if (gpGlobals->curtime - m_flAtkAnimationChangingTime >= 0)
-	//		{
-	//			m_bIsAttack1 = true;
-	//			m_bIsAttack2 = false;
-	//			m_bIsAttack3 = false;
-	//		}
-
-	//		if ((m_flTimeBetweenAttack < 0) && (m_afButtonPressed & IN_SPEED))
-	//		{
-	//			m_flAtkAnimationChangingTime = gpGlobals->curtime;
-	//		}
-
 	if ((m_flAtkAnimationChangingTime < gpGlobals->curtime) && (!m_bIsAttack1))
 	{
 		m_bIsAttack1 = true;
 		m_bIsAttack2 = false;
 		m_bIsAttack3 = false;
+		m_bIsAttack4 = false;
+		m_bIsAttack5 = false;
 	}
 
 	if (m_afButtonPressed & IN_SPEED)
@@ -995,7 +985,12 @@ void CHL2_Player::PreThink(void)
 		m_bIsAttack1 = true;
 		m_bIsAttack2 = false;
 		m_bIsAttack3 = false;
+		m_bIsAttack4 = false;
+		m_bIsAttack5 = false;
 	}
+
+	engine->Con_NPrintf(10, "Attack Animation in the chain %i %i %i %i %i ", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3, m_bIsAttack4, m_bIsAttack5);
+
 
 	//DevMsg("Current Animation %d\n", GetSequenceActivity();
 
@@ -2217,7 +2212,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	speed = GetAbsVelocity().Length2D();
 	float flPlayRunToIdleAnim = 0.0f;
 
-	ConVar *pAttackSpeed = cvar->FindVar("sk_plr_attackspeed");
+	ConVar *pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
 
 
 	//Select Animation for different attacking stages.
@@ -2262,36 +2257,17 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 		else
 		{  //Select proper animations for each attack. TODO: Sync Animation time with Weapon Attack Cycle.
-			/*if ((m_bIsAttack1 == true) && (m_flTimeBetweenAttack >= 0))
-			{
-					idealActivity = ACT_MELEE_ATTACK1;
-					m_bIsAttack2 = true;
-					m_bIsAttack1 = false;
-					m_flAtkAnimationChangingTime = gpGlobals->curtime + 1.0f;
-			}
-			else if ((m_bIsAttack2 == true) && (m_flTimeBetweenAttack < 0))
-			{
-					idealActivity = ACT_MELEE_ATTACK2;
-					m_flAtkAnimationChangingTime = gpGlobals->curtime + 0.8f;
-					m_bIsAttack2 = false;
-					m_bIsAttack1 = false;
-					m_bIsAttack3 = true;
-			}
-			else if ((m_bIsAttack3 == true) && (m_flTimeBetweenAttack < 0))
-			{
-					idealActivity = ACT_MELEE_ATTACK3;
-					m_bIsAttack1 = true;
-					m_bIsAttack2 = false;
-					m_bIsAttack3 = false;
-			}*/
 			
 			if (m_bIsAttack1 == true) 
 			{
 				idealActivity = ACT_MELEE_ATTACK1;
 				m_bIsAttack1 = false;
 				m_bIsAttack2 = true;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat()+ animtime.GetFloat();
-				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
+				m_bIsAttack3 = false;
+				m_bIsAttack4 = false;
+				m_bIsAttack5 = false;
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackInterval->GetFloat()+ animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
 				
 			}
 			else if (m_bIsAttack2 == true) 
@@ -2302,8 +2278,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack3 = true;
 				m_bIsAttack4 = false;
 				m_bIsAttack5 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
-				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackInterval->GetFloat() + animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
 
 			}
 			else if (m_bIsAttack3 == true) 
@@ -2314,8 +2290,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack3 = false;
 				m_bIsAttack4 = true;
 				m_bIsAttack5 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + animtime.GetFloat();
-				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackInterval->GetFloat() + animtime.GetFloat();
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
 
 			}
 			else if (m_bIsAttack4 == true)
@@ -2326,8 +2302,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack3 = false;
 				m_bIsAttack4 = false;
 				m_bIsAttack5 = true;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + (animtime.GetFloat() + 0.4);
-				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK4));
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackInterval->GetFloat() + (animtime.GetFloat()+0.4f);
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK4));
 			}
 			else if (m_bIsAttack5 == true)
 			{
@@ -2337,8 +2313,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				m_bIsAttack3 = false;
 				m_bIsAttack4 = false;
 				m_bIsAttack5 = false;
-				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackSpeed->GetFloat() + (animtime.GetFloat() + 0.4);
-				DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK5));
+				m_flAtkAnimationChangingTime = gpGlobals->curtime + pAttackInterval->GetFloat() + (animtime.GetFloat() + 0.4f);
+				//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK5));
 
 			}
 

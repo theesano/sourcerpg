@@ -111,6 +111,14 @@ private:
 	void	GetPlayerAnglesOnce(void);
 	void	GetPlayerPosOnce(void);
 
+	float m_flAttackInterval;
+	float m_flAnimTime;
+
+	float m_flTotalAttackTime;
+
+	bool ShouldCollide(int collisionGroup, int contentsMask) const;
+
+
 	//Use with GetPlayerAnglesOnce
 	Vector dirkb;
 

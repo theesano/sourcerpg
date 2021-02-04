@@ -40,7 +40,7 @@ END_SEND_TABLE()
 static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM);
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
-extern ConVar sk_atkspeedmod("sk_atkspeedmod", "1");
+extern ConVar sk_plr_attackspeedmod("sk_plr_attackspeedmod", "1");
 extern ConVar pl_isattacking("pl_isattacking", "0");
 extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 extern ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
@@ -51,6 +51,7 @@ extern ConVar sk_plr_skills_4_cd("sk_plr_skills_4_cd", "0");
 extern ConVar sk_plr_skills_5_cd("sk_plr_skills_5_cd", "0");
 extern ConVar sk_plr_skills_6_cd("sk_plr_skills_6_cd", "0");
 extern ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
+
 
 
 //-----------------------------------------------------------------------------
@@ -69,9 +70,12 @@ CBaseMeleeWeapon::CBaseMeleeWeapon()
 	m_bWIsAttack1 = true;
 	m_bWIsAttack2 = false;
 	m_bWIsAttack3 = false; 
+	m_bWIsAttack2 = false;
+	m_bWIsAttack3 = false;
 	m_SpeedModActiveTime = 0.0f;
 	m_flNPCFreezeTime = 0.0f;
 	m_flSkillAttributeRange = 0.0f;
+	m_flTotalAttackTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -129,10 +133,26 @@ int CBaseMeleeWeapon::WeaponMeleeAttack1Condition(float flDot, float flDist)
 //------------------------------------------------------------------------------
 void CBaseMeleeWeapon::ItemPostFrame(void)
 {
+	
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
 	SkillsHandler();
 	HandlePlayerMP();
+
+	ConVar* pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
+	m_flAttackInterval = pAttackInterval->GetFloat();
+	ConVar* pAnimTime = cvar->FindVar("animtime");
+	m_flAnimTime = pAnimTime->GetFloat();
+
+	if ((m_flTotalAttackTime < gpGlobals->curtime) && (!m_bWIsAttack1))
+	{
+		m_bWIsAttack1 = true;
+		m_bWIsAttack2 = false;
+		m_bWIsAttack3 = false;
+		m_bWIsAttack4 = false;
+		m_bWIsAttack5 = false;
+	}
+	
 
 	if (pOwner == NULL)
 		return;
@@ -150,7 +170,10 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 		WeaponIdle();
 		return;
 	}
+
+
 }
+
 void CBaseMeleeWeapon::HandlePlayerMP(void)
 {
 	if (m_iPlayerMP <= 0)
@@ -178,6 +201,7 @@ void CBaseMeleeWeapon::HandlePlayerMP(void)
 		m_iPlayerMP = m_iPlayerMPMax;
 	}
 }
+
 //m_nExecutionTime handles freezing the player for a certain amount of time
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
@@ -191,9 +215,9 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	//Warning("Attack speed %.2f \n", sk_atkspeedmod.GetFloat());
 	if (m_SpeedModActiveTime > gpGlobals->curtime)
-		sk_atkspeedmod.SetValue("0.75");
+		sk_plr_attackspeedmod.SetValue("0.75");
 	else
-		sk_atkspeedmod.SetValue("1");
+		sk_plr_attackspeedmod.SetValue("1");
 
 	if (m_flNPCFreezeTime > gpGlobals->curtime)
 	{
@@ -251,8 +275,17 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	//Makes the player stand still when activating a skill
 
-	if (pOwner->m_nButtons & IN_SPEED)
-		m_nExecutionTime = 0.0f;
+		if (pOwner->m_nButtons & IN_SPEED)
+		{
+			m_nExecutionTime = 0.0f;
+			
+			m_bWIsAttack1 = true;
+			m_bWIsAttack2 = false;
+			m_bWIsAttack3 = false;
+			m_bWIsAttack4 = false;
+			m_bWIsAttack5 = false;
+			
+		}
 
 	//Skill 1 CoolDown
 	if (gpGlobals->curtime - m_nSkCoolDownTime < 0)
@@ -283,6 +316,24 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		float cdtimer = gpGlobals->curtime - m_nSkCoolDownTime4;
 		//DevMsg("Nade CD  %.2f \n ", cdtimer);
 		m_bIsSkCoolDown4 = false;
+	}
+
+	if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 0)
+	{
+		//engine->Con_NPrintf(14, "Skill 5 Cooldown time  %6.1f   ", m_nSkCoolDownTime5 - gpGlobals->curtime);
+	}
+	else
+	{
+		m_bIsSkCoolDown5 = false;
+	}
+
+	if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 0)
+	{
+		//engine->Con_NPrintf(15, "Skill 6 Cooldown time  %6.1f   ", m_nSkCoolDownTime6 - gpGlobals->curtime);
+	}
+	else
+	{
+		m_bIsSkCoolDown6 = false;
 	}
 
 	/*if (gpGlobals->curtime - m_nSkCoolDownTime5 <= 0)
@@ -331,6 +382,9 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 void CBaseMeleeWeapon::SkillStatNotification(void)
 {
+
+	ConVar* pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
+
 	int skill2cdtimer = m_nSkCoolDownTime2 - gpGlobals->curtime;
 	sk_plr_skills_2_cd.SetValue(skill2cdtimer);
 
@@ -348,52 +402,64 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
 
-	if (m_nSkCoolDownTime - gpGlobals->curtime >= 0)
-		engine->Con_NPrintf(10, "Skill 1 Cooldown time %6.1f Attack speed %6.1f ", m_nSkCoolDownTime - gpGlobals->curtime, sk_atkspeedmod.GetFloat());
+	engine->Con_NPrintf(9, "Current Attack in the chain %i %i %i %i %i ", m_bWIsAttack1, m_bWIsAttack2, m_bWIsAttack3, m_bWIsAttack4, m_bWIsAttack5);
 
+	engine->Con_NPrintf(11, "Current Attack Interval %.2f ",pAttackInterval->GetFloat() );
 
-	if (m_nSkCoolDownTime2 - gpGlobals->curtime >= 0)
-		engine->Con_NPrintf(11, "Skill 2 Cooldown time  %6.1f ", m_nSkCoolDownTime2 - gpGlobals->curtime);
-
-
-	if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
-		engine->Con_NPrintf(12, "Skill 3 Cooldown time  %6.1f  Press USE to Detonate Now ", m_nSkCoolDownTime3 - gpGlobals->curtime);
-
-	if (m_nSkCoolDownTime4 - gpGlobals->curtime >= 0)
-		engine->Con_NPrintf(13, "Skill 4 Cooldown time  %6.1f   ", m_nSkCoolDownTime4 - gpGlobals->curtime);
-
-	engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
-
-	if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 0)
-	{
-		engine->Con_NPrintf(14, "Skill 5 Cooldown time  %6.1f   ", m_nSkCoolDownTime5 - gpGlobals->curtime);
-	}
+	if (m_flNextPrimaryAttack - gpGlobals->curtime >=0)
+		engine->Con_NPrintf(12, "Time Until Next Attack %.2f", m_flNextPrimaryAttack - gpGlobals->curtime);
 	else
-	{
-		m_bIsSkCoolDown5 = false;	
-	}
+		engine->Con_NPrintf(12, "Time Until Next Attack: 0");
 
-	if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 0)
-	{
-		engine->Con_NPrintf(15, "Skill 6 Cooldown time  %6.1f   ", m_nSkCoolDownTime6 - gpGlobals->curtime);
-	}
-	else
-	{
-		m_bIsSkCoolDown6 = false;
-	}
 
-		if (m_bIsSkCoolDown5)
-			engine->Con_NPrintf(13, "Skill 5 is in cooldown");
-		else if (!m_bIsSkCoolDown5)
-			engine->Con_NPrintf(13, "Skill 5 is NOT in cooldown");
 
-		if (m_bIsSkCoolDown6)
-			engine->Con_NPrintf(16, "Skill 6 is in cooldown");
-		else if (!m_bIsSkCoolDown6)
-			engine->Con_NPrintf(16, "Skill 6 is NOT in cooldown");
+
+	//if (m_nSkCoolDownTime - gpGlobals->curtime >= 0)
+	//	engine->Con_NPrintf(10, "Skill 1 Cooldown time %6.1f Attack speed %6.1f ", m_nSkCoolDownTime - gpGlobals->curtime, sk_atkspeedmod.GetFloat());
+
+
+	//if (m_nSkCoolDownTime2 - gpGlobals->curtime >= 0)
+	//	engine->Con_NPrintf(11, "Skill 2 Cooldown time  %6.1f ", m_nSkCoolDownTime2 - gpGlobals->curtime);
+
+
+	//if (m_nSkCoolDownTime3 - gpGlobals->curtime >= 0)
+	//	engine->Con_NPrintf(12, "Skill 3 Cooldown time  %6.1f  Press USE to Detonate Now ", m_nSkCoolDownTime3 - gpGlobals->curtime);
+
+	//if (m_nSkCoolDownTime4 - gpGlobals->curtime >= 0)
+	//	engine->Con_NPrintf(13, "Skill 4 Cooldown time  %6.1f   ", m_nSkCoolDownTime4 - gpGlobals->curtime);
+
+	//engine->Con_NPrintf(9, "Enemy HP  %i ", m_iEnemyHealth);
+
+	//if (m_nSkCoolDownTime5 - gpGlobals->curtime >= 0)
+	//{
+	//	engine->Con_NPrintf(14, "Skill 5 Cooldown time  %6.1f   ", m_nSkCoolDownTime5 - gpGlobals->curtime);
+	//}
+	//else
+	//{
+	//	m_bIsSkCoolDown5 = false;	
+	//}
+
+	//if (m_nSkCoolDownTime6 - gpGlobals->curtime >= 0)
+	//{
+	//	engine->Con_NPrintf(15, "Skill 6 Cooldown time  %6.1f   ", m_nSkCoolDownTime6 - gpGlobals->curtime);
+	//}
+	//else
+	//{
+	//	m_bIsSkCoolDown6 = false;
+	//}
+
+	//	if (m_bIsSkCoolDown5)
+	//		engine->Con_NPrintf(13, "Skill 5 is in cooldown");
+	//	else if (!m_bIsSkCoolDown5)
+	//		engine->Con_NPrintf(13, "Skill 5 is NOT in cooldown");
+
+	//	if (m_bIsSkCoolDown6)
+	//		engine->Con_NPrintf(16, "Skill 6 is in cooldown");
+	//	else if (!m_bIsSkCoolDown6)
+	//		engine->Con_NPrintf(16, "Skill 6 is NOT in cooldown");
 
 		engine->Con_NPrintf(16,"Is player attacking? : %i", pl_isattacking.GetInt());
-		engine->Con_NPrintf(17, "MP unit: %i", m_iPlayerMP);
+	//	engine->Con_NPrintf(17, "MP unit: %i", m_iPlayerMP);
 
 
 
@@ -546,14 +612,15 @@ void CBaseMeleeWeapon::ImpactEffect(trace_t &traceHit)
 //------------------------------------------------------------------------------
 void CBaseMeleeWeapon::Swing(int bIsSecondary)
 {
+	ConVar* pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
+	ConVar* pAnimTime = cvar->FindVar("animtime");
+
 	// Try a ray
 	trace_t traceHit;
 	
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
-
-	//float flSpeedMod = 1.5f;
 
 	//use g_EntList  to make reference to the npc????
 	float m_nDamageRadius = 128.0f;
@@ -665,11 +732,16 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		pOwner->SetAnimation(PLAYER_ATTACK1);
 		m_bWIsAttack1 = false;
 		m_bWIsAttack2 = true;
+		m_bWIsAttack3 = false;
+		m_bWIsAttack4 = false;
+		m_bWIsAttack5 = false;
 		AddKnockbackXY(2.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
-		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
+
+		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_plr_attackspeedmod.GetFloat());
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 
+		m_flTotalAttackTime = gpGlobals->curtime + m_flAttackInterval + m_flAnimTime;
 
 	}
 	else if (m_bWIsAttack2 == true)
@@ -682,11 +754,15 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_bWIsAttack1 = false;
 		m_bWIsAttack2 = false;
 		m_bWIsAttack3 = true;
+		m_bWIsAttack4 = false;
+		m_bWIsAttack5 = false;
 		AddKnockbackXY(2.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
-		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_atkspeedmod.GetFloat());
+
+		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_plr_attackspeedmod.GetFloat());
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 
+		m_flTotalAttackTime = gpGlobals->curtime + m_flAttackInterval + m_flAnimTime;
 
 	}
 	else if (m_bWIsAttack3 == true)
@@ -703,8 +779,11 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_bWIsAttack5 = false;
 		AddKnockbackXY(3.0f,1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
-		m_nExecutionTime = gpGlobals->curtime + 0.6666f;
+
+		m_nExecutionTime = gpGlobals->curtime + (0.6666f *sk_plr_attackspeedmod.GetFloat());
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+
+		m_flTotalAttackTime = gpGlobals->curtime + m_flAttackInterval + m_flAnimTime;
 
 	}
 	else if (m_bWIsAttack4 == true)
@@ -719,7 +798,10 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		AddKnockbackXY(3.0f, 1);
 		m_nExecutionTime = gpGlobals->curtime + 1.0f;
 		AddKnockbackXY(1, 5); //for npc hitting sound
+
 		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+
+		m_flTotalAttackTime = gpGlobals->curtime + m_flAttackInterval + (m_flAnimTime + 0.4f);
 
 	}
 	else if (m_bWIsAttack5 == true)
@@ -733,8 +815,12 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 		m_bWIsAttack5 = false;
 		AddKnockbackXY(3.0f, 1);
 		AddKnockbackXY(1, 5); //for npc hitting sound
+
 		m_nExecutionTime = gpGlobals->curtime + 1.0f;
 		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+
+		m_flTotalAttackTime = gpGlobals->curtime + m_flAttackInterval + (m_flAnimTime + 0.4f);
+
 	}
 	
 
@@ -778,6 +864,8 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 		RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 		WeaponSound(SINGLE);
 		pOwner->SetAnimation(PLAYER_EVADE);
+
+		AddKnockbackXY(1, 6);
 
 		//Sync the time with flFreezingMovementTime in in_main.cpp
 		m_nExecutionTime = gpGlobals->curtime + 1.0f;
@@ -1303,6 +1391,10 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 						WeaponSound(MELEE_HIT);
 						
 					}
+					else if (options == 6)
+					{
+						
+					}
 						
 				}
 				else
@@ -1344,4 +1436,12 @@ void CBaseMeleeWeapon::AddSkillMovementImpulse(float magnitude)
 	VectorNormalize(fwd);
 	//Give the player the push they need 
 	UTIL_GetLocalPlayer()->SetAbsVelocity(fwd*m_nStepVelocity);
+}
+
+bool CBaseMeleeWeapon::ShouldCollide(int collisionGroup, int contentsMask) const
+{	
+		if (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_NPC)
+			return false;
+
+	return BaseClass::ShouldCollide(collisionGroup, contentsMask);
 }
