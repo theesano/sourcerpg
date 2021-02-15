@@ -37,7 +37,7 @@ public:
 	virtual Activity	GetPrimaryAttackActivity(void)	{ return	ACT_VM_HITCENTER; }
 	virtual Activity	GetSecondaryAttackActivity(void)	{ return	ACT_VM_HITCENTER2; }
 
-	virtual	float	GetFireRate(void)								{ return	0.6f; }
+	virtual	float	GetFireRate(void)								{ return	0.6f; } // Changing it here doesn't do anything, please refer to the weapon files that inherit this class eg. weapon_melee.h/weapon_melee.cpp
 	virtual float	GetRange(void)								{ return	32.0f; }
 	virtual	float	GetDamageForActivity(Activity hitActivity)	{ return	1.0f; }
 
@@ -67,6 +67,7 @@ public:
 	float			m_flSkillAttributeRange;
 	float			m_flPlayerMPRestoreInterval;
 
+	float			m_flSkillsCDReductionRate;
 
 	int				m_iEnemyHealth;
 
@@ -83,7 +84,7 @@ private:
 	float			m_nExecutionTime;
 	float			m_nSkillHitRefireTime;
 	float			m_flNPCFreezeTime;
-	float			m_nExecutionTimeFix = 0.2f;
+	float			m_flInAirTime;
 
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
@@ -101,12 +102,17 @@ private:
 
 	void			Skill_Evade(void);
 	void			Skill_RadialSlash(void);
+	void			Skill_RadialSlash_LogicEx(void);
 	void			Skill_Grenade(void);
 	void			Skill_GrenadeEX(void);
 	void			Skill_HealSlash(void);
 	void			Skill_Trapping(void);
+	void			Skill_Trapping_LogicEx(void);
 	void			Skill_Tornado(void);
+	void			Skill_Tornado_LogicEx(void);
 	void			SkillStatNotification(void);
+
+	virtual void			SkillStatNotification_HUD(int messageoption);
 
 	void	GetPlayerAnglesOnce(void);
 	void	GetPlayerPosOnce(void);
@@ -117,11 +123,12 @@ private:
 	float m_flTotalAttackTime;
 
 	bool ShouldCollide(int collisionGroup, int contentsMask) const;
-
+	virtual Vector GetWeaponAimDirection();
 
 	//Use with GetPlayerAnglesOnce
 	Vector dirkb;
-
+	Vector dirkbZ;
+	Vector playerPosInAir;
 	Activity		ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner);
 };
 

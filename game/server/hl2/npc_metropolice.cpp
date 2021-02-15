@@ -577,10 +577,13 @@ void CNPC_MetroPolice::Precache( void )
 	if ( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
 	{
 		SetModelName( AllocPooledString("models/police_cheaple.mdl" ) );
+		//SetModelName(AllocPooledString("models/monster/mob1_puppet.mdl"));
+
 	}
 	else
 	{
 		SetModelName( AllocPooledString("models/police.mdl") );
+		//SetModelName(AllocPooledString("models/monster/mob1_puppet.mdl"));
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );

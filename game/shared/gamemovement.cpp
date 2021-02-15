@@ -2527,8 +2527,8 @@ bool CGameMovement::CheckJumpButton( void )
 
 	CheckV( player->CurrentCommandNumber(), "CheckJump", mv->m_vecVelocity );
 
-	mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
-	mv->m_outStepHeight += 0.15f;
+	//mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
+	//mv->m_outStepHeight += 0.15f;
 
 	OnJump(mv->m_outJumpVel.z);
 
@@ -2557,75 +2557,75 @@ bool CGameMovement::CheckJumpButton( void )
 	return true;
 }
 
-void CGameMovement::DoDuckJump(float flFraction)
-{
-	if (flFraction >= 1.0f)
-	{
-		// Since we accelerate the ducking time artificially say that we are ducking so we don't fly up in the air
-		player->AddFlag(FL_DUCKING);
-		player->m_Local.m_bDucked = true;
-		player->m_Local.m_bDucking = false;
-
-		// Force the view offset to be "fully ducked"
-		player->SetViewOffset(GetPlayerViewOffset(true));
-	}
-	else
-	{
-		// Move our view down
-		SetDuckedEyeOffset(flFraction);
-
-		// Move our body up a fraction of the difference between fully crouched and fully standing
-		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
-		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
-		Vector viewDelta = (hullSizeNormal - hullSizeCrouch) * DUCKJUMP_SCALING * flFraction;
-		Vector out;
-		VectorAdd(mv->GetAbsOrigin(), viewDelta, out);
-		mv->SetAbsOrigin(out);
-
-		// See if we are stuck?
-		FixPlayerCrouchStuck(true);
-
-		// Recategorize position since ducking can change origin
-		CategorizePosition();
-	}
-}
-
-void CGameMovement::DoUnDuckJump(float flFraction)
-{
-	if (flFraction <= 0.0f)
-	{
-		// Since we accelerate the ducking time artificially say that we are not ducking so we don't go through the floor
-		player->m_Local.m_bDucked = false;
-		player->RemoveFlag(FL_DUCKING);
-		player->m_Local.m_bDucking = false;
-		player->m_Local.m_bInDuckJump = false;
-
-		// Set our view offset to fully standing
-		player->SetViewOffset(GetPlayerViewOffset(false));
-		player->m_Local.m_flDucktime = 0;
-	}
-	else
-	{
-		// Move our view up
-		SetDuckedEyeOffset(flFraction);
-
-		// Move our body down a fraction of the difference between fully crouched and fully standing
-		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
-		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
-		Vector viewDelta = (hullSizeNormal - hullSizeCrouch) * DUCKJUMP_SCALING * flFraction;
-		viewDelta.Negate();
-		Vector out;
-		VectorAdd(mv->GetAbsOrigin(), viewDelta, out);
-
-		mv->SetAbsOrigin(out);
-
-		// See if we are stuck?
-		FixPlayerCrouchStuck(true);
-
-		// Recategorize position since ducking can change origin
-		CategorizePosition();
-	}
-}
+//void CGameMovement::DoDuckJump(float flFraction)
+//{
+//	if (flFraction >= 1.0f)
+//	{
+//		// Since we accelerate the ducking time artificially say that we are ducking so we don't fly up in the air
+//		player->AddFlag(FL_DUCKING);
+//		player->m_Local.m_bDucked = true;
+//		player->m_Local.m_bDucking = false;
+//
+//		// Force the view offset to be "fully ducked"
+//		player->SetViewOffset(GetPlayerViewOffset(true));
+//	}
+//	else
+//	{
+//		// Move our view down
+//		SetDuckedEyeOffset(flFraction);
+//
+//		// Move our body up a fraction of the difference between fully crouched and fully standing
+//		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
+//		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
+//		Vector viewDelta = (hullSizeNormal - hullSizeCrouch) * DUCKJUMP_SCALING * flFraction;
+//		Vector out;
+//		VectorAdd(mv->GetAbsOrigin(), viewDelta, out);
+//		mv->SetAbsOrigin(out);
+//
+//		// See if we are stuck?
+//		FixPlayerCrouchStuck(true);
+//
+//		// Recategorize position since ducking can change origin
+//		CategorizePosition();
+//	}
+//}
+//
+//void CGameMovement::DoUnDuckJump(float flFraction)
+//{
+//	if (flFraction <= 0.0f)
+//	{
+//		// Since we accelerate the ducking time artificially say that we are not ducking so we don't go through the floor
+//		player->m_Local.m_bDucked = false;
+//		player->RemoveFlag(FL_DUCKING);
+//		player->m_Local.m_bDucking = false;
+//		player->m_Local.m_bInDuckJump = false;
+//
+//		// Set our view offset to fully standing
+//		player->SetViewOffset(GetPlayerViewOffset(false));
+//		player->m_Local.m_flDucktime = 0;
+//	}
+//	else
+//	{
+//		// Move our view up
+//		SetDuckedEyeOffset(flFraction);
+//
+//		// Move our body down a fraction of the difference between fully crouched and fully standing
+//		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
+//		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
+//		Vector viewDelta = (hullSizeNormal - hullSizeCrouch) * DUCKJUMP_SCALING * flFraction;
+//		viewDelta.Negate();
+//		Vector out;
+//		VectorAdd(mv->GetAbsOrigin(), viewDelta, out);
+//
+//		mv->SetAbsOrigin(out);
+//
+//		// See if we are stuck?
+//		FixPlayerCrouchStuck(true);
+//
+//		// Recategorize position since ducking can change origin
+//		CategorizePosition();
+//	}
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -4489,15 +4489,9 @@ void CGameMovement::Duck( void )
 				float flDuckSeconds = flDuckMilliseconds * 0.001f;
 
 				// Finish in duck transition when transition time is over, in "duck", in air.
-				if (((flDuckSeconds > TIME_TO_DUCK) || bInDuck) && !bInAir)
+				if ((flDuckSeconds > TIME_TO_DUCK) || bInDuck || bInAir)
 				{
 					FinishDuck();
-				}
-				else if (bInAir)
-				{
-					// Speed up our duck transition by two times if we are duck jumping
-					float flDuckFraction = clamp(SimpleSpline(flDuckSeconds / TIME_TO_DUCK)*2.0f, 0, 1.0f);
-					DoDuckJump(flDuckFraction);
 				}
 				else
 				{
@@ -4593,15 +4587,9 @@ void CGameMovement::Duck( void )
 						float flDuckSeconds = flDuckMilliseconds * 0.001f;
 
 						// Finish ducking immediately if duck time is over or not on ground
-						if (flDuckSeconds > TIME_TO_UNDUCK && !bInAir)
+						if (flDuckSeconds > TIME_TO_UNDUCK || (bInAir && !bDuckJump))
 						{
 							FinishUnDuck();
-						}
-						else if (bInAir)
-						{
-							// Reverse our process
-							float flDuckFraction = clamp(SimpleSpline(1.0f - (flDuckSeconds / TIME_TO_UNDUCK))*2.0f, 0, 1.0f);
-							DoUnDuckJump(flDuckFraction);
 						}
 						else
 						{

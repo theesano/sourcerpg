@@ -88,10 +88,11 @@ void CHudSkillCooldown::OnThink(void)
 	ConVar *pSkill6cdtimer = cvar->FindVar("sk_plr_skills_6_cd");
 	m_flHudSk6Timer = pSkill6cdtimer->GetInt();
 
+	//Skill 2 cooldown has been defined using a different method below in Paint()
 
 	if (m_flHudSk3Timer > 0)
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
-	else if (m_iGetPlayerMP < 50)
+	else if (m_iGetPlayerMP < 25)
 	{
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2NoMP");
 	}
@@ -115,7 +116,7 @@ void CHudSkillCooldown::OnThink(void)
 	
 	if (m_flHudSk5Timer > 0)
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
-	else if (m_iGetPlayerMP < 50)
+	else if (m_iGetPlayerMP < 30)
 	{
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4NoMP");
 	}
@@ -166,17 +167,9 @@ void CHudSkillCooldown::Paint()
 		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
 	}
 
-	if (m_flHudSk3Timer > 0)
-	{
-		surface()->DrawSetTexture(m_nIconTextureId2);
-		surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
-		
-	}
-	else
-	{
-		surface()->DrawSetTexture(m_nIconTextureId2);
-		surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
-	}
+	
+	surface()->DrawSetTexture(m_nIconTextureId2);
+	surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
 
 	surface()->DrawSetTexture(m_nIconTextureId3);
 	surface()->DrawTexturedRect(m_iIconX3, m_iIconY3, m_iIconWide3, m_iIconTall3);
