@@ -487,6 +487,9 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.Use" );
 	PrecacheScriptSound( "HL2Player.BurnPain" );
 	PrecacheModel(lilyss_player_model.GetString(), true);
+	PrecacheModel("models/weapons/melee/lilyscythe_u.mdl", true);
+	PrecacheScriptSound("Player.Evade");
+
 }
 
 //-----------------------------------------------------------------------------
@@ -697,6 +700,7 @@ void CHL2_Player::Evade(void)
 			if (!sv_infinite_aux_power.GetInt() == 1)
 				m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
 			
+			EmitSound("Player.Evade");
 			SetAnimation(PLAYER_EVADE);
 			m_bIsEvade = true;
 			RemoveGesture(ACT_MELEE_ATTACK1);

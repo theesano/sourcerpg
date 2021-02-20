@@ -81,7 +81,7 @@ CBaseEntity *CreateWpnThrowSkill(const Vector &origin, const Vector &velocity, f
 	pSkWpnThrow->SetSpeed(velocity.Length());
 
 	//! CHANGE
-	pSkWpnThrow->EmitSound("NPC_CombineBall.Launch");
+	pSkWpnThrow->EmitSound("Weapon_Melee.SPECIAL1");
 
 	PhysSetGameFlags(pSkWpnThrow->VPhysicsGetObject(), FVPHYSICS_WAS_THROWN);
 

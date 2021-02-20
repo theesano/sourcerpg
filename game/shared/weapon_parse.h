@@ -46,14 +46,18 @@ typedef enum {
 	ATTACK1,
 	ATTACK2,
 	ATTACK3,
-
+	ATTACK4,
+	ATTACK5,
+	SPECIAL4,
+	SPECIAL5,
+	EVADE,
 
 	NUM_SHOOT_SOUND_TYPES,
 } WeaponSound_t;
 
 int GetWeaponSoundFromString( const char *pszString );
 
-#define MAX_SHOOT_SOUNDS	16			// Maximum number of shoot sounds per shoot type
+#define MAX_SHOOT_SOUNDS	32			// Maximum number of shoot sounds per shoot type
 
 #define MAX_WEAPON_STRING	80
 #define MAX_WEAPON_PREFIX	16
