@@ -531,7 +531,7 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	//engine->Con_NPrintf(9, "Current Attack in the chain %i %i %i %i %i ", m_bWIsAttack1, m_bWIsAttack2, m_bWIsAttack3, m_bWIsAttack4, m_bWIsAttack5);
 	
-	engine->Con_NPrintf(11, "Current Attack Interval %.2f ",m_flAttackInterval );
+//	engine->Con_NPrintf(11, "Current Attack Interval %.2f ",m_flAttackInterval );
 
 	//if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
 	//{
@@ -546,10 +546,10 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	//		DevMsg("Time: Total Execution (Freeze Mvmt): 0 \n");
 	//}
 	
-	if (m_flNextPrimaryAttack - gpGlobals->curtime >=0)
+	/*if (m_flNextPrimaryAttack - gpGlobals->curtime >=0)
 		engine->Con_NPrintf(12, "Time Until Next Attack %.2f", m_flNextPrimaryAttack - gpGlobals->curtime);
 	else
-		engine->Con_NPrintf(12, "Time Until Next Attack: 0");
+		engine->Con_NPrintf(12, "Time Until Next Attack: 0");*/
 
 	//if (m_nSkCoolDownTime - gpGlobals->curtime >= 0)
 	//	engine->Con_NPrintf(10, "Skill 1 Cooldown time %6.1f Attack speed %6.1f ", m_nSkCoolDownTime - gpGlobals->curtime, sk_atkspeedmod.GetFloat());
@@ -595,7 +595,7 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	//	else if (!m_bIsSkCoolDown6)
 	//		engine->Con_NPrintf(16, "Skill 6 is NOT in cooldown");
 
-		engine->Con_NPrintf(16,"Is player attacking? : %i", pl_isattacking.GetInt());
+	//	engine->Con_NPrintf(16,"Is player attacking? : %i", pl_isattacking.GetInt());
 	//	engine->Con_NPrintf(17, "MP unit: %i", m_iPlayerMP);
 
 
@@ -780,7 +780,8 @@ void CBaseMeleeWeapon::ImpactEffect(trace_t &traceHit)
 //------------------------------------------------------------------------------
 void CBaseMeleeWeapon::Swing(int bIsSecondary)
 {
-	
+	Vector vecShootOrigin, vecShootDir;
+
 	float speedmod = 1/sk_plr_attackspeedmod.GetFloat();
 	// Try a ray
 	trace_t traceHit;
@@ -805,7 +806,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	Vector particlepos = GetAbsOrigin() + Vector(0,0,32);
 	DispatchParticleEffect("aoehint", GetWeaponAimDirection(), vec3_angle);
-
 		
 	m_iPrimaryAttacks++;
 
@@ -1040,7 +1040,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 	if (pOwner->GetGroundEntity() != NULL)
 	{
-		pOwner->SetAbsVelocity(dirkb*nStepVelocity);
+		pOwner->SetAbsVelocity(dirkb*(nStepVelocity*1.5));
 		m_nExecutionTime = gpGlobals->curtime + (1.0f * speedmod);
 
 	}
@@ -1345,7 +1345,7 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
-	string_t iszNPCName = AllocPooledString("npc_metropolice");
+	string_t iszNPCExcludeName = AllocPooledString("npc_metropolice");
 	Vector SkillOriginNPCdist;
 
 	trace_t traceHit;
@@ -1364,7 +1364,8 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 		{
 			for (int i = 0; i < nAIs; i++)
 			{
-				if (ppAIs[i]->m_iClassname == iszNPCName)
+				//if (ppAIs[i]->m_iClassname == iszNPCName)
+				if (ppAIs[i])
 				{
 					SkillOriginNPCdist.x = abs(effectpos.x - ppAIs[i]->GetAbsOrigin().x);
 					SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
@@ -1527,10 +1528,13 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
 	Vector playernpcdist;
 	Vector staticplayernpcdist;
+	
 
 	for (int i = 0; i < nAIs; i++)
 	{
-		if (ppAIs[i]->m_iClassname == iszNPCName)
+		//if (ppAIs[i]->m_iClassname == iszNPCName)
+
+		if (ppAIs[i])
 		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);

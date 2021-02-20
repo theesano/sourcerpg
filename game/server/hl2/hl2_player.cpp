@@ -98,6 +98,8 @@ ConVar sk_evadestaminacost("sk_evadestaminacost", "33.3");
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
+ConVar lilyss_player_model("lilyss_player_model", "models/player/lilyproto.mdl");
+
 
 
 #ifdef HL2MP
@@ -123,7 +125,7 @@ ConVar autoaim_unlock_target( "autoaim_unlock_target", "0.8666" );
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
-#define PLAYER_MODEL "models/player/lilyproto.mdl"
+//#define PLAYER_MODEL "models/player/lilyproto.mdl"
 
 
 
@@ -484,7 +486,7 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound( "HL2Player.TrainUse" );
 	PrecacheScriptSound( "HL2Player.Use" );
 	PrecacheScriptSound( "HL2Player.BurnPain" );
-	PrecacheModel(PLAYER_MODEL, true);
+	PrecacheModel(lilyss_player_model.GetString(), true);
 }
 
 //-----------------------------------------------------------------------------
@@ -503,7 +505,7 @@ void CHL2_Player::CheckSuitZoom( void )
 		else if ( m_afButtonPressed & IN_ZOOM )
 		{
 			StartZooming();
-			ThrowGrenade();
+			//ThrowGrenade();
 		}
 	}
 //#endif//_XBOX
@@ -801,112 +803,112 @@ void CHL2_Player::HandleArmorReduction( void )
 }
 
 
-void CHL2_Player::HandleThrowGrenade(void)
-{
-	if ((m_afButtonPressed & IN_THROWGRENADE) && !WantThrow && HasAnyAmmoOfType(12) && HasWeapons())
-	{
-		
-		timeholster = NULL;
-		timethrow = NULL;
-		timedeploy = NULL;
-		WantThrow = true;
-	}
-	
-	ThrowGrenade();
-}
-
-void CHL2_Player::ThrowGrenade(void)
-{
-	if (WantThrow)
-	{
-
-		if (timeholster == NULL)
-			timeholster = gpGlobals->curtime;
-
-		//THROW SEQUENCING
-		if ((timeholster < gpGlobals->curtime) && (timeholster != NULL))
-		{
-			if (timethrow == NULL)
-			{
-				timethrow = gpGlobals->curtime;
-				CreateGrenade();
-			}
-		}
-
-		if ((timethrow < gpGlobals->curtime) && (timethrow != NULL))
-		{
-			if (timedeploy == NULL)
-				timedeploy = (gpGlobals->curtime);
-		}
-
-		if ((timedeploy < gpGlobals->curtime) && (timedeploy != NULL))
-		{
-			//Successfully Thrown A Grenade! Decrement ammo
-			//RemoveAmmo(1, 12);
-			WantThrow = false;
-		}
-	}
-}
-void CHL2_Player::UseDetonate(void)
-{
-	
-	if (m_afButtonPressed & IN_USE)
-	{
-		FragDetonate();
-	}
-}
-
-void CHL2_Player::CreateGrenade(void)
-{
-
-	Vector	vecEye = EyePosition();
-	Vector	vForward, vRight;
-
-	EyeVectors(&vForward, &vRight, NULL);
-	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
-	trace_t tr;
-
-	UTIL_TraceHull(vecEye, vecSrc, -Vector(4.0f + 2, 4.0f + 2, 4.0f + 2), Vector(4.0f + 2, 4.0f + 2, 4.0f + 2),
-		PhysicsSolidMaskForEntity(), this, GetCollisionGroup(), &tr);
-
-	if (tr.DidHit())
-	{
-		vecSrc = tr.endpos;
-	}
-	vForward[2] += 0.1f;
-
-	Vector vecThrow;
-	GetVelocity(&vecThrow, NULL);
-	vecThrow += vForward * 1200;
-	//Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), this, 3.0f, false);
-	CGrenadeFrag *pFrag = (CGrenadeFrag*)Create("npc_grenade_frag", vecSrc, vec3_angle);
-	pFrag->ApplyAbsVelocityImpulse(vecThrow);
-	pFrag->SetLocalAngularVelocity(QAngle(0, 400, 0));
-	pFrag->m_bIsLive = true;
-	pFrag->SetTimer(3.0f, 3.0f);
-}
-
-void CHL2_Player::FragDetonate()
-{
-	CBaseEntity *pEntity = NULL;
-	//Vector vPlrViewAngles;
-	//AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(),&vPlrViewAngles);
-	//Vector vTempOffsetFrag = g_ThirdPersonManager.GetCameraOffsetAngles();
-	//vTempOffsetFrag.z = 0;
-	//QAngle vTransform;
-	//VectorAngles(vTempOffsetFrag, vTransform);
-	//UTIL_GetLocalPlayer()->SetAbsAngles(vTransform);
-	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
-	{
-		CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
-		if (pFrag->m_bIsLive)
-		{
-			//pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
-			pFrag->SetTimer(0, 0);
-		}
-	}
-
-}
+//void CHL2_Player::HandleThrowGrenade(void)
+//{
+//	if ((m_afButtonPressed & IN_THROWGRENADE) && !WantThrow && HasAnyAmmoOfType(12) && HasWeapons())
+//	{
+//		
+//		timeholster = NULL;
+//		timethrow = NULL;
+//		timedeploy = NULL;
+//		WantThrow = true;
+//	}
+//	
+//	ThrowGrenade();
+//}
+//
+//void CHL2_Player::ThrowGrenade(void)
+//{
+//	if (WantThrow)
+//	{
+//
+//		if (timeholster == NULL)
+//			timeholster = gpGlobals->curtime;
+//
+//		//THROW SEQUENCING
+//		if ((timeholster < gpGlobals->curtime) && (timeholster != NULL))
+//		{
+//			if (timethrow == NULL)
+//			{
+//				timethrow = gpGlobals->curtime;
+//				CreateGrenade();
+//			}
+//		}
+//
+//		if ((timethrow < gpGlobals->curtime) && (timethrow != NULL))
+//		{
+//			if (timedeploy == NULL)
+//				timedeploy = (gpGlobals->curtime);
+//		}
+//
+//		if ((timedeploy < gpGlobals->curtime) && (timedeploy != NULL))
+//		{
+//			//Successfully Thrown A Grenade! Decrement ammo
+//			//RemoveAmmo(1, 12);
+//			WantThrow = false;
+//		}
+//	}
+//}
+//void CHL2_Player::UseDetonate(void)
+//{
+//	
+//	if (m_afButtonPressed & IN_USE)
+//	{
+//		FragDetonate();
+//	}
+//}
+//
+//void CHL2_Player::CreateGrenade(void)
+//{
+//
+//	Vector	vecEye = EyePosition();
+//	Vector	vForward, vRight;
+//
+//	EyeVectors(&vForward, &vRight, NULL);
+//	Vector vecSrc = vecEye + vForward * 18.0f + vRight * 8.0f;
+//	trace_t tr;
+//
+//	UTIL_TraceHull(vecEye, vecSrc, -Vector(4.0f + 2, 4.0f + 2, 4.0f + 2), Vector(4.0f + 2, 4.0f + 2, 4.0f + 2),
+//		PhysicsSolidMaskForEntity(), this, GetCollisionGroup(), &tr);
+//
+//	if (tr.DidHit())
+//	{
+//		vecSrc = tr.endpos;
+//	}
+//	vForward[2] += 0.1f;
+//
+//	Vector vecThrow;
+//	GetVelocity(&vecThrow, NULL);
+//	vecThrow += vForward * 1200;
+//	//Fraggrenade_Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), this, 3.0f, false);
+//	CGrenadeFrag *pFrag = (CGrenadeFrag*)Create("npc_grenade_frag", vecSrc, vec3_angle);
+//	pFrag->ApplyAbsVelocityImpulse(vecThrow);
+//	pFrag->SetLocalAngularVelocity(QAngle(0, 400, 0));
+//	pFrag->m_bIsLive = true;
+//	pFrag->SetTimer(3.0f, 3.0f);
+//}
+//
+//void CHL2_Player::FragDetonate()
+//{
+//	CBaseEntity *pEntity = NULL;
+//	//Vector vPlrViewAngles;
+//	//AngleVectors(UTIL_GetLocalPlayer()->GetAbsAngles(),&vPlrViewAngles);
+//	//Vector vTempOffsetFrag = g_ThirdPersonManager.GetCameraOffsetAngles();
+//	//vTempOffsetFrag.z = 0;
+//	//QAngle vTransform;
+//	//VectorAngles(vTempOffsetFrag, vTransform);
+//	//UTIL_GetLocalPlayer()->SetAbsAngles(vTransform);
+//	while ((pEntity = gEntList.FindEntityByClassname(pEntity, "npc_grenade_frag")) != NULL)
+//	{
+//		CGrenadeFrag *pFrag = dynamic_cast<CGrenadeFrag *>(pEntity);
+//		if (pFrag->m_bIsLive)
+//		{
+//			//pFrag->Use(GetOwner(), GetOwner(), USE_ON, 0);
+//			pFrag->SetTimer(0, 0);
+//		}
+//	}
+//
+//}
 
 float flReturnSpeed;
 float flReturnSpeedAfterEvaded;
@@ -992,6 +994,8 @@ void CHL2_Player::PreThink(void)
 		m_bIsAttack5 = false;
 	}
 
+
+
 	//engine->Con_NPrintf(10, "Attack Animation in the chain %i %i %i %i %i ", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3, m_bIsAttack4, m_bIsAttack5);
 
 
@@ -999,6 +1003,8 @@ void CHL2_Player::PreThink(void)
 
 
 #endif//HL2_EPISODIC
+
+
 
 	// Riding a vehicle?
 	if ( IsInAVehicle() )	
@@ -1107,9 +1113,9 @@ void CHL2_Player::PreThink(void)
 		return;         // finale
 
 	//VPROF_SCOPE_BEGIN("CHL2_Player::PreThink-HandleThrowGrenade");
-	HandleThrowGrenade();
+	//HandleThrowGrenade();
 	//VPROF_SCOPE_END();
-	UseDetonate();
+	//UseDetonate();
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-ItemPreFrame" );
 	ItemPreFrame( );
 	VPROF_SCOPE_END();
@@ -1338,7 +1344,7 @@ void CHL2_Player::PostThink( void )
 	{
 		 HandleAdmireGlovesAnimation();
 	}
-
+	
 	m_angEyeAngles = EyeAngles();
 
 	QAngle angles = GetLocalAngles();
@@ -1557,7 +1563,7 @@ void CHL2_Player::Spawn(void)
 #ifndef HL2MP
 #ifndef PORTAL
 	
-	SetModel( PLAYER_MODEL );
+	SetModel( lilyss_player_model.GetString() );
 #endif
 #endif
 
@@ -2231,7 +2237,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (playerAnim == PLAYER_JUMP)
 	{
 		if (HasWeapons())
-			idealActivity = ACT_HL2MP_JUMP;
+		{
+			//Can't afford individual weapon animations due to time constraint
+			//idealActivity = ACT_HL2MP_JUMP;
+
+			idealActivity = ACT_JUMP;
+
+			if (m_bIsFallingA)
+				idealActivity = ACT_GLIDE;
+		}
 		else
 		{
 			idealActivity = ACT_JUMP;

@@ -116,8 +116,10 @@ ConVar	sk_metropolice_simple_health( "sk_metropolice_simple_health","26");
 ConVar	sk_metropolice_stitch_distance( "sk_metropolice_stitch_distance","1000");
 
 ConVar	metropolice_chase_use_follow( "metropolice_chase_use_follow", "0" );
-ConVar  metropolice_move_and_melee("metropolice_move_and_melee", "1" );
+ConVar  metropolice_move_and_melee("metropolice_move_and_melee", "0" );
 ConVar  metropolice_charge("metropolice_charge", "1" );
+
+ConVar lilyss_metropolice_model("lilyss_metropolice_model", "models/police.mdl");
 
 // How many clips of pistol ammo a metropolice carries.
 #define METROPOLICE_NUM_CLIPS			5
@@ -458,7 +460,7 @@ void CNPC_MetroPolice::NotifyDeadFriend( CBaseEntity* pFriend )
 		return;
 	}
 
-	m_Sentences.Speak( "METROPOLICE_MAN_DOWN", SENTENCE_PRIORITY_MEDIUM );
+	//m_Sentences.Speak( "METROPOLICE_MAN_DOWN", SENTENCE_PRIORITY_MEDIUM );
 }
 
 
@@ -574,15 +576,19 @@ bool CNPC_MetroPolice::OverrideMoveFacing( const AILocalMoveGoal_t &move, float 
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::Precache( void )
 {
+	string_t iszNPCName = AllocPooledString(lilyss_metropolice_model.GetString());
+
+	string_t iszNPCName_Cheap = AllocPooledString("models/police.mdl");
+
 	if ( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
 	{
-		SetModelName( AllocPooledString("models/police_cheaple.mdl" ) );
+		SetModelName(iszNPCName_Cheap);
 		//SetModelName(AllocPooledString("models/monster/mob1_puppet.mdl"));
 
 	}
 	else
 	{
-		SetModelName( AllocPooledString("models/police.mdl") );
+		SetModelName(iszNPCName);
 		//SetModelName(AllocPooledString("models/monster/mob1_puppet.mdl"));
 	}
 
@@ -4767,7 +4773,7 @@ void CNPC_MetroPolice::RunTask( const Task_t *pTask )
 				// Shoot if he gets too far.
 				if ( m_vSavePosition.DistToSqr( GetEnemy()->GetAbsOrigin() ) > FLEEING_DISTANCE_SQR )
 				{
-					SpeakSentence( METROPOLICE_SENTENCE_HES_RUNNING );
+					//SpeakSentence( METROPOLICE_SENTENCE_HES_RUNNING );
 					EnemyResistingArrest();
 					break;
 				}
@@ -4880,8 +4886,9 @@ int CNPC_MetroPolice::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		m_flRecentDamageTime = gpGlobals->curtime;
 	}
 
+	//show damage number
 	char tempstr[512];
-	Q_snprintf(tempstr, sizeof(tempstr), "%i", GetHealth());
+	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
 	EntityText(5, tempstr, 1);
 
 	return BaseClass::OnTakeDamage_Alive( info ); 

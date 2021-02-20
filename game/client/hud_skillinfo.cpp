@@ -4,9 +4,9 @@ using namespace vgui;
 #include <vgui/IVGui.h>
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Label.h>
-
-
-
+#include "vgui/ISurface.h"
+//#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/Button.h>
 
 //CHudSkillInfo class:
 class CHudSkillInfo : public vgui::Frame
@@ -17,15 +17,36 @@ class CHudSkillInfo : public vgui::Frame
 	CHudSkillInfo(vgui::VPANEL parent); //Constructor
 	~CHudSkillInfo(){}; //Destructor
 
+	virtual void	OnMouseReleased(vgui::MouseCode code);
+
 protected:
 	//VGUI overrides:
 	virtual void OnTick();
 	virtual void OnCommand(const char* pcCommand);
+	virtual void Paint();
+	virtual void OnThink();
 
 private:
 	//Other used VGUI control Elements:
-	Label *m_skinfo1;
+	Label *m_StatsInfo;
+	Label *m_StatsBaseDamage;
+	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
+	Button *m_pCloseButton;
+	Button *m_pAspdUpButton;
+	Button *m_pAspdDownButton;
 
+	CPanelAnimationVarAliasType(int, m_iBgImageX, "BgImageX", "0", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iBgImageY, "BgImageY", "0", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iBgImageWide, "BgImageWidth", "308", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iBgImageTall, "BgImageHeight", "308", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_BgImage, "bgimage", "vgui/panel", "textureid");
+	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedX, "StatsAttackSpeedX", "64", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedY, "StatsAttackSpeedY", "96", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedButtonX, "StatsAttackSpeedButtonX", "72", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedButtonY, "StatsAttackSpeedButtonY", "96", "proportional_int");
+	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Trebuchet18");
+	float m_flGetPlayerAttackSpeedMod;
+	float m_flPlayerBaseDamage;
 };
 
 //Constructor: Initialize the Panel
@@ -36,16 +57,25 @@ CHudSkillInfo::CHudSkillInfo(vgui::VPANEL parent)
 
 	SetKeyBoardInputEnabled(true);
 	SetMouseInputEnabled(true);
-	
+	SetPaintBackgroundEnabled(false);
 	SetProportional(false);
-	SetTitleBarVisible(false);
+	SetTitleBarVisible(true);
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
-	SetCloseButtonVisible(false);
+	SetCloseButtonVisible(true);
 	SetSizeable(false);
-	SetMoveable(false); // I want it to be movable later on
+	SetMoveable(true); // I want it to be movable later on
 	SetVisible(true);
+	
+	
+	//Button done
+	m_pCloseButton = new Button(this, "ButtonClose", "", this, "turnoff");
+	m_pCloseButton->SetDepressedSound("common/bugreporter_succeeded.wav");
+	m_pCloseButton->SetReleasedSound("ui/buttonclick.wav");
 
+	//surface()->DrawSetTexture(m_BgImage);
+	//surface()->DrawTexturedRect(m_iBgImageX, m_iBgImageY, m_iBgImageWide, m_iBgImageTall);
+	
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/SourceScheme.res", "SourceScheme"));
 
 	LoadControlSettings("resource/UI/hudskillinfo.res");
@@ -53,13 +83,30 @@ CHudSkillInfo::CHudSkillInfo(vgui::VPANEL parent)
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
 
 	DevMsg("HudSkillInfo has been constructed \n");
+	
+	//imagePanel->SetImage(scheme()->GetImage("panel", false));
 
-	m_skinfo1 = new Label(this, "Skill1", "skill1");
-	m_skinfo1->SetPos(100, 100);
+	m_StatsInfo = new Label(this, "AttackSpeedDisp", "aspd");
+	m_StatsInfo->SetPos(64,76);
+	m_StatsInfo->SetFont(m_hTextFont);
+	m_StatsInfo->SetWide(128);
 
-	m_skinfo1 = new Label(this, "Skill2", "skill2");
-	m_skinfo1->SetPos(100, 100);
+	m_StatsBaseDamage = new Label(this, "BaseDamage", "bdmg");
+	m_StatsBaseDamage->SetPos(64,64);
+	m_StatsBaseDamage->SetFont(m_hTextFont);
+	m_StatsBaseDamage->SetWide(128);
 
+
+	m_pAspdUpButton = new Button(this, "ButtonIncreaseASPD", "", this);
+	m_pAspdUpButton->SetPos(175,75);
+	m_pAspdUpButton->SetText("Increase");
+
+	m_pAspdDownButton = new Button(this, "ButtonDecreaseASPD", "", this);
+	m_pAspdDownButton->SetPos(175,100);
+	m_pAspdDownButton->SetText("Decrease");
+	
+	//m_skinfo1 = new Label(this, "Skill2", "skill2");
+	//m_skinfo1->SetPos(100, 100);
 	
 }
 
@@ -100,16 +147,69 @@ ConVar cl_showskillinfo("cl_showskillinfo", "0", FCVAR_CLIENTDLL, "Sets the stat
 
 void CHudSkillInfo::OnTick()
 {
+	ConVar *pGetPlayerAttackSpeedMod = cvar->FindVar("sk_plr_attackspeedmod");
+	m_flGetPlayerAttackSpeedMod = pGetPlayerAttackSpeedMod->GetFloat();
+
+	if (m_pAspdUpButton->IsDepressed())
+	{
+		pGetPlayerAttackSpeedMod->SetValue(pGetPlayerAttackSpeedMod->GetFloat() + 0.1f);
+	}
+
+	if (m_pAspdDownButton->IsDepressed())
+	{
+		pGetPlayerAttackSpeedMod->SetValue(pGetPlayerAttackSpeedMod->GetFloat() - 0.1f);
+	}
+
 	BaseClass::OnTick();
-	SetVisible(cl_showskillinfo.GetBool()); //CL_SHOWMYPANEL / 1 BY DEFAULT
+	SetVisible(cl_showskillinfo.GetBool()); 
+
+}
+
+void CHudSkillInfo::OnThink()
+{
+	
+
+	ConVar *pGetPlayerBaseDamage = cvar->FindVar("sk_plr_dmg_melee");
+	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();
+
+	
+
+}
+
+void CHudSkillInfo::Paint()
+{
+	surface()->DrawSetTexture(m_BgImage);
+	surface()->DrawTexturedRect(m_iBgImageX, m_iBgImageY, m_iBgImageWide, m_iBgImageTall);
+
+	surface()->DrawSetTextFont(m_hTextFont);
+
+	wchar_t aspd[64];
+	V_swprintf_safe(aspd,L"Attack Speed: %.0f", m_flGetPlayerAttackSpeedMod*100);
+	m_StatsInfo->SetText(aspd);
+
+	wchar_t bdmg[64];
+	V_swprintf_safe(bdmg, L"Base Damage: %.0f", m_flPlayerBaseDamage);
+	m_StatsBaseDamage->SetText(bdmg);
+
+}
+
+void CHudSkillInfo::OnMouseReleased(vgui::MouseCode code)
+{
 
 }
 
 
 CON_COMMAND(ToggleSkillInfo, "Toggles myPanel on or off")
 {
-	cl_showskillinfo.SetValue(!cl_showskillinfo.GetBool());
-	hudskillinfo->Activate();
+	if (cl_showskillinfo.GetBool() == true)
+	{
+		cl_showskillinfo.SetValue(0);
+	}
+	else
+	{
+		cl_showskillinfo.SetValue(1);
+	}
+	
 
 };
 

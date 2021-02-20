@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Game Shared Header Files">
-      <UniqueIdentifier>{CF82B2DC-9C3C-7FC8-20C2-E6C638E4242D}</UniqueIdentifier>
-    </Filter>
     <Filter Include="game_controls Header Files">
       <UniqueIdentifier>{27E89F3D-D002-DEDF-D147-1A64C9C083D1}</UniqueIdentifier>
     </Filter>
@@ -45,6 +42,9 @@
     </Filter>
     <Filter Include="VPC Scripts">
       <UniqueIdentifier>{A40EE377-781A-C6B9-0C7C-B3BE118D248E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game Shared Header Files">
+      <UniqueIdentifier>{CF82B2DC-9C3C-7FC8-20C2-E6C638E4242D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,346 +102,346 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\game\shared\activitylist.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ai_activity.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ai_debug_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ammodef.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\animation.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\apparent_velocity_helper.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\base_playeranimstate.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\baseentity_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\basegrenade_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\basehlcombatweapon_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\baseparticleentity.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\baseplayer_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\baseviewmodel_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\beam_flags.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\beam_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\choreoactor.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\choreochannel.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\choreoevent.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\choreoscene.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\collisionproperty.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\death_pose.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\decals.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\effect_color_tables.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\effect_dispatch_data.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ehandle.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\entitydatainstantiator.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\entitylist_base.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\entityparticletrail_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\env_detail_controller.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\env_wind_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\eventlist.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\func_dust_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\func_ladder.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gameeventdefs.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamemovement.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamerules_register.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamestats.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamestringpool.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\gamevars_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\groundlink.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hl2_player_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\hl2\hl_movedata.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ichoreoeventcallback.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\IEffects.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\igamemovement.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\igamesystem.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\imovehelper.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\in_buttons.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\interval.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\iplayeranimstate.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ipredictionsystem.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\itempents.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\IVehicle.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\mapdata_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\mapentities_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\movevars_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\mp_shareddefs.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\multiplay_gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\npcevent.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\obstacle_pushaway.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\physics_saverestore.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\physics_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\playernet_vars.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\point_posecontroller.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\positionwatcher.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\precache_register.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\precipitation_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\predictable_entity.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\predictableid.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\predictioncopy.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\ragdoll_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\rope_helpers.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\saverestore.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\saverestore_bitstring.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\saverestore_utlclass.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\saverestore_utlsymbol.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\saverestore_utlvector.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\sceneentity_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\scriptevent.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\sequence_Transitioner.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\shared_classnames.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\shareddefs.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\sharedInterface.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\sheetsimulator.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\shot_manipulator.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\simtimer.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\singleplay_gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\smoke_fog_overlay_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\solidsetdefaults.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\soundenvelope.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\Sprite.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\SpriteTrail.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\sun_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\takedamageinfo.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\teamplay_gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\teamplayroundbased_gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\tempentity.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\touchlink.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\usercmd.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\usermessages.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\util_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\vehicle_choreo_generic_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\vehicle_viewblend_shared.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\vgui_defaultinputsignal.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\viewport_panel_names.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\voice_banmgr.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\voice_common.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\voice_gamemgr.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\voice_status.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\vphysics_sound.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\weapon_ifmsteadycam.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\weapon_parse.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game_controls\baseviewport.h">
       <Filter>game_controls Header Files</Filter>
@@ -1890,7 +1890,7 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="view.h">
-      <Filter>Game Shared Header Files</Filter>
+      <Filter>Header Files\Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\server\baseentity.h" />
     <ClInclude Include="c_skills_weaponthrow.h">

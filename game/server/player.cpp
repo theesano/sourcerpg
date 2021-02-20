@@ -3898,6 +3898,7 @@ void CBasePlayer::PreThink(void)
 		m_Local.m_flFallVelocity = -GetAbsVelocity().z;
 	}
 
+
 	// track where we are in the nav mesh
 	UpdateLastKnownArea();
 
@@ -4532,6 +4533,22 @@ void CBasePlayer::ForceOrigin( const Vector &vecOrigin )
 void CBasePlayer::PostThink()
 {
 	m_vecSmoothedVelocity = m_vecSmoothedVelocity * SMOOTHING_FACTOR + GetAbsVelocity() * ( 1 - SMOOTHING_FACTOR );
+
+	if (m_afButtonPressed & IN_THROWGRENADE)
+	{
+		CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+
+		if (pWeapon == NULL)
+		{
+			GiveNamedItem("weapon_melee");
+
+		}
+		else if (Weapon_OwnsThisType("weapon_melee"))
+		{
+			UTIL_Remove(pWeapon);
+		}
+
+	}
 
 	if ( !g_fGameOver && !m_iPlayerLocked )
 	{

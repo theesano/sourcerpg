@@ -1,9 +1,3 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: combine ball -	can be held by the super physcannon and launched
-//							by the AR2's alt-fire
-//
-//=============================================================================//
 
 #include "cbase.h"
 #include "skills_weaponthrow.h"
@@ -31,7 +25,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define WPNTHROW_MODEL	"models/effects/combineball.mdl"
+//#define WPNTHROW_MODEL	"models/effects/combineball.mdl"
+//#define WPNTHROW_MODEL	"models/props_junk/sawblade001a.mdl"
+//#define WPNTHROW_MODEL	"models/effects/combineball.mdl"
 #define WPNTHROW_SPRITE_TRAIL "sprites/combineball_trail_black_1.vmt" 
 
 #define WPNTHROW_LIFETIME	4.0f	// Seconds
@@ -47,6 +43,7 @@ ConVar	sk_wpnthrow_guidefactor("sk_wpnthrow_guidefactor", "0.5", FCVAR_REPLICATE
 ConVar	sk_wpnthrow_search_radius("sk_wpnthrow_search_radius", "512", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_angle("sk_wpnthrow_seek_angle", "15.0", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_kill("sk_wpnthrow_seek_kill", "0", FCVAR_REPLICATED);
+ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/effects/combineball.mdl");
 
 // For our ring explosion
 int s_nExplosionTextureWpnThrow = -1;
@@ -258,7 +255,7 @@ void CWeaponThrowingSkills::Precache(void)
 	//NOTENOTE: We don't call into the base class because it chains multiple 
 	//			precaches we don't need to incur
 
-	PrecacheModel(WPNTHROW_MODEL);
+	PrecacheModel(lilyss_skill2_throwmodel.GetString());
 	PrecacheModel(WPNTHROW_SPRITE_TRAIL);
 
 
@@ -374,7 +371,7 @@ void CWeaponThrowingSkills::Spawn(void)
 {
 	BaseClass::Spawn();
 
-	SetModel(WPNTHROW_MODEL);
+	SetModel(lilyss_skill2_throwmodel.GetString());
 
 	if (ShouldHitPlayer())
 	{
@@ -399,6 +396,7 @@ void CWeaponThrowingSkills::Spawn(void)
 
 	// No shadow!
 	AddEffects(EF_NOSHADOW);
+	//AddEffects(EF_NODRAW);
 
 	// Start up the eye trail
 	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate(WPNTHROW_SPRITE_TRAIL, GetAbsOrigin(), false);
@@ -1739,7 +1737,8 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 
 	for (int i = 0; i < nAIs; i++)
 	{
-		if (ppAIs[i]->m_iClassname == iszNPCName)
+		//if (ppAIs[i]->m_iClassname == iszNPCName)
+		if (ppAIs[i])
 		{
 			CBaseEntity *pEntity = NULL;
 
