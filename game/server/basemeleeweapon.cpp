@@ -140,9 +140,10 @@ void CBaseMeleeWeapon::Precache(void)
 	PrecacheScriptSound("Weapon_Melee.SPECIAL5");
 	PrecacheScriptSound("Weapon_Melee.ATTACK4");
 	PrecacheScriptSound("Weapon_Melee.ATTACK5");
-
-
-	
+	PrecacheScriptSound("Weapon_Melee.SPEVADE");
+	PrecacheScriptSound("Weapon_Melee.AIRATTACK1");
+	PrecacheScriptSound("Weapon_Melee.AIRATTACK2");
+	PrecacheScriptSound("Weapon_Melee.AIRATTACK3");
 }
 
 int CBaseMeleeWeapon::CapabilitiesGet()
@@ -846,9 +847,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	}
 
-	//Give the player MP for each enemy hit
-	if (m_bIsEnemyInAtkRange)
-	m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+	
 
 	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
@@ -869,6 +868,10 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bWIsAttack5 = false;
 			AddKnockbackXY(2.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
+			//Give the player MP for each enemy hit
+			if (m_bIsEnemyInAtkRange)
+			m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod );
 			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* speedmod); 	//Hard coded value, should change to SequenceDuration()
@@ -890,6 +893,10 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bWIsAttack5 = false;
 			AddKnockbackXY(2.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
+			//Give the player MP for each enemy hit
+			if (m_bIsEnemyInAtkRange)
+				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod);
 			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* speedmod); 	//Hard coded value, should change to SequenceDuration()
@@ -911,6 +918,10 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bWIsAttack5 = false;
 			AddKnockbackXY(3.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
+			//Give the player MP for each enemy hit
+			if (m_bIsEnemyInAtkRange)
+				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod);
 			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* speedmod); 	//Hard coded value, should change to SequenceDuration()
@@ -930,6 +941,11 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AddKnockbackXY(3.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
 
+			//Give the player MP for each enemy hit
+			if (m_bIsEnemyInAtkRange)
+				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt()+2;
+
+
 			m_nExecutionTime = gpGlobals->curtime + (1.0f * speedmod);
 
 			m_flNextPrimaryAttack = gpGlobals->curtime + (1.0f * speedmod);
@@ -948,6 +964,9 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bWIsAttack5 = false;
 			AddKnockbackXY(3.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
+			if (m_bIsEnemyInAtkRange)
+				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt() + 4;
+
 
 			m_nExecutionTime = gpGlobals->curtime + (1.0f * speedmod);
 
@@ -964,7 +983,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AoeDamageRadius = 128.0f;
 			m_flSkillAttributeRange = AoeDamageRadius;
 			//triggerInfo.ScaleDamage(1.0);
-			WeaponSound(ATTACK1);
+			EmitSound("Weapon_Melee.AIRATTACK1");
 			pOwner->SetAnimation(PLAYER_ATTACK1);
 			m_bWIsAttack1 = false;
 			m_bWIsAttack2 = true;
@@ -985,7 +1004,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			//AoeDamageRadius = 144.0f;
 			//triggerInfo.ScaleDamage(1.5);
 			m_flSkillAttributeRange = AoeDamageRadius;
-			WeaponSound(ATTACK2);
+			EmitSound("Weapon_Melee.AIRATTACK2");
 			pOwner->SetAnimation(PLAYER_ATTACK1);
 			m_bWIsAttack1 = false;
 			m_bWIsAttack2 = false;
@@ -1006,7 +1025,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			//AoeDamageRadius = 192.0f;
 			//triggerInfo.ScaleDamage(2.0);
 			m_flSkillAttributeRange = AoeDamageRadius;
-			WeaponSound(ATTACK3);
+			EmitSound("Weapon_Melee.AIRATTACK3");
 			pOwner->SetAnimation(PLAYER_ATTACK1);
 			m_bWIsAttack1 = true;
 			m_bWIsAttack2 = false;
@@ -1077,7 +1096,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 	RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner);
 		
-	EmitSound("Player.Evade");
+	EmitSound("Weapon_Melee.SPEVADE");
 	pOwner->SetAnimation(PLAYER_EVADE); 
 
 		//Sync the time with flFreezingMovementTime in in_main.cpp
@@ -1337,7 +1356,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	
 			float fmagnitude = 350;
 			effectpos = pOwner->GetAbsOrigin() + (fwd * fmagnitude);
-			effectpos.z = 0;
+			//effectpos.z = 0;
 
 			//WeaponSound(SPECIAL4);
 			EmitSound("Weapon_Melee.SPECIAL4");
@@ -1392,7 +1411,7 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 				{
 					SkillOriginNPCdist.x = abs(effectpos.x - ppAIs[i]->GetAbsOrigin().x);
 					SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
-					SkillOriginNPCdist.z = 0;
+					//SkillOriginNPCdist.z = 0;
 
 					if (flSkillTrapping_ActiveTime - gpGlobals->curtime >= 1.0f)
 					{

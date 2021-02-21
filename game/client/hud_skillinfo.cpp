@@ -34,6 +34,8 @@ private:
 	Button *m_pCloseButton;
 	Button *m_pAspdUpButton;
 	Button *m_pAspdDownButton;
+	Button *m_pHardModeButton;
+	Button *m_pNormalModeButton;
 
 	CPanelAnimationVarAliasType(int, m_iBgImageX, "BgImageX", "0", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iBgImageY, "BgImageY", "0", "proportional_int");
@@ -104,6 +106,22 @@ CHudSkillInfo::CHudSkillInfo(vgui::VPANEL parent)
 	m_pAspdDownButton = new Button(this, "ButtonDecreaseASPD", "", this);
 	m_pAspdDownButton->SetPos(175,100);
 	m_pAspdDownButton->SetText("Decrease");
+
+	m_pNormalModeButton = new Button(this, "ButtonNormalMode", "", this);
+	m_pNormalModeButton->SetPos(175, 130);
+	m_pNormalModeButton->SetText("Normal Difficulty");
+	m_pNormalModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
+	m_pNormalModeButton->SetReleasedSound("ui/buttonclick.wav");
+	m_pNormalModeButton->SetWide(112);
+
+	m_pHardModeButton = new Button(this, "ButtonHardMode", "", this);
+	m_pHardModeButton->SetPos(175, 155);
+	m_pHardModeButton->SetText("Very Hard Difficulty");
+	m_pHardModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
+	m_pHardModeButton->SetReleasedSound("ui/buttonclick.wav");
+	m_pHardModeButton->SetWide(150);
+
+
 	
 	//m_skinfo1 = new Label(this, "Skill2", "skill2");
 	//m_skinfo1->SetPos(100, 100);
@@ -167,7 +185,21 @@ void CHudSkillInfo::OnTick()
 
 void CHudSkillInfo::OnThink()
 {
-	
+	ConVar *pGetMetropoliceStats = cvar->FindVar("metropolice_move_and_melee");
+
+	ConVar *pGetNPCHpKnockback = cvar->FindVar("sk_npcknockbackathealth");
+
+	if (m_pNormalModeButton->IsDepressed())
+	{
+		pGetMetropoliceStats->SetValue("0");
+		pGetNPCHpKnockback->SetValue("100");
+	}
+
+	if (m_pHardModeButton->IsDepressed())
+	{
+		pGetMetropoliceStats->SetValue("1");
+		pGetNPCHpKnockback->SetValue("50");
+	}
 
 	ConVar *pGetPlayerBaseDamage = cvar->FindVar("sk_plr_dmg_melee");
 	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();
