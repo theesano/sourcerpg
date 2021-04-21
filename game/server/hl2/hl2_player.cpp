@@ -444,6 +444,12 @@ CHL2_Player::CHL2_Player()
 	m_bIsFallingA = false;
 	m_bIsEvade = false;
 
+	// A fix for the bug that doesn't allow player to move when they die and the server reload
+	if (GetFlags() & FL_FROZEN_ACT)
+	{
+		RemoveFlag(FL_FROZEN_ACT);
+	}
+
 }
 
 

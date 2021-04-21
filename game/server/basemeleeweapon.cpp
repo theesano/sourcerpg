@@ -93,6 +93,7 @@ void CBaseMeleeWeapon::Spawn(void)
 	PrecacheParticleSystem("aoehint");
 	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
 	PrecacheParticleSystem("choreo_skyflower_nexus");
+	PrecacheParticleSystem("chappi_explosion");
 
 
 	m_iPlayerMP = 50;
@@ -219,18 +220,21 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	if (pOwner == NULL)
 		return;
 
-	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	if (m_nExecutionTime - gpGlobals->curtime <= 0)
 	{
-		PrimaryAttack();
-	}
-	else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
-	{
-		//SecondaryAttack();
-	}
-	else
-	{
-		WeaponIdle();
-		return;
+		if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+		{
+			PrimaryAttack();
+		}
+		else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+		{
+			//SecondaryAttack();
+		}
+		else
+		{
+			WeaponIdle();
+			return;
+		}
 	}
 
 
@@ -562,10 +566,10 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	//	else
 	//		DevMsg("Time In Air:0 \n");
 
-	//	if (m_nExecutionTime - gpGlobals->curtime >= 0)
-	//		DevMsg("Time: Total Execution (Freeze Mvmt): %.2f \n", m_nExecutionTime - gpGlobals->curtime);
-	//	else
-	//		DevMsg("Time: Total Execution (Freeze Mvmt): 0 \n");
+		//if (m_nExecutionTime - gpGlobals->curtime >= 0)
+			//DevMsg("Time: Total Execution (Freeze Mvmt): %.2f \n", m_nExecutionTime - gpGlobals->curtime);
+		//else
+			//DevMsg("Time: Total Execution (Freeze Mvmt): 0 \n");
 	//}
 	
 	/*if (m_flNextPrimaryAttack - gpGlobals->curtime >=0)
@@ -1513,7 +1517,7 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 					AddKnockbackXY(1, 4);
 					RadiusDamage(triggerInfo, skpos, skillrange, CLASS_PLAYER, pOwner);
 					AddKnockbackXY(1, 5); //for npc hitting sound
-					DispatchParticleEffect("aoehint", skpos, vec3_angle);
+					DispatchParticleEffect("chappi_explosion", skpos, vec3_angle);
 
 					flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
 				}
@@ -1590,13 +1594,8 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					m_iEnemyHealth = ppAIs[i]->GetHealth();
 
 					if (ppAIs[i]->IsAlive())
-
 					{
-						m_bIsEnemyInAtkRange = true;
-
-						// display text if they are within range
-						
-
+						m_bIsEnemyInAtkRange = true;						// display text if they are within range
 					}
 					
 					int NPCHealth = ppAIs[i]->GetHealth();
@@ -1642,7 +1641,6 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 				else
 				{
 					m_bIsEnemyInAtkRange = false;
-
 				}
 				
 				if (staticplayernpcdist.x <= m_flSkillAttributeRange && staticplayernpcdist.y <= m_flSkillAttributeRange)
