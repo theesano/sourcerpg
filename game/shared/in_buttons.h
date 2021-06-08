@@ -44,4 +44,9 @@
 #define IN_SLOT4		(1 << 24)
 #define IN_SLOT5		(1 << 25)
 #define IN_SLOT6		(1 << 26)
+#define IN_UTILSLOT1	(1 << 27)
+#define IN_UTILSLOT2	(1 << 28)
+#define IN_UTILSLOT3	(1 << 29)
+#define IN_UTILSLOT4	(1 << 30)
+#define IN_RAGE			(1 << 31)
 #endif // IN_BUTTONS_H

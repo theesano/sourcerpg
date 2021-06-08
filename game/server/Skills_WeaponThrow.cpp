@@ -1,8 +1,5 @@
-
 #include "cbase.h"
 #include "skills_weaponthrow.h"
-#include "props.h"
-#include "explode.h"
 #include "saverestore_utlvector.h"
 #include "hl2_shareddefs.h"
 #include "materialsystem/imaterial.h"
@@ -13,22 +10,15 @@
 #include "te_effect_dispatch.h"
 #include "ai_basenpc.h"
 #include "ai_condition.h"
-#include "npc_bullseye.h"
-#include "filters.h"
 #include "SpriteTrail.h"
 #include "decals.h"
 #include "hl2_player.h"
-#include "eventqueue.h"
 #include "physics_collisionevent.h"
 #include "gamestats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//#define WPNTHROW_MODEL	"models/effects/combineball.mdl"
-//#define WPNTHROW_MODEL	"models/props_junk/sawblade001a.mdl"
-//#define WPNTHROW_MODEL	"models/effects/combineball.mdl"
-#define WPNTHROW_SPRITE_TRAIL "sprites/combineball_trail_black_1.vmt" 
 
 #define WPNTHROW_LIFETIME	4.0f	// Seconds
 
@@ -43,7 +33,10 @@ ConVar	sk_wpnthrow_guidefactor("sk_wpnthrow_guidefactor", "0.5", FCVAR_REPLICATE
 ConVar	sk_wpnthrow_search_radius("sk_wpnthrow_search_radius", "512", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_angle("sk_wpnthrow_seek_angle", "15.0", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_kill("sk_wpnthrow_seek_kill", "0", FCVAR_REPLICATED);
-ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/effects/combineball.mdl");
+ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/weapons/melee/lilyscythe_u.mdl");
+
+
+
 
 // For our ring explosion
 int s_nExplosionTextureWpnThrow = -1;
@@ -215,15 +208,11 @@ DEFINE_FIELD(m_nMaxBounces, FIELD_INTEGER),
 DEFINE_FIELD(m_bBounceDie, FIELD_BOOLEAN),
 
 
-DEFINE_FIELD(m_hSpawner, FIELD_EHANDLE),
-
 DEFINE_THINKFUNC(ExplodeThink),
 DEFINE_THINKFUNC(WhizSoundThink),
 DEFINE_THINKFUNC(DieThink),
 DEFINE_THINKFUNC(DissolveThink),
-DEFINE_THINKFUNC(DissolveRampSoundThink),
 DEFINE_THINKFUNC(AnimThink),
-DEFINE_THINKFUNC(CaptureBySpawner),
 
 DEFINE_INPUTFUNC(FIELD_VOID, "Explode", InputExplode),
 DEFINE_INPUTFUNC(FIELD_VOID, "FadeAndRespawn", InputFadeAndRespawn),
@@ -239,13 +228,6 @@ SendPropBool(SENDINFO(m_bHeld)),
 SendPropBool(SENDINFO(m_bLaunched)),
 END_SEND_TABLE()
 
-//-----------------------------------------------------------------------------
-// Gets at the spawner
-//-----------------------------------------------------------------------------
-CFuncWeaponThrowingSkillsSpawner *CWeaponThrowingSkills::GetSpawner()
-{
-	return m_hSpawner;
-}
 
 //-----------------------------------------------------------------------------
 // Precache 
@@ -255,10 +237,8 @@ void CWeaponThrowingSkills::Precache(void)
 	//NOTENOTE: We don't call into the base class because it chains multiple 
 	//			precaches we don't need to incur
 
+	//PrecacheModel(lilyss_skill2_throwmodel.GetString());
 	PrecacheModel(lilyss_skill2_throwmodel.GetString());
-	PrecacheModel(WPNTHROW_SPRITE_TRAIL);
-
-
 	s_nExplosionTextureWpnThrow = PrecacheModel("sprites/lgtning.vmt");
 	
 	PrecacheScriptSound("NPC_CombineBall.Launch");
@@ -398,19 +378,6 @@ void CWeaponThrowingSkills::Spawn(void)
 	AddEffects(EF_NOSHADOW);
 	//AddEffects(EF_NODRAW);
 
-	// Start up the eye trail
-	m_pGlowTrail = CSpriteTrail::SpriteTrailCreate(WPNTHROW_SPRITE_TRAIL, GetAbsOrigin(), false);
-
-	if (m_pGlowTrail != NULL)
-	{
-		m_pGlowTrail->FollowEntity(this);
-		m_pGlowTrail->SetTransparency(kRenderTransAdd, 0, 0, 0, 255, kRenderFxNone);
-		m_pGlowTrail->SetStartWidth(m_flRadius);
-		m_pGlowTrail->SetEndWidth(0);
-		m_pGlowTrail->SetLifeTime(0.1f);
-		m_pGlowTrail->TurnOff();
-	}
-
 	m_bEmit = true;
 	m_bHeld = false;
 	m_bLaunched = false;
@@ -442,70 +409,6 @@ void CWeaponThrowingSkills::StartAnimating(void)
 void CWeaponThrowingSkills::StopAnimating(void)
 {
 	SetContextThink(NULL, gpGlobals->curtime, s_pAnimThinkContext);
-}
-
-//-----------------------------------------------------------------------------
-// Put it into the spawner
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::CaptureBySpawner()
-{
-	m_bCaptureInProgress = true;
-	m_bFiredGrabbedOutput = false;
-
-	// Slow down the ball
-	Vector vecVelocity;
-	VPhysicsGetObject()->GetVelocity(&vecVelocity, NULL);
-	float flSpeed = VectorNormalize(vecVelocity);
-	if (flSpeed > 25.0f)
-	{
-		vecVelocity *= flSpeed * 0.4f;
-		VPhysicsGetObject()->SetVelocity(&vecVelocity, NULL);
-
-		// Slow it down until we can set its velocity ok
-		SetContextThink(&CWeaponThrowingSkills::CaptureBySpawner, gpGlobals->curtime + 0.01f, s_pCaptureContext);
-		return;
-	}
-
-	// Ok, we're captured
-	SetContextThink(NULL, gpGlobals->curtime, s_pCaptureContext);
-	ReplaceInSpawner(GetSpawner()->GetWeaponThrowSpeed());
-	m_bCaptureInProgress = false;
-}
-
-//-----------------------------------------------------------------------------
-// Put it into the spawner
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::ReplaceInSpawner(float flSpeed)
-{
-	m_bForward = true;
-	m_nState = STATE_NOT_THROWN;
-
-	// Prevent it from exploding
-	ClearLifetime();
-
-	// Stop whiz noises
-	SetContextThink(NULL, gpGlobals->curtime, s_pWhizThinkContext);
-
-	// Slam velocity to what the field wants
-	Vector vecTarget, vecVelocity;
-	GetSpawner()->GetTargetEndpoint(m_bForward, &vecTarget);
-	VectorSubtract(vecTarget, GetAbsOrigin(), vecVelocity);
-	VectorNormalize(vecVelocity);
-	vecVelocity *= flSpeed;
-	VPhysicsGetObject()->SetVelocity(&vecVelocity, NULL);
-
-	// Set our desired speed to the spawner's speed. This will be
-	// our speed on our first bounce in the field.
-	SetSpeed(flSpeed);
-}
-
-
-float CWeaponThrowingSkills::LastCaptureTime() const
-{
-	if (IsInField() || IsBeingCaptured())
-		return gpGlobals->curtime;
-
-	return m_flLastCaptureTime;
 }
 
 //-----------------------------------------------------------------------------
@@ -572,7 +475,6 @@ void CWeaponThrowingSkills::InputKill(inputdata_t &inputdata)
 
 	UTIL_Remove(this);
 
-	NotifySpawnerOfRemoval();
 }
 
 //-----------------------------------------------------------------------------
@@ -597,7 +499,6 @@ void CWeaponThrowingSkills::InputSocketed(inputdata_t &inputdata)
 
 	UTIL_Remove(this);
 
-	NotifySpawnerOfRemoval();
 }
 
 //-----------------------------------------------------------------------------
@@ -616,11 +517,6 @@ void CWeaponThrowingSkills::UpdateOnRemove()
 	{
 		if (IsDissolving())
 		{
-			if (GetSpawner())
-			{
-				GetSpawner()->WeaponThrowGrabbed(this);
-				NotifySpawnerOfRemoval();
-			}
 		}
 	}
 
@@ -635,33 +531,12 @@ void CWeaponThrowingSkills::ExplodeThink(void)
 	DoExplosion();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Tell the respawner to make a new one
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::NotifySpawnerOfRemoval(void)
-{
-	if (GetSpawner())
-	{
-		GetSpawner()->RespawnWeaponThrowPostExplosion();
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Fade out. 
 //-----------------------------------------------------------------------------
 void CWeaponThrowingSkills::DieThink()
 {
-	if (GetSpawner())
-	{
-		//Let the spawner know we died so it does it's thing
-		if (hl2_episodic.GetBool() && IsInField())
-		{
-			GetSpawner()->WeaponThrowGrabbed(this);
-		}
-
-		GetSpawner()->RespawnWeaponThrow(0.1);
-	}
-
 	UTIL_Remove(this);
 }
 
@@ -773,98 +648,6 @@ void CWeaponThrowingSkills::SetBallAsLaunched(void)
 	WhizSoundThink();
 }
 
-//-----------------------------------------------------------------------------
-// Lighten the mass so it's zippy toget to the gun
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason)
-{
-	CDefaultPlayerPickupVPhysics::OnPhysGunPickup(pPhysGunUser, reason);
-
-	if (m_nMaxBounces == -1)
-	{
-		m_nMaxBounces = 0;
-	}
-
-	if (!m_bFiredGrabbedOutput)
-	{
-		if (GetSpawner())
-		{
-			GetSpawner()->WeaponThrowGrabbed(this);
-		}
-
-		m_bFiredGrabbedOutput = true;
-	}
-
-	if (m_pGlowTrail)
-	{
-		m_pGlowTrail->TurnOff();
-		m_pGlowTrail->SetRenderColor(0, 0, 0, 0);
-	}
-
-	if (reason != PUNTED_BY_CANNON)
-	{
-		SetState(STATE_HOLDING);
-		CPASAttenuationFilter filter(GetAbsOrigin(), ATTN_NORM);
-		filter.MakeReliable();
-
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_STATIC;
-
-		if (hl2_episodic.GetBool())
-		{
-			ep.m_pSoundName = "NPC_CombineBall_Episodic.HoldingInPhysCannon";
-		}
-		else
-		{
-			ep.m_pSoundName = "NPC_CombineBall.HoldingInPhysCannon";
-		}
-
-		ep.m_flVolume = 1.0f;
-		ep.m_SoundLevel = SNDLVL_NORM;
-
-		// Now we own this ball
-		SetPlayerLaunched(pPhysGunUser);
-
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		m_pHoldingSound = controller.SoundCreate(filter, entindex(), ep);
-		controller.Play(m_pHoldingSound, 1.0f, 100);
-
-		// Don't collide with anything we may have to pull the ball through
-		SetCollisionGroup(COLLISION_GROUP_DEBRIS);
-
-		VPhysicsGetObject()->SetMass(20.0f);
-		VPhysicsGetObject()->SetInertia(Vector(100, 100, 100));
-
-		// Make it not explode
-		ClearLifetime();
-
-		m_bHeld = true;
-		m_bLaunched = false;
-
-		//Let the ball know is not being captured by one of those ball fields anymore.
-		//
-		m_bCaptureInProgress = false;
-
-
-		SetContextThink(&CWeaponThrowingSkills::DissolveRampSoundThink, gpGlobals->curtime + GetBallHoldSoundRampTime(), s_pHoldDissolveContext);
-
-		StartAnimating();
-	}
-	else
-	{
-		Vector vecVelocity;
-		VPhysicsGetObject()->GetVelocity(&vecVelocity, NULL);
-
-		SetSpeed(vecVelocity.Length());
-
-		// Set us as being launched by the player
-		SetPlayerLaunched(pPhysGunUser);
-
-		SetBallAsLaunched();
-
-		StopAnimating();
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Reset the ball to be deadly to NPCs after we've picked it up
@@ -882,64 +665,6 @@ void CWeaponThrowingSkills::SetPlayerLaunched(CBasePlayer *pOwner)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Activate death-spin!
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::OnPhysGunDrop(CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason)
-{
-	CDefaultPlayerPickupVPhysics::OnPhysGunDrop(pPhysGunUser, Reason);
-
-	SetState(STATE_THROWN);
-	WhizSoundThink();
-
-	m_bHeld = false;
-	m_bLaunched = true;
-
-	// Stop with the dissolving
-	SetContextThink(NULL, gpGlobals->curtime, s_pHoldDissolveContext);
-
-	// We're ready to start colliding again.
-	SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL);
-
-	if (m_pGlowTrail)
-	{
-		m_pGlowTrail->TurnOn();
-		m_pGlowTrail->SetRenderColor(255, 255, 255, 255);
-	}
-
-	// Set our desired speed to be launched at
-	SetSpeed(1500.0f);
-	SetPlayerLaunched(pPhysGunUser);
-
-	if (Reason != LAUNCHED_BY_CANNON)
-	{
-		// Choose a random direction (forward facing)
-		Vector vecForward;
-		pPhysGunUser->GetVectors(&vecForward, NULL, NULL);
-
-		QAngle shotAng;
-		VectorAngles(vecForward, shotAng);
-
-		// Offset by some small cone
-		shotAng[PITCH] += random->RandomInt(-55, 55);
-		shotAng[YAW] += random->RandomInt(-55, 55);
-
-		AngleVectors(shotAng, &vecForward, NULL, NULL);
-
-		vecForward *= GetSpeed();
-
-		VPhysicsGetObject()->SetVelocity(&vecForward, &vec3_origin);
-	}
-	else
-	{
-		// This will have the consequence of making it so that the
-		// ball is launched directly down the crosshair even if the player is moving.
-		VPhysicsGetObject()->SetVelocity(&vec3_origin, &vec3_origin);
-	}
-
-	SetBallAsLaunched();
-	StopAnimating();
-}
 
 //------------------------------------------------------------------------------
 // Stop looping sounds
@@ -955,20 +680,6 @@ void CWeaponThrowingSkills::StopLoopingSounds()
 	}
 }
 
-
-//------------------------------------------------------------------------------
-// Pow!
-//------------------------------------------------------------------------------
-void CWeaponThrowingSkills::DissolveRampSoundThink()
-{
-	float dt = GetBallHoldDissolveTime() - GetBallHoldSoundRampTime();
-	if (m_pHoldingSound)
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundChangePitch(m_pHoldingSound, 150, dt);
-	}
-	SetContextThink(&CWeaponThrowingSkills::DissolveThink, gpGlobals->curtime + dt, s_pHoldDissolveContext);
-}
 
 
 //------------------------------------------------------------------------------
@@ -1014,11 +725,6 @@ void CWeaponThrowingSkills::DoExplosion()
 	{
 		g_PostSimulationQueue.QueueCall(this, &CWeaponThrowingSkills::DoExplosion);
 		return;
-	}
-	// Tell the respawner to make a new one
-	if (GetSpawner())
-	{
-		GetSpawner()->RespawnWeaponThrowPostExplosion();
 	}
 
 	//Shockring
@@ -1214,75 +920,6 @@ void CWeaponThrowingSkills::OnHitEntity(CBaseEntity *pHitEntity, float flSpeed, 
 		return;
 	}
 	
-	//CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_npc_dmg_wpnthrow.GetFloat(), DMG_DISSOLVE);
-
-	//bool bIsDissolving = (pHitEntity->GetFlags() & FL_DISSOLVING) != 0;
-	//bool bShouldHit = pHitEntity->PassesDamageFilter(info);
-
-	////One more check
-	////Combine soldiers are not allowed to hurt their friends with combine balls (they can still shoot and hurt each other with grenades).
-	//CBaseCombatCharacter *pBCC = pHitEntity->MyCombatCharacterPointer();
-
-	//if (pBCC)
-	//{
-	//	bShouldHit = pBCC->IRelationType(GetOwnerEntity()) != D_LI;
-	//}
-
-	//if (!bIsDissolving && bShouldHit == true)
-	//{
-	//	if (pHitEntity->PassesDamageFilter(info))
-	//	{
-	//		if (WasFiredByNPC() || m_nMaxBounces == -1)
-	//		{
-	//			// Since Combine balls fired by NPCs do a metered dose of damage per impact, we have to ignore touches
-	//			// for a little while after we hit someone, or the ball will immediately touch them again and do more
-	//			// damage. 
-	//			if (gpGlobals->curtime >= m_flNextDamageTime)
-	//			{
-	//				EmitSound("NPC_CombineBall.KillImpact");
-
-	//				if (pHitEntity->IsNPC() && pHitEntity->Classify() != CLASS_PLAYER_ALLY_VITAL && hl2_episodic.GetBool() == true)
-	//				{
-	//					if (pHitEntity->Classify() != CLASS_PLAYER_ALLY || (pHitEntity->Classify() == CLASS_PLAYER_ALLY && m_bStruckEntity == false))
-	//					{
-	//						info.SetDamage(pHitEntity->GetMaxHealth());
-	//						m_bStruckEntity = true;
-	//					}
-	//				}
-	//				else
-	//				{
-	//					// Ignore touches briefly.
-	//					m_flNextDamageTime = gpGlobals->curtime + 0.1f;
-	//				}
-
-	//				pHitEntity->TakeDamage(info);
-	//			}
-	//		}
-	//		else
-	//		{
-	//			if ((m_nState == STATE_THROWN) && (pHitEntity->IsNPC() || dynamic_cast<CRagdollProp*>(pHitEntity)))
-	//			{
-	//				EmitSound("NPC_CombineBall.KillImpact");
-	//			}
-	//			if ((m_nState != STATE_HOLDING))
-	//			{
-
-	//				CBasePlayer *pPlayer = ToBasePlayer(GetOwnerEntity());
-	//				if (pPlayer && UTIL_IsAR2WeaponThrow(this) && ToBaseCombatCharacter(pHitEntity))
-	//				{
-	//					gamestats->Event_WeaponHit(pPlayer, false, "weapon_ar2", info);
-	//				}
-
-	//				//DissolveEntity(pHitEntity);
-	//				if (pHitEntity->ClassMatches("npc_hunter"))
-	//				{
-	//					DoExplosion();
-	//					return;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 	//HACK: Stop the weapon from moving
 	float flFinalVelocity = 0;
 	Vector vecFinalVelocity;
@@ -1522,28 +1159,6 @@ void CWeaponThrowingSkills::DeflectTowardEnemy(float flSpeed, int index, gamevco
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Bounce inside the spawner: 
-//-----------------------------------------------------------------------------
-void CWeaponThrowingSkills::BounceInSpawner(float flSpeed, int index, gamevcollisionevent_t *pEvent)
-{
-	GetSpawner()->RegisterReflection(this, m_bForward);
-
-	m_bForward = !m_bForward;
-
-	Vector vecTarget;
-	GetSpawner()->GetTargetEndpoint(m_bForward, &vecTarget);
-
-	Vector vecVelocity;
-	VectorSubtract(vecTarget, GetAbsOrigin(), vecVelocity);
-	VectorNormalize(vecVelocity);
-	vecVelocity *= flSpeed;
-
-	PhysCallbackSetVelocity(pEvent->pObjects[index], vecVelocity);
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1610,83 +1225,6 @@ void CWeaponThrowingSkills::VPhysicsCollision(int index, gamevcollisionevent_t *
 			return;
 	}
 
-
-	// Prevents impact sounds, effects, etc. when it's in the field
-	//if (!IsInField())
-	//{
-	//	BaseClass::VPhysicsCollision(index, pEvent);
-	//}
-
-	//if (m_nState == STATE_HOLDING)
-	//	return;
-
-	//// If we've collided going faster than our desired, then up our desired
-	//if (flSpeed > GetSpeed())
-	//{
-	//	SetSpeed(flSpeed);
-	//}
-
-	//// Make sure we don't slow down
-	////HACK: Make sure we stop moving entirely
-	//float flFinalVelocity = 0;
-	//Vector vecFinalVelocity = pEvent->postVelocity[index];
-	//VectorNormalize(vecFinalVelocity);
-	////vecFinalVelocity *= GetSpeed();
-	//vecFinalVelocity *= flFinalVelocity;
-	//PhysCallbackSetVelocity(pEvent->pObjects[index], vecFinalVelocity);
-
-	//CBaseEntity *pHitEntity = pEvent->pEntities[!index];
-	//if (pHitEntity && IsHittableEntity(pHitEntity))
-	//{
-	//	OnHitEntity(pHitEntity, flSpeed, index, pEvent);
-	//	return;
-	//}
-
-	//if (IsInField())
-	//{
-	//	if (HasSpawnFlags(SF_WPNTHROW_BALL_BOUNCING_IN_SPAWNER) && GetSpawner())
-	//	{
-	//		BounceInSpawner(GetSpeed(), index, pEvent);
-	//		return;
-	//	}
-
-	//	PhysCallbackSetVelocity(pEvent->pObjects[index], vec3_origin);
-
-	//	// Delay the fade out so that we don't change our 
-	//	// collision rules inside a vphysics callback.
-	//	variant_t emptyVariant;
-	//	g_EventQueue.AddEvent(this, "FadeAndRespawn", 0.01, NULL, NULL);
-	//	return;
-	//}
-
-	//if (IsBeingCaptured())
-	//	return;
-
-	//// Do that crazy impact effect!
-	//DoImpactEffect(preVelocity, index, pEvent);
-
-	//// Only do the bounce so often
-	//if (gpGlobals->curtime - m_flLastBounceTime < 0.25f)
-	//	return;
-
-	//// Save off our last bounce time
-	//m_flLastBounceTime = gpGlobals->curtime;
-
-	//// Reset the sound timer
-	//SetContextThink(&CWeaponThrowingSkills::WhizSoundThink, gpGlobals->curtime + 0.01, s_pWhizThinkContext);
-
-	//// Deflect towards nearby enemies
-	////DeflectTowardEnemy(flSpeed, index, pEvent);
-	//
-	//// Once more bounce
-	//++m_nBounceCount;
-
-	//if (OutOfBounces() && m_bBounceDie == false)
-	//{
-	//	StartLifetime(0.5);
-	//	//Hack: Stop this from being called by doing this.
-	//	m_bBounceDie = true;
-	//}
 }
 
 
@@ -1767,524 +1305,3 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + 0.1f, s_pSkillsStatsThinkContext);
 
 }
-//-----------------------------------------------------------------------------
-//
-// Implementation of CWeaponThrowingSkills
-//
-//-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS(func_weaponthrowing_skills_spawner, CFuncWeaponThrowingSkillsSpawner);
-
-
-//-----------------------------------------------------------------------------
-// Save/load: 
-//-----------------------------------------------------------------------------
-BEGIN_DATADESC(CFuncWeaponThrowingSkillsSpawner)
-
-DEFINE_KEYFIELD(m_nBallCount, FIELD_INTEGER, "ballcount"),
-DEFINE_KEYFIELD(m_flMinSpeed, FIELD_FLOAT, "minspeed"),
-DEFINE_KEYFIELD(m_flMaxSpeed, FIELD_FLOAT, "maxspeed"),
-DEFINE_KEYFIELD(m_flBallRadius, FIELD_FLOAT, "ballradius"),
-DEFINE_KEYFIELD(m_flBallRespawnTime, FIELD_FLOAT, "ballrespawntime"),
-DEFINE_FIELD(m_flRadius, FIELD_FLOAT),
-DEFINE_FIELD(m_nBallsRemainingInField, FIELD_INTEGER),
-DEFINE_FIELD(m_bEnabled, FIELD_BOOLEAN),
-DEFINE_UTLVECTOR(m_BallRespawnTime, FIELD_TIME),
-DEFINE_FIELD(m_flDisableTime, FIELD_TIME),
-
-DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
-DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
-
-DEFINE_OUTPUT(m_OnBallGrabbed, "OnBallGrabbed"),
-DEFINE_OUTPUT(m_OnBallReinserted, "OnBallReinserted"),
-DEFINE_OUTPUT(m_OnBallHitTopSide, "OnBallHitTopSide"),
-DEFINE_OUTPUT(m_OnBallHitBottomSide, "OnBallHitBottomSide"),
-DEFINE_OUTPUT(m_OnLastBallGrabbed, "OnLastBallGrabbed"),
-DEFINE_OUTPUT(m_OnFirstBallReinserted, "OnFirstBallReinserted"),
-
-DEFINE_THINKFUNC(WeaponThrowThink),
-DEFINE_ENTITYFUNC(GrabWeaponThrowTouch),
-
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CFuncWeaponThrowingSkillsSpawner::CFuncWeaponThrowingSkillsSpawner()
-{
-	m_flBallRespawnTime = 0.0f;
-	m_flBallRadius = 20.0f;
-	m_flDisableTime = 0.0f;
-	m_bShooter = false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Spawn a ball
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::SpawnWeaponThrow()
-{
-	CWeaponThrowingSkills *pSkWpnThrow = static_cast<CWeaponThrowingSkills*>(CreateEntityByName("skills_weaponthrow"));
-
-	float flRadius = m_flBallRadius;
-	pSkWpnThrow->SetRadius(flRadius);
-
-	Vector vecAbsOrigin;
-	ChoosePointInBox(&vecAbsOrigin);
-	Vector zaxis;
-	MatrixGetColumn(EntityToWorldTransform(), 2, zaxis);
-	VectorMA(vecAbsOrigin, flRadius, zaxis, vecAbsOrigin);
-
-	pSkWpnThrow->SetAbsOrigin(vecAbsOrigin);
-	pSkWpnThrow->SetSpawner(this);
-
-	float flSpeed = random->RandomFloat(m_flMinSpeed, m_flMaxSpeed);
-
-	zaxis *= flSpeed;
-	pSkWpnThrow->SetAbsVelocity(zaxis);
-	if (HasSpawnFlags(SF_SPAWNER_POWER_SUPPLY))
-	{
-		pSkWpnThrow->AddSpawnFlags(SF_WPNTHROW_BALL_BOUNCING_IN_SPAWNER);
-	}
-
-	pSkWpnThrow->Spawn();
-}
-
-void CFuncWeaponThrowingSkillsSpawner::Precache()
-{
-	BaseClass::Precache();
-
-	UTIL_PrecacheOther("skills_weaponthrow");
-}
-
-//-----------------------------------------------------------------------------
-// Spawn
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::Spawn()
-{
-	BaseClass::Spawn();
-
-	Precache();
-
-	AddEffects(EF_NODRAW);
-	SetModel(STRING(GetModelName()));
-	SetSolid(SOLID_BSP);
-	AddSolidFlags(FSOLID_NOT_SOLID);
-	m_nBallsRemainingInField = m_nBallCount;
-
-	float flWidth = CollisionProp()->OBBSize().x;
-	float flHeight = CollisionProp()->OBBSize().y;
-	m_flRadius = MIN(flWidth, flHeight) * 0.5f;
-	if (m_flRadius <= 0.0f && m_bShooter == false)
-	{
-		Warning("Zero dimension func_combine_ball_spawner! Removing...\n");
-		UTIL_Remove(this);
-		return;
-	}
-
-	// Compute a respawn time
-	float flDeltaT = 1.0f;
-	if (!(m_flMinSpeed == 0 && m_flMaxSpeed == 0))
-	{
-		flDeltaT = (CollisionProp()->OBBSize().z - 2 * m_flBallRadius) / ((m_flMinSpeed + m_flMaxSpeed) * 0.5f);
-		flDeltaT /= m_nBallCount;
-	}
-
-	m_BallRespawnTime.EnsureCapacity(m_nBallCount);
-	for (int i = 0; i < m_nBallCount; ++i)
-	{
-		RespawnWeaponThrow((float)i * flDeltaT);
-	}
-
-	m_bEnabled = true;
-	if (HasSpawnFlags(SF_SPAWNER_START_DISABLED))
-	{
-		inputdata_t inputData;
-		InputDisable(inputData);
-	}
-	else
-	{
-		SetThink(&CFuncWeaponThrowingSkillsSpawner::WeaponThrowThink);
-		SetNextThink(gpGlobals->curtime + 0.1f);
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Enable/disable
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::InputEnable(inputdata_t &inputdata)
-{
-	if (m_bEnabled)
-		return;
-
-	m_bEnabled = true;
-	m_flDisableTime = 0.0f;
-
-	for (int i = m_BallRespawnTime.Count(); --i >= 0;)
-	{
-		m_BallRespawnTime[i] += gpGlobals->curtime;
-	}
-
-	SetThink(&CFuncWeaponThrowingSkillsSpawner::WeaponThrowThink);
-	SetNextThink(gpGlobals->curtime + 0.1f);
-}
-
-void CFuncWeaponThrowingSkillsSpawner::InputDisable(inputdata_t &inputdata)
-{
-	if (!m_bEnabled)
-		return;
-
-	m_flDisableTime = gpGlobals->curtime;
-	m_bEnabled = false;
-
-	for (int i = m_BallRespawnTime.Count(); --i >= 0;)
-	{
-		m_BallRespawnTime[i] -= gpGlobals->curtime;
-	}
-
-	SetThink(NULL);
-}
-
-
-//-----------------------------------------------------------------------------
-// Choose a random point inside the cylinder
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::ChoosePointInBox(Vector *pVecPoint)
-{
-	float flXBoundary = (CollisionProp()->OBBSize().x != 0) ? m_flBallRadius / CollisionProp()->OBBSize().x : 0.0f;
-	float flYBoundary = (CollisionProp()->OBBSize().y != 0) ? m_flBallRadius / CollisionProp()->OBBSize().y : 0.0f;
-	if (flXBoundary > 0.5f)
-	{
-		flXBoundary = 0.5f;
-	}
-	if (flYBoundary > 0.5f)
-	{
-		flYBoundary = 0.5f;
-	}
-
-	CollisionProp()->RandomPointInBounds(
-		Vector(flXBoundary, flYBoundary, 0.0f), Vector(1.0f - flXBoundary, 1.0f - flYBoundary, 0.0f), pVecPoint);
-}
-
-
-//-----------------------------------------------------------------------------
-// Choose a random point inside the cylinder
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::ChoosePointInCylinder(Vector *pVecPoint)
-{
-	float flXRange = m_flRadius / CollisionProp()->OBBSize().x;
-	float flYRange = m_flRadius / CollisionProp()->OBBSize().y;
-
-	Vector vecEndPoint1, vecEndPoint2;
-	CollisionProp()->NormalizedToWorldSpace(Vector(0.5f, 0.5f, 0.0f), &vecEndPoint1);
-	CollisionProp()->NormalizedToWorldSpace(Vector(0.5f, 0.5f, 1.0f), &vecEndPoint2);
-
-	// Choose a point inside the cylinder
-	float flDistSq;
-	do
-	{
-		CollisionProp()->RandomPointInBounds(
-			Vector(0.5f - flXRange, 0.5f - flYRange, 0.0f),
-			Vector(0.5f + flXRange, 0.5f + flYRange, 0.0f),
-			pVecPoint);
-
-		flDistSq = CalcDistanceSqrToLine(*pVecPoint, vecEndPoint1, vecEndPoint2);
-
-	} while (flDistSq > m_flRadius * m_flRadius);
-}
-
-
-//-----------------------------------------------------------------------------
-// Register that a reflection occurred
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::RegisterReflection(CWeaponThrowingSkills *pSkWpnThrow, bool bForward)
-{
-	if (bForward)
-	{
-		m_OnBallHitTopSide.FireOutput(pSkWpnThrow, this);
-	}
-	else
-	{
-		m_OnBallHitBottomSide.FireOutput(pSkWpnThrow, this);
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Choose a random point on the 
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::GetTargetEndpoint(bool bForward, Vector *pVecEndPoint)
-{
-	float flZValue = bForward ? 1.0f : 0.0f;
-
-	CollisionProp()->RandomPointInBounds(
-		Vector(0.0f, 0.0f, flZValue), Vector(1.0f, 1.0f, flZValue), pVecEndPoint);
-}
-
-
-//-----------------------------------------------------------------------------
-// Fire ball grabbed output
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::WeaponThrowGrabbed(CBaseEntity *pCombineBall)
-{
-	m_OnBallGrabbed.FireOutput(pCombineBall, this);
-	--m_nBallsRemainingInField;
-	if (m_nBallsRemainingInField == 0)
-	{
-		m_OnLastBallGrabbed.FireOutput(pCombineBall, this);
-	}
-
-	// Wait for another ball to touch this to re-power it up.
-	if (HasSpawnFlags(SF_SPAWNER_POWER_SUPPLY))
-	{
-		AddSolidFlags(FSOLID_TRIGGER);
-		SetTouch(&CFuncWeaponThrowingSkillsSpawner::GrabWeaponThrowTouch);
-	}
-
-	// Stop the ball thinking in case it was in the middle of being captured (which could re-add incorrectly)
-	if (pCombineBall != NULL)
-	{
-		pCombineBall->SetContextThink(NULL, gpGlobals->curtime, s_pCaptureContext);
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Fire ball grabbed output
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::GrabWeaponThrowTouch(CBaseEntity *pOther)
-{
-	// Safety net for two balls hitting this at once
-	if (m_nBallsRemainingInField >= m_nBallCount)
-		return;
-
-	if (pOther->GetCollisionGroup() != HL2COLLISION_GROUP_COMBINE_BALL)
-		return;
-
-	CWeaponThrowingSkills *pSkWpnThrow = dynamic_cast<CWeaponThrowingSkills*>(pOther);
-	Assert(pSkWpnThrow);
-
-	// Don't grab AR2 alt-fire
-	if (pSkWpnThrow->WasWeaponLaunched() || !pSkWpnThrow->VPhysicsGetObject())
-		return;
-
-	// Don't grab balls that are already in the field..
-	if (pSkWpnThrow->IsInField())
-		return;
-
-	// Don't grab fading out balls...
-	if (!pSkWpnThrow->IsSolid())
-		return;
-
-	// Don't capture balls that were very recently in the field (breaks punting)
-	if (gpGlobals->curtime - pSkWpnThrow->LastCaptureTime() < 0.5f)
-		return;
-
-	// Now we're bouncing in this spawner
-	pSkWpnThrow->AddSpawnFlags(SF_WPNTHROW_BALL_BOUNCING_IN_SPAWNER);
-
-	// Tell the respawner we're no longer its ball
-	pSkWpnThrow->NotifySpawnerOfRemoval();
-
-	pSkWpnThrow->SetOwnerEntity(NULL);
-	pSkWpnThrow->SetSpawner(this);
-	pSkWpnThrow->CaptureBySpawner();
-
-	++m_nBallsRemainingInField;
-
-	if (m_nBallsRemainingInField >= m_nBallCount)
-	{
-		RemoveSolidFlags(FSOLID_TRIGGER);
-		SetTouch(NULL);
-	}
-
-	m_OnBallReinserted.FireOutput(pSkWpnThrow, this);
-	if (m_nBallsRemainingInField == 1)
-	{
-		m_OnFirstBallReinserted.FireOutput(pSkWpnThrow, this);
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Get a speed for the ball to insert
-//-----------------------------------------------------------------------------
-float CFuncWeaponThrowingSkillsSpawner::GetWeaponThrowSpeed() const
-{
-	return random->RandomFloat(m_flMinSpeed, m_flMaxSpeed);
-}
-
-
-//-----------------------------------------------------------------------------
-// Balls call this when they've been removed from the spawner
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::RespawnWeaponThrow(float flRespawnTime)
-{
-	// Insert the time in sorted order, 
-	// which by definition means to always insert at the start
-	m_BallRespawnTime.AddToTail(gpGlobals->curtime + flRespawnTime - m_flDisableTime);
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::RespawnWeaponThrowPostExplosion(void)
-{
-	if (m_flBallRespawnTime < 0)
-		return;
-
-	if (m_flBallRespawnTime == 0.0f)
-	{
-		m_BallRespawnTime.AddToTail(gpGlobals->curtime + 4.0f - m_flDisableTime);
-	}
-	else
-	{
-		m_BallRespawnTime.AddToTail(gpGlobals->curtime + m_flBallRespawnTime - m_flDisableTime);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Ball think
-//-----------------------------------------------------------------------------
-void CFuncWeaponThrowingSkillsSpawner::WeaponThrowThink()
-{
-	for (int i = m_BallRespawnTime.Count(); --i >= 0;)
-	{
-		if (m_BallRespawnTime[i] < gpGlobals->curtime)
-		{
-			SpawnWeaponThrow();
-			m_BallRespawnTime.FastRemove(i);
-		}
-	}
-
-	// There are no more to respawn
-	SetNextThink(gpGlobals->curtime + 0.1f);
-}
-
-BEGIN_DATADESC(CPointWeaponThrowLauncher)
-DEFINE_KEYFIELD(m_flConeDegrees, FIELD_FLOAT, "launchconenoise"),
-DEFINE_KEYFIELD(m_iszBullseyeName, FIELD_STRING, "bullseyename"),
-DEFINE_KEYFIELD(m_iBounces, FIELD_INTEGER, "maxballbounces"),
-DEFINE_INPUTFUNC(FIELD_VOID, "LaunchBall", InputLaunchWeaponThrow),
-END_DATADESC()
-
-#define SF_COMBINE_BALL_LAUNCHER_ATTACH_BULLSEYE	0x00000001
-#define SF_COMBINE_BALL_LAUNCHER_COLLIDE_PLAYER		0x00000002
-
-LINK_ENTITY_TO_CLASS(point_combine_ball_launcher, CPointWeaponThrowLauncher);
-
-CPointWeaponThrowLauncher::CPointWeaponThrowLauncher()
-{
-	m_bShooter = true;
-	m_flConeDegrees = 0.0f;
-	m_iBounces = 0;
-}
-
-void CPointWeaponThrowLauncher::Spawn(void)
-{
-	m_bShooter = true;
-
-	BaseClass::Spawn();
-}
-
-void CPointWeaponThrowLauncher::InputLaunchWeaponThrow(inputdata_t &inputdata)
-{
-	SpawnWeaponThrow();
-}
-
-//-----------------------------------------------------------------------------
-// Spawn a ball
-//-----------------------------------------------------------------------------
-void CPointWeaponThrowLauncher::SpawnWeaponThrow()
-{
-	CWeaponThrowingSkills *pSkWpnThrow = static_cast<CWeaponThrowingSkills*>(CreateEntityByName("skills_weaponthrow"));
-
-	if (pSkWpnThrow == NULL)
-		return;
-
-	float flRadius = m_flBallRadius;
-	pSkWpnThrow->SetRadius(flRadius);
-
-	Vector vecAbsOrigin = GetAbsOrigin();
-	Vector zaxis;
-
-	pSkWpnThrow->SetAbsOrigin(vecAbsOrigin);
-	pSkWpnThrow->SetSpawner(this);
-
-	float flSpeed = random->RandomFloat(m_flMinSpeed, m_flMaxSpeed);
-
-	Vector vDirection;
-	QAngle qAngle = GetAbsAngles();
-
-	qAngle = qAngle + QAngle(random->RandomFloat(-m_flConeDegrees, m_flConeDegrees), random->RandomFloat(-m_flConeDegrees, m_flConeDegrees), 0);
-
-	AngleVectors(qAngle, &vDirection, NULL, NULL);
-
-	vDirection *= flSpeed;
-	pSkWpnThrow->SetAbsVelocity(vDirection);
-
-	DispatchSpawn(pSkWpnThrow);
-	pSkWpnThrow->Activate();
-	pSkWpnThrow->SetState(CWeaponThrowingSkills::STATE_LAUNCHED);
-	pSkWpnThrow->SetMaxBounces(m_iBounces);
-
-	if (HasSpawnFlags(SF_COMBINE_BALL_LAUNCHER_COLLIDE_PLAYER))
-	{
-		pSkWpnThrow->SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL_NPC);
-	}
-
-	if (GetSpawnFlags() & SF_COMBINE_BALL_LAUNCHER_ATTACH_BULLSEYE)
-	{
-		CNPC_Bullseye *pBullseye = static_cast<CNPC_Bullseye*>(CreateEntityByName("npc_bullseye"));
-
-		if (pBullseye)
-		{
-			pBullseye->SetAbsOrigin(pSkWpnThrow->GetAbsOrigin());
-			pBullseye->SetAbsAngles(QAngle(0, 0, 0));
-			pBullseye->KeyValue("solid", "6");
-			pBullseye->KeyValue("targetname", STRING(m_iszBullseyeName));
-			pBullseye->Spawn();
-
-			DispatchSpawn(pBullseye);
-			pBullseye->Activate();
-
-			pBullseye->SetParent(pSkWpnThrow);
-			pBullseye->SetHealth(10);
-		}
-	}
-}
-
-// ###################################################################
-//	> FilterClass
-// ###################################################################
-class CFilterWeaponThrow : public CBaseFilter
-{
-	DECLARE_CLASS(CFilterWeaponThrow, CBaseFilter);
-	DECLARE_DATADESC();
-
-public:
-	int m_iBallType;
-
-	bool PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity)
-	{
-		CWeaponThrowingSkills *pSkWpnThrow = dynamic_cast<CWeaponThrowingSkills*>(pEntity);
-
-		if (pSkWpnThrow)
-		{
-			//Playtest HACK: If we have an NPC owner then we were shot from an AR2.
-			if (pSkWpnThrow->GetOwnerEntity() && pSkWpnThrow->GetOwnerEntity()->IsNPC())
-				return false;
-
-			return pSkWpnThrow->GetState() == m_iBallType;
-		}
-
-		return false;
-	}
-};
-
-LINK_ENTITY_TO_CLASS(filter_weaponthrow_type, CFilterWeaponThrow);
-
-BEGIN_DATADESC(CFilterWeaponThrow)
-// Keyfields
-DEFINE_KEYFIELD(m_iBallType, FIELD_INTEGER, "balltype"),
-END_DATADESC()

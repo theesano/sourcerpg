@@ -74,6 +74,11 @@ public:
 	int				m_iPlayerMP;
 	int				m_iPlayerMPMax;
 
+	float			m_flRageCurrent;
+	float			m_flRageMax;
+	bool			ApplyRagePower();
+
+
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
 
@@ -93,6 +98,7 @@ private:
 	bool			m_bWIsAttack5;
 
 	void			HandlePlayerMP(void);
+	void			HandleRage(void);
 
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);

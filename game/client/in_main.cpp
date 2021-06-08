@@ -153,6 +153,11 @@ kbutton_t	in_slot3;
 kbutton_t	in_slot4;
 kbutton_t	in_slot5;
 kbutton_t	in_slot6;
+kbutton_t	in_utilslot1;
+kbutton_t	in_utilslot2;
+kbutton_t	in_utilslot3;
+kbutton_t	in_utilslot4;
+kbutton_t	in_rage;
 
 kbutton_t	in_ducktoggle;
 
@@ -515,6 +520,16 @@ void IN_Slot5Down(const CCommand &args) { KeyDown(&in_slot5, args[1]); }
 void IN_Slot5Up(const CCommand &args) { KeyUp(&in_slot5, args[1]); }
 void IN_Slot6Down(const CCommand &args) { KeyDown(&in_slot6, args[1]); }
 void IN_Slot6Up(const CCommand &args) { KeyUp(&in_slot6, args[1]); }
+void IN_UtilSlot1Down(const CCommand &args) { KeyDown(&in_utilslot1, args[1]); }
+void IN_UtilSlot1Up(const CCommand &args) { KeyUp(&in_utilslot1, args[1]); }
+void IN_UtilSlot2Down(const CCommand &args) { KeyDown(&in_utilslot2, args[1]); }
+void IN_UtilSlot2Up(const CCommand &args) { KeyUp(&in_utilslot2, args[1]); }
+void IN_UtilSlot3Down(const CCommand &args) { KeyDown(&in_utilslot3, args[1]); }
+void IN_UtilSlot3Up(const CCommand &args) { KeyUp(&in_utilslot3, args[1]); }
+void IN_UtilSlot4Down(const CCommand &args) { KeyDown(&in_utilslot4, args[1]); }
+void IN_UtilSlot4Up(const CCommand &args) { KeyUp(&in_utilslot4, args[1]); }
+void IN_RageDown(const CCommand &args) { KeyDown(&in_rage, args[1]); }
+void IN_RageUp(const CCommand &args) { KeyUp(&in_rage, args[1]); }
 
 void IN_DuckToggle( const CCommand &args ) 
 { 
@@ -1594,6 +1609,11 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits(bits, IN_SLOT4, s_ClearInputState, &in_slot4, bResetState);
 	CalcButtonBits(bits, IN_SLOT5, s_ClearInputState, &in_slot5, bResetState);
 	CalcButtonBits(bits, IN_SLOT6, s_ClearInputState, &in_slot6, bResetState);
+	CalcButtonBits(bits, IN_UTILSLOT1, s_ClearInputState, &in_utilslot1, bResetState);
+	CalcButtonBits(bits, IN_UTILSLOT2, s_ClearInputState, &in_utilslot2, bResetState);
+	CalcButtonBits(bits, IN_UTILSLOT3, s_ClearInputState, &in_utilslot3, bResetState);
+	CalcButtonBits(bits, IN_UTILSLOT4, s_ClearInputState, &in_utilslot4, bResetState);
+	CalcButtonBits(bits, IN_RAGE, s_ClearInputState, &in_rage, bResetState);
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1765,6 +1785,16 @@ static ConCommand startslot5("+quickslot5", IN_Slot5Down);
 static ConCommand endslot5("-quickslot5", IN_Slot5Up);
 static ConCommand startslot6("+quickslot6", IN_Slot6Down);
 static ConCommand endslot6("-quickslot6", IN_Slot6Up);
+static ConCommand startutilslot1("+utilslot1", IN_UtilSlot1Down);
+static ConCommand endutilslot1("-utilslot1", IN_UtilSlot1Up);
+static ConCommand startutilslot2("+utilslot2", IN_UtilSlot2Down);
+static ConCommand endutilslot2("-utilslot2", IN_UtilSlot2Up);
+static ConCommand startutilslot3("+utilslot3", IN_UtilSlot3Down);
+static ConCommand endutilslot3("-utilslot3", IN_UtilSlot3Up);
+static ConCommand startutilslot4("+utilslot4", IN_UtilSlot4Down);
+static ConCommand endutilslot4("-utilslot4", IN_UtilSlot4Up);
+static ConCommand startrage("+rage", IN_RageDown);
+static ConCommand endrage("-rage", IN_RageUp);
 
 
 

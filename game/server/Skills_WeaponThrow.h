@@ -15,18 +15,16 @@
 //-----------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------
-#include "player_pickup.h"	// for combine ball inheritance
 
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
-class CFuncWeaponThrowingSkillsSpawner;
 class CSpriteTrail;
 
 //-----------------------------------------------------------------------------
 // Looks for enemies, bounces a max # of times before it breaks
 //-----------------------------------------------------------------------------
-class CWeaponThrowingSkills : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
+class CWeaponThrowingSkills : public CBaseAnimating
 {
 public:
 	DECLARE_CLASS(CWeaponThrowingSkills, CBaseAnimating);
@@ -38,28 +36,19 @@ public:
 	virtual void UpdateOnRemove();
 	void StopLoopingSounds();
 
-	virtual void OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason);
-	virtual void OnPhysGunDrop(CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason);
 	virtual void VPhysicsCollision(int index, gamevcollisionevent_t *pEvent);
 
 	virtual bool OverridePropdata();
 	virtual bool CreateVPhysics();
 
-	CFuncWeaponThrowingSkillsSpawner *GetSpawner();
 
 	virtual void ExplodeThink(void);
-
-	// Override of IPlayerPickupVPhysics;
-	virtual bool ShouldPuntUseLaunchForces(PhysGunForce_t reason) { return (reason == PHYSGUN_FORCE_PUNTED); }
 
 	void SetRadius(float flRadius);
 	void SetSpeed(float flSpeed) { m_flSpeed = flSpeed; }
 	float GetSpeed(void) const { return m_flSpeed; }
 
-	void CaptureBySpawner();
 	bool IsBeingCaptured() const { return m_bCaptureInProgress; }
-
-	void ReplaceInSpawner(float flSpeed);
 
 	// Input
 	void InputExplode(inputdata_t &inputdata);
@@ -92,10 +81,6 @@ public:
 	bool ShouldHitPlayer() const;
 
 	virtual CBasePlayer *HasPhysicsAttacker(float dt);
-
-	void	SetSpawner(CFuncWeaponThrowingSkillsSpawner *pSpawner) { m_hSpawner = pSpawner; }
-	void	NotifySpawnerOfRemoval(void);
-
 
 	float	LastCaptureTime() const;
 
@@ -140,9 +125,6 @@ private:
 	bool DissolveEntity(CBaseEntity *pEntity);
 	void OnHitEntity(CBaseEntity *pHitEntity, float flSpeed, int index, gamevcollisionevent_t *pEvent);
 	void DoImpactEffect(const Vector &preVelocity, int index, gamevcollisionevent_t *pEvent);
-
-	// Bounce inside the spawner: 
-	void BounceInSpawner(float flSpeed, int index, gamevcollisionevent_t *pEvent);
 
 	bool IsAttractiveTarget(CBaseEntity *pEntity);
 
@@ -191,7 +173,6 @@ private:
 	float	m_flNextDamageTime;
 	float	m_flLastCaptureTime;
 
-	CHandle < CFuncWeaponThrowingSkillsSpawner > m_hSpawner;
 
 	EHANDLE m_hOriginalOwner;
 
@@ -201,98 +182,6 @@ private:
 	CNetworkVar(float, m_flRadius);
 };
 
-class CFuncWeaponThrowingSkillsSpawner : public CBaseEntity
-{
-	DECLARE_CLASS(CFuncWeaponThrowingSkillsSpawner, CBaseEntity);
-	DECLARE_DATADESC();
-
-public:
-	CFuncWeaponThrowingSkillsSpawner();
-
-	virtual void Spawn();
-	virtual void Precache();
-
-	// Balls call this to figure out where to bounce to
-	void GetTargetEndpoint(bool bForward, Vector *pVecEndpoint);
-
-	// Balls call this when they've been removed from the spawner
-	void RespawnWeaponThrow(float flRespawnTime);
-	void RespawnWeaponThrowPostExplosion(void);
-
-	// Fire ball grabbed output
-	void WeaponThrowGrabbed(CBaseEntity *pEntity);
-
-	// Get speed of ball to place into the field
-	float GetWeaponThrowSpeed() const;
-
-	// Register that a reflection occurred
-	void RegisterReflection(CWeaponThrowingSkills *pWeaponThrow, bool bForward);
-
-	// Spawn a ball
-	virtual void SpawnWeaponThrow();
-
-private:
-
-	// Choose a random point inside the cylinder
-	void ChoosePointInCylinder(Vector *pVecPoint);
-
-	// Choose a random point inside the box
-	void ChoosePointInBox(Vector *pVecPoint);
-
-	// Used to determine when to respawn balls
-	void WeaponThrowThink();
-
-	// Input
-	void	InputEnable(inputdata_t &inputdata);
-	void	InputDisable(inputdata_t &inputdata);
-
-	// Fire ball grabbed output
-	void	GrabWeaponThrowTouch(CBaseEntity *pOther);
-
-public:
-	bool m_bShooter;
-	float m_flBallRadius;
-	float m_flBallRespawnTime;
-	float m_flMinSpeed;
-	float m_flMaxSpeed;
-
-private:
-	CUtlVector< float > m_BallRespawnTime;
-	int m_nBallCount;
-	int m_nBallsRemainingInField;
-	float m_flRadius;
-	float m_flDisableTime;
-	bool m_bEnabled;
-
-	COutputEvent m_OnBallGrabbed;
-	COutputEvent m_OnBallReinserted;
-	COutputEvent m_OnBallHitTopSide;
-	COutputEvent m_OnBallHitBottomSide;
-	COutputEvent m_OnLastBallGrabbed;
-	COutputEvent m_OnFirstBallReinserted;
-};
-
-
-class CPointWeaponThrowLauncher : public CFuncWeaponThrowingSkillsSpawner
-{
-	DECLARE_CLASS(CPointWeaponThrowLauncher, CFuncWeaponThrowingSkillsSpawner);
-
-	DECLARE_DATADESC();
-
-public:
-
-	virtual void Spawn(void);
-	virtual void SpawnWeaponThrow(void);
-	void InputLaunchWeaponThrow(inputdata_t &inputdata);
-
-	CPointWeaponThrowLauncher();
-
-private:
-
-	int			m_iBounces;
-	float		m_flConeDegrees;
-	string_t	m_iszBullseyeName;
-};
 
 // Creates a throw
 CBaseEntity *CreateWpnThrowSkill(const Vector &origin, const Vector &velocity, float radius, float mass, float lifetime, CBaseEntity *pOwner);

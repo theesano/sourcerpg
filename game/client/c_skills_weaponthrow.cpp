@@ -230,51 +230,52 @@ void DrawHaloOrientedWpnThrow(const Vector& source, float scale, float const *co
 //-----------------------------------------------------------------------------
 int C_WeaponThrowingSkills::DrawModel(int flags)
 {
-	if (!m_bEmit)
-		return 0;
+	//if (!m_bEmit)
+	//	return 0;
 
-	// Make sure our materials are cached
-	if (!InitMaterials())
-	{
-		//NOTENOTE: This means that a material was not found for the combine ball, so it may not render!
-		AssertOnce(0);
-		return 0;
-	}
+	//// Make sure our materials are cached
+	//if (!InitMaterials())
+	//{
+	//	//NOTENOTE: This means that a material was not found for the combine ball, so it may not render!
+	//	AssertOnce(0);
+	//	return 0;
+	//}
 
-	// Draw the flickering overlay
-	DrawFlicker();
+	//// Draw the flickering overlay
+	//DrawFlicker();
 
-	// Draw the motion blur from movement
-	if (m_bHeld || m_bLaunched)
-	{
-		DrawMotionBlur();
-	}
+	//// Draw the motion blur from movement
+	//if (m_bHeld || m_bLaunched)
+	//{
+	//	DrawMotionBlur();
+	//}
 
-	// Draw the model if we're being held
-	if (m_bHeld)
-	{
-		QAngle	angles;
-		VectorAngles(-CurrentViewForward(), angles);
+	//// Draw the model if we're being held
+	//if (m_bHeld)
+	//{
+	//	QAngle	angles;
+	//	VectorAngles(-CurrentViewForward(), angles);
 
-		// Always orient towards the camera!
-		SetAbsAngles(angles);
+	//	// Always orient towards the camera!
+	//	SetAbsAngles(angles);
 
-		BaseClass::DrawModel(flags);
-	}
-	else
-	{
-		float color[3];
-		color[0] = color[1] = color[2] = 1.0f;
+	//	BaseClass::DrawModel(flags);
+	//}
+	//else
+	//{
+	//	float color[3];
+	//	color[0] = color[1] = color[2] = 1.0f;
 
-		float sinOffs = 1.0f * sin(gpGlobals->curtime * 25);
+	//	float sinOffs = 1.0f * sin(gpGlobals->curtime * 25);
 
-		float roll = SpawnTime();
+	//	float roll = SpawnTime();
 
 		// Draw the main ball body
-		CMatRenderContextPtr pRenderContext(materials);
-		pRenderContext->Bind(m_pBodyMaterial, (C_BaseEntity*) this);
-		DrawHaloOrientedWpnThrow(GetAbsOrigin(), m_flRadius + sinOffs, color, roll);
-	}
+		//CMatRenderContextPtr pRenderContext(materials);
+		//pRenderContext->Bind(m_pBodyMaterial, (C_BaseEntity*) this);
+		//DrawHaloOrientedWpnThrow(GetAbsOrigin(), m_flRadius + sinOffs, color, roll);
+		BaseClass::DrawModel(flags);
+	//}
 
 	m_vecLastOrigin = GetAbsOrigin();
 

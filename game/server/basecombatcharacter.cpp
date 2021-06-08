@@ -3198,6 +3198,22 @@ void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRa
 	}
 }
 
+void RadiusDamage_EX(const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore, bool bShouldIgnoreDamageFallout)
+{
+	g_pGameRules->RadiusDamage_EX(info, vecSrc, flRadius, iClassIgnore, pEntityIgnore,bShouldIgnoreDamageFallout);
+
+
+	// Let the world know if this was an explosion.
+	if (info.GetDamageType() & DMG_BLAST)
+	{
+		// Even the tiniest explosion gets attention. Don't let the radius
+		// be less than 128 units.
+		float soundRadius = MAX(128.0f, flRadius * 1.5);
+
+		CSoundEnt::InsertSound(SOUND_COMBAT | SOUND_CONTEXT_EXPLOSION, vecSrc, soundRadius, 0.25, info.GetInflictor());
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Change active weapon and notify derived classes
 //			

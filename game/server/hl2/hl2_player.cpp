@@ -444,12 +444,7 @@ CHL2_Player::CHL2_Player()
 	m_bIsFallingA = false;
 	m_bIsEvade = false;
 
-	// A fix for the bug that doesn't allow player to move when they die and the server reload
-	if (GetFlags() & FL_FROZEN_ACT)
-	{
-		RemoveFlag(FL_FROZEN_ACT);
-	}
-
+	
 }
 
 
@@ -1587,6 +1582,8 @@ void CHL2_Player::Spawn(void)
 
 	if ( !IsSuitEquipped() )
 		 StartWalking();
+	//Hack fix for movement speed rage increase!!!
+	hl2_normspeed.SetValue(280);
 
 	SuitPower_SetCharge( 100 );
 
@@ -1604,6 +1601,9 @@ void CHL2_Player::Spawn(void)
 	GetPlayerProxy();
 
 	SetFlashlightPowerDrainScale( 1.0f );
+
+	// A fix for the bug that doesn't allow player to move when they die and the server reload
+		RemoveFlag(FL_FROZEN_ACT);
 
 }
 
@@ -2948,7 +2948,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-ConVar	sk_suitpowerconsumable("sk_suitpowerconsumable", "0");
+ConVar	sk_suitpowerconsumable("sk_suitpowerconsumable", "33");
 
 bool CHL2_Player::ApplySuitPower()
 {

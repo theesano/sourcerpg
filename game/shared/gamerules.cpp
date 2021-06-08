@@ -473,6 +473,7 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 		}
 		// decrease damage for an ent that's farther from the bomb.
 		flAdjustedDamage = ( vecSrc - tr.endpos ).Length() * falloff;
+		//flAdjustedDamage = 0;
 		flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
 
 		if ( flAdjustedDamage <= 0 )
@@ -546,6 +547,248 @@ void CGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc
 			}
 
 			gamestats->Event_WeaponHit( player, bIsPrimary, (pWeapon != NULL) ? player->GetActiveWeapon()->GetClassname() : "NULL", info );
+		}
+#endif
+	}
+}
+
+#define ROBUST_RADIUS_PROBE_DIST 16.0f // If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
+void CGameRules::RadiusDamage_EX(const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore, bool bShouldIgnoreDamageFallout)
+{
+	const int MASK_RADIUS_DAMAGE = MASK_SHOT&(~CONTENTS_HITBOX);
+	CBaseEntity *pEntity = NULL;
+	trace_t		tr;
+	float		flAdjustedDamage, falloff;
+	Vector		vecSpot;
+
+	Vector vecSrc = vecSrcIn;
+
+	if (flRadius)
+		falloff = info.GetDamage() / flRadius;
+	else
+		falloff = 1.0;
+
+	int bInWater = (UTIL_PointContents(vecSrc) & MASK_WATER) ? true : false;
+
+#ifdef HL2_DLL
+	if (bInWater)
+	{
+		// Only muffle the explosion if deeper than 2 feet in water.
+		if (!(UTIL_PointContents(vecSrc + Vector(0, 0, 24)) & MASK_WATER))
+		{
+			bInWater = false;
+		}
+	}
+#endif // HL2_DLL
+
+	vecSrc.z += 1;// in case grenade is lying on the ground
+
+	float flHalfRadiusSqr = Square(flRadius / 2.0f);
+
+	// iterate on all entities in the vicinity.
+	for (CEntitySphereQuery sphere(vecSrc, flRadius); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
+	{
+		// This value is used to scale damage when the explosion is blocked by some other object.
+		float flBlockedDamagePercent = 0.0f;
+
+		if (pEntity == pEntityIgnore)
+			continue;
+
+		if (pEntity->m_takedamage == DAMAGE_NO)
+			continue;
+
+		// UNDONE: this should check a damage mask, not an ignore
+		if (iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore)
+		{// houndeyes don't hurt other houndeyes with their attack
+			continue;
+		}
+
+		// blast's don't tavel into or out of water
+		if (bInWater && pEntity->GetWaterLevel() == 0)
+			continue;
+
+		if (!bInWater && pEntity->GetWaterLevel() == 3)
+			continue;
+
+		// Check that the explosion can 'see' this entity.
+		vecSpot = pEntity->BodyTarget(vecSrc, false);
+		UTIL_TraceLine(vecSrc, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+
+		if (old_radius_damage.GetBool())
+		{
+			if (tr.fraction != 1.0 && tr.m_pEnt != pEntity)
+				continue;
+		}
+		else
+		{
+			if (tr.fraction != 1.0)
+			{
+				if (IsExplosionTraceBlocked(&tr))
+				{
+					if (ShouldUseRobustRadiusDamage(pEntity))
+					{
+						if (vecSpot.DistToSqr(vecSrc) > flHalfRadiusSqr)
+						{
+							// Only use robust model on a target within one-half of the explosion's radius.
+							continue;
+						}
+
+						Vector vecToTarget = vecSpot - tr.endpos;
+						VectorNormalize(vecToTarget);
+
+						// We're going to deflect the blast along the surface that 
+						// interrupted a trace from explosion to this target.
+						Vector vecUp, vecDeflect;
+						CrossProduct(vecToTarget, tr.plane.normal, vecUp);
+						CrossProduct(tr.plane.normal, vecUp, vecDeflect);
+						VectorNormalize(vecDeflect);
+
+						// Trace along the surface that intercepted the blast...
+						UTIL_TraceLine(tr.endpos, tr.endpos + vecDeflect * ROBUST_RADIUS_PROBE_DIST, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+						//NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 255, 0, false, 10 );
+
+						// ...to see if there's a nearby edge that the explosion would 'spill over' if the blast were fully simulated.
+						UTIL_TraceLine(tr.endpos, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+						//NDebugOverlay::Line( tr.startpos, tr.endpos, 255, 0, 0, false, 10 );
+
+						if (tr.fraction != 1.0 && tr.DidHitWorld())
+						{
+							// Still can't reach the target.
+							continue;
+						}
+						// else fall through
+					}
+					else
+					{
+						continue;
+					}
+				}
+
+				// UNDONE: Probably shouldn't let children block parents either?  Or maybe those guys should set their owner if they want this behavior?
+				// HL2 - Dissolve damage is not reduced by interposing non-world objects
+				if (tr.m_pEnt && tr.m_pEnt != pEntity && tr.m_pEnt->GetOwnerEntity() != pEntity)
+				{
+					// Some entity was hit by the trace, meaning the explosion does not have clear
+					// line of sight to the entity that it's trying to hurt. If the world is also
+					// blocking, we do no damage.
+					CBaseEntity *pBlockingEntity = tr.m_pEnt;
+					//Msg( "%s may be blocked by %s...", pEntity->GetClassname(), pBlockingEntity->GetClassname() );
+
+					UTIL_TraceLine(vecSrc, vecSpot, CONTENTS_SOLID, info.GetInflictor(), COLLISION_GROUP_NONE, &tr);
+
+					if (tr.fraction != 1.0)
+					{
+						continue;
+					}
+
+					// Now, if the interposing object is physics, block some explosion force based on its mass.
+					if (pBlockingEntity->VPhysicsGetObject())
+					{
+						const float MASS_ABSORB_ALL_DAMAGE = 350.0f;
+						float flMass = pBlockingEntity->VPhysicsGetObject()->GetMass();
+						float scale = flMass / MASS_ABSORB_ALL_DAMAGE;
+
+						// Absorbed all the damage.
+						if (scale >= 1.0f)
+						{
+							continue;
+						}
+
+						ASSERT(scale > 0.0f);
+						flBlockedDamagePercent = scale;
+						//Msg("  Object (%s) weighing %fkg blocked %f percent of explosion damage\n", pBlockingEntity->GetClassname(), flMass, scale * 100.0f);
+					}
+					else
+					{
+						// Some object that's not the world and not physics. Generically block 25% damage
+						flBlockedDamagePercent = 0.25f;
+					}
+				}
+			}
+		}
+		// decrease damage for an ent that's farther from the bomb.
+		if (bShouldIgnoreDamageFallout)
+		{
+			flAdjustedDamage = 0; 
+		}
+		else
+		{
+			flAdjustedDamage = (vecSrc - tr.endpos).Length() * falloff;
+		}
+		
+		flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
+
+		if (flAdjustedDamage <= 0)
+		{
+			continue;
+		}
+
+		// the explosion can 'see' this entity, so hurt them!
+		if (tr.startsolid)
+		{
+			// if we're stuck inside them, fixup the position and distance
+			tr.endpos = vecSrc;
+			tr.fraction = 0.0;
+		}
+
+		CTakeDamageInfo adjustedInfo = info;
+		//Msg("%s: Blocked damage: %f percent (in:%f  out:%f)\n", pEntity->GetClassname(), flBlockedDamagePercent * 100, flAdjustedDamage, flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
+		adjustedInfo.SetDamage(flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent));
+
+		// Now make a consideration for skill level!
+		if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && pEntity->IsNPC())
+		{
+			// An explosion set off by the player is harming an NPC. Adjust damage accordingly.
+			adjustedInfo.AdjustPlayerDamageInflictedForSkillLevel();
+		}
+
+		Vector dir = vecSpot - vecSrc;
+		VectorNormalize(dir);
+
+		// If we don't have a damage force, manufacture one
+		if (adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin)
+		{
+			if (!(adjustedInfo.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE))
+			{
+				CalculateExplosiveDamageForce(&adjustedInfo, dir, vecSrc);
+			}
+		}
+		else
+		{
+			// Assume the force passed in is the maximum force. Decay it based on falloff.
+			float flForce = adjustedInfo.GetDamageForce().Length() * falloff;
+			adjustedInfo.SetDamageForce(dir * flForce);
+			adjustedInfo.SetDamagePosition(vecSrc);
+		}
+
+		if (tr.fraction != 1.0 && pEntity == tr.m_pEnt)
+		{
+			ClearMultiDamage();
+			pEntity->DispatchTraceAttack(adjustedInfo, dir, &tr);
+			ApplyMultiDamage();
+		}
+		else
+		{
+			pEntity->TakeDamage(adjustedInfo);
+		}
+
+		// Now hit all triggers along the way that respond to damage... 
+		pEntity->TraceAttackToTriggers(adjustedInfo, vecSrc, tr.endpos, dir);
+
+#if defined( GAME_DLL )
+		if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && ToBaseCombatCharacter(tr.m_pEnt))
+		{
+
+			// This is a total hack!!!
+			bool bIsPrimary = true;
+			CBasePlayer *player = ToBasePlayer(info.GetAttacker());
+			CBaseCombatWeapon *pWeapon = player->GetActiveWeapon();
+			if (pWeapon && FClassnameIs(pWeapon, "weapon_smg1"))
+			{
+				bIsPrimary = false;
+			}
+
+			gamestats->Event_WeaponHit(player, bIsPrimary, (pWeapon != NULL) ? player->GetActiveWeapon()->GetClassname() : "NULL", info);
 		}
 #endif
 	}

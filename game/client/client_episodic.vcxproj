@@ -498,6 +498,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="hud_macros.h" />
     <ClInclude Include="hud_numericdisplay.h" />
     <ClInclude Include="hud_pdump.h" />
+    <ClInclude Include="hud_rageinfo.h" />
     <ClInclude Include="hud_skillcd.h" />
     <ClInclude Include="hud_stamina.h" />
     <ClInclude Include="hud_vehicle.h" />
@@ -869,8 +870,10 @@ if ERRORLEVEL 1 exit /b 1
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\server\singleplayer_animstate.cpp" />
+    <ClCompile Include="c_item_rage.cpp" />
     <ClCompile Include="c_skills_weaponthrow.cpp" />
     <ClCompile Include="hud_playerquickstats.cpp" />
+    <ClCompile Include="hud_rageinfo.cpp" />
     <ClCompile Include="hud_skillcd.cpp" />
     <ClCompile Include="hud_skillinfo.cpp" />
     <ClCompile Include="hud_stamina.cpp" />

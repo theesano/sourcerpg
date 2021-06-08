@@ -25,8 +25,8 @@
 #include "ai_eventresponse.h"
 #include "ai_basenpc.h"
 #include "grenade_frag.h"
-#include "grenade_ar2.h"
 #include "Skills_WeaponThrow.h"
+#include "hl2_player.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -48,12 +48,28 @@ extern ConVar pl_isattacking("pl_isattacking", "0");
 extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 
 // Combat stats behavior 
+extern ConVar sk_plr_melee_dmg_critical("sk_plr_melee_dmg_critical", "0");
+extern ConVar sk_plr_melee_dmg_critical_chance("sk_plr_melee_dmg_critical", "0");
+
 extern ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
 extern ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
 extern ConVar sk_plr_mp_restore("sk_plr_mp_restore", "3");
 
 extern ConVar sk_plr_melee_mp_bonus("sk_plr_melee_mp_bonus", "4");
 extern ConVar sk_plr_melee_normal_range("sk_plr_melee_normal_range", "128");
+
+extern ConVar sk_plr_rage_current("sk_plr_rage_current", "0");
+extern ConVar sk_plr_rage_max("sk_plr_rage_max", "100");
+
+extern ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "10");
+extern ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "10");
+extern ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "10");
+extern ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "10");
+
+extern ConVar sk_plr_rage_heal_given("sk_plr_rage_heal_given", "15");
+extern ConVar sk_plr_rage_mp_given("sk_plr_rage_mp_given", "15");
+extern ConVar sk_plr_rage_speed_given("sk_plr_rage_speed_given", "350");
+extern ConVar sk_plr_rage_stamina_given("sk_plr_rage_stamina_given", "33");
 
 //Current cooldown time (Shared Variables with server)
 extern ConVar sk_plr_skills_2_cd("sk_plr_skills_2_cd", "0");
@@ -91,14 +107,17 @@ void CBaseMeleeWeapon::Spawn(void)
 	m_fMaxRange2 = 64;
 	//Call base class first
 	PrecacheParticleSystem("aoehint");
+	PrecacheParticleSystem("aoehint2");
 	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
 	PrecacheParticleSystem("choreo_skyflower_nexus");
-	PrecacheParticleSystem("chappi_explosion");
-
+	PrecacheParticleSystem("tornado1");
 
 	m_iPlayerMP = 50;
 	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
 	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
+
+	m_flRageCurrent = 0;
+	m_flRageMax = sk_plr_rage_max.GetFloat();
 
 	m_bIsSkCoolDown = false;
 	m_nSkCoolDownTime = 0.0f;
@@ -195,6 +214,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 
 	SkillsHandler();
 	HandlePlayerMP();
+	HandleRage();
 
 	ConVar* pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
 	m_flAttackInterval = pAttackInterval->GetFloat();
@@ -267,6 +287,108 @@ void CBaseMeleeWeapon::HandlePlayerMP(void)
 		m_iPlayerMP = m_iPlayerMPMax;
 	}
 }
+float flMovementSpeedtimer;
+void CBaseMeleeWeapon::HandleRage(void)
+{
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+
+	clamp(m_flRageCurrent, 0, m_flRageMax);
+
+	Msg("Rage Power: %.2f \n", m_flRageCurrent);
+	
+
+	if (flMovementSpeedtimer > gpGlobals->curtime)
+	{
+		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
+		pMovementSpeed->SetValue(sk_plr_rage_speed_given.GetFloat());
+		if ((flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
+		{
+			pOwner->SetMaxSpeed(sk_plr_rage_speed_given.GetFloat());
+		}
+	}
+	else
+	{
+		if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT3)
+		{
+			if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
+			{
+				flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
+				m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
+			}
+		}
+
+		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
+		pMovementSpeed->SetValue(280.0f);
+		if ((flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
+		{
+			pOwner->SetMaxSpeed(280.f);
+		}
+	
+	}
+	
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT4)
+	{
+		//if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
+		//{		
+		//	pOwner->SetHealth(pOwner->GetHealth() + sk_plr_rage_heal_given.GetFloat());
+		//	m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
+		//}
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT1)
+	{
+		if (m_flRageCurrent >= sk_plr_rage_2_consumption.GetFloat())
+		{			
+			m_iPlayerMP += sk_plr_rage_mp_given.GetFloat();
+			m_flRageCurrent -= sk_plr_rage_2_consumption.GetFloat();
+		}
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT2)
+	{
+		if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
+		{
+			CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(pOwner);
+			pPlayer->SuitPower_Charge(sk_plr_rage_stamina_given.GetFloat());
+			m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
+		}
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
+	{
+		if (m_flRageCurrent >= 100)
+		{
+			Msg("RAGE ENABLED \n");
+			m_flRageCurrent -= 100;
+		}
+	}
+	//press Q to transfer Rage points to HP
+	// How many Rage should be used
+	//press E to transfer Rage points to MP
+	//press F1 to transfer Rage points to Stamina
+	//press F2 to consumer Rage points to run faster
+	//press C to Rage
+}
+extern ConVar sk_rage_item_pickup("sk_rage_item_pickup", "10");
+
+bool CBaseMeleeWeapon::ApplyRagePower()
+{
+
+	if (m_flRageCurrent < m_flRageMax)
+	{
+		m_flRageCurrent += sk_rage_item_pickup.GetFloat();
+		CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+		PlayerFilter.MakeReliable();
+
+		UserMessageBegin(PlayerFilter, "ItemPickup");
+		WRITE_STRING(GetClassname());
+		MessageEnd();
+		EmitSound(PlayerFilter, UTIL_GetLocalPlayer()->entindex(), "HealthKit.Touch"); // this should be done by the HUD really
+
+		return true;
+	}
+	return false;
+}
 
 //m_nExecutionTime handles freezing the player for a certain amount of time
 void CBaseMeleeWeapon::SkillsHandler(void)
@@ -293,7 +415,8 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	{
 		//Reason why some stats can't be changed on the character panel
 		sk_plr_attackspeedmod.SetValue(1.0f);
-		pBaseDamage->SetValue(18.0f);
+		pBaseDamage->SetValue(RandomFloat(18.0f,24.0f));
+		//pBaseDamage->SetValue(18.0f);
 		sk_plr_skills_cooldown_timereduction.SetValue(1.0f);
 
 	}
@@ -307,8 +430,11 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Skill 1 Special Evade
 	if ((pOwner->m_nButtons & IN_ATTACK2) && !m_bIsSkCoolDown)
 	{
-		GetPlayerAnglesOnce();
-		Skill_Evade();
+		if (m_nExecutionTime - gpGlobals->curtime <= 0)
+		{
+			GetPlayerAnglesOnce();
+			Skill_Evade();
+		}
 		
 	}
 
@@ -327,7 +453,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		if (m_iPlayerMP > 30)
 		{
 			if (!m_bIsSkCoolDown2)
-				Skill_RadialSlash();
+			{
+				if (m_nExecutionTime - gpGlobals->curtime <= 0)
+					Skill_RadialSlash();
+			}
 		}
 		else
 		{
@@ -347,7 +476,13 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	if ((pOwner->m_afButtonPressed & IN_SLOT2) && !m_bIsSkCoolDown3)
 	{
 		if (m_iPlayerMP > 25)
-			Skill_GrenadeEX();
+		{
+			if (!m_bIsSkCoolDown3)
+			{
+				if (m_nExecutionTime - gpGlobals->curtime <= 0)
+					Skill_GrenadeEX();
+			}
+		}
 		else
 			SkillStatNotification_HUD(1);
 	}
@@ -363,7 +498,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		if (m_iPlayerMP > 50)
 		{
 			if (!m_bIsSkCoolDown4)
-				Skill_HealSlash();
+			{ 
+				if (m_nExecutionTime - gpGlobals->curtime <= 0)
+					Skill_HealSlash();
+			}
 		}
 		else
 			SkillStatNotification_HUD(1);
@@ -379,7 +517,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		if (m_iPlayerMP > 30)
 		{
 			if (!m_bIsSkCoolDown5)
-				Skill_Trapping();
+			{
+				if (m_nExecutionTime - gpGlobals->curtime <= 0)
+					Skill_Trapping();
+			}
 		}
 		else
 		{
@@ -398,7 +539,10 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		if (m_iPlayerMP > 50)
 		{
 			if (!m_bIsSkCoolDown6)
-			Skill_Tornado();
+			{
+				if (m_nExecutionTime - gpGlobals->curtime <= 0)
+					Skill_Tornado();
+			}
 		}
 		else
 		{
@@ -554,6 +698,7 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	sk_plr_skills_6_cd.SetValue(skill6cdtimer);
 
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
+	sk_plr_rage_current.SetValue(m_flRageCurrent);
 
 	//engine->Con_NPrintf(9, "Current Attack in the chain %i %i %i %i %i ", m_bWIsAttack1, m_bWIsAttack2, m_bWIsAttack3, m_bWIsAttack4, m_bWIsAttack5);
 	
@@ -826,13 +971,16 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//dmginfo.SetDamagePosition( traceHit.startpos );
 
 	//Makes weapon produce AoE damage
-	RadiusDamage(dmginfo, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner);
+	RadiusDamage_EX(dmginfo, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner,true);
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(2.0f);
 
+	int iScytheBlade = LookupAttachment("attach_blade");
+
 	Vector particlepos = GetAbsOrigin() + Vector(0,0,32);
-	DispatchParticleEffect("aoehint", GetWeaponAimDirection(), vec3_angle);
-		
+	//DispatchParticleEffect("aoehint2", GetWeaponAimDirection(), vec3_angle);
+	DispatchParticleEffect("aoehint2", PATTACH_ABSORIGIN_FOLLOW,this,iScytheBlade,true);
+
 	m_iPrimaryAttacks++;
 
 	// Send the anim
@@ -840,19 +988,17 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	GetPlayerAnglesOnce();
 	//Setup our next attack times
 	m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
-	UTIL_ScreenShake(GetAbsOrigin(), 1.8f, 100.0, 0.5, 256.0f, SHAKE_START);
+	UTIL_ScreenShake(GetAbsOrigin(), 2.4f, 100.0, 0.5, 256.0f, SHAKE_START);
 
 	//Air
 	if (pOwner->GetGroundEntity() == NULL)
 	{
 		GetPlayerPosOnce();
 		m_flInAirTime = gpGlobals->curtime + 0.6666f;
-		UTIL_ScreenShake(GetAbsOrigin(), 2.5f, 100.0, 0.5, 256.0f, SHAKE_START,true);
+		UTIL_ScreenShake(GetAbsOrigin(), 3.2f, 100.0, 0.5, 256.0f, SHAKE_START,true);
 
 	}
-
 	
-
 	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 	//Set and cycles between attack states, play animation and make sound. 
@@ -1272,7 +1418,6 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
 	UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
 
-
 	m_iPlayerMP -= 25;
 	WeaponSound(SINGLE);
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
@@ -1474,7 +1619,8 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 	skpos = pOwner->GetAbsOrigin();
 
 	GetPlayerPosOnce();
-			//Init Cooldown
+	//Init Cooldown
+	DispatchParticleEffect("tornado1", skpos, vec3_angle);
 	flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
 	m_nSkCoolDownTime6 = gpGlobals->curtime + (sk_plr_skills_6_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
 	flSkillActiveTime = gpGlobals->curtime + 4.0f;
@@ -1517,8 +1663,7 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 					AddKnockbackXY(1, 4);
 					RadiusDamage(triggerInfo, skpos, skillrange, CLASS_PLAYER, pOwner);
 					AddKnockbackXY(1, 5); //for npc hitting sound
-					DispatchParticleEffect("chappi_explosion", skpos, vec3_angle);
-
+				
 					flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
 				}
 			}
