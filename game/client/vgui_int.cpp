@@ -23,7 +23,7 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "Ihudskillinfo.h"
+#include "ICharacterPanel.h"
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -224,7 +224,7 @@ void VGui_CreateGlobalPanels( void )
 	g_pSixenseInput->CreateGUI( gameToolParent );
 #endif
 
-	hudskillinfo->Create(gameParent);
+	characterpanel->Create(gameParent);
 
 
 }
@@ -257,7 +257,7 @@ void VGui_Shutdown()
 	//  actually gets deleted before this dll goes away
 	vgui::ivgui()->RunFrame();
 
-	hudskillinfo->Destroy();
+	characterpanel->Destroy();
 }
 
 static ConVar cl_showpausedimage( "cl_showpausedimage", "1", 0, "Show the 'Paused' image when game is paused." );

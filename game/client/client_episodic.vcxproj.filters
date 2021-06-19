@@ -1896,9 +1896,6 @@
     <ClInclude Include="..\server\Ihudskillinfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Ihudskillinfo.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="hud_skillcd.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1911,6 +1908,9 @@
     </ClInclude>
     <ClInclude Include="hud_rageinfo.h">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="ICharacterPanel.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -3438,9 +3438,6 @@
     <ClCompile Include="..\server\singleplayer_animstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hud_skillinfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hud_skillcd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3456,6 +3453,9 @@
     <ClCompile Include="c_item_rage.cpp" />
     <ClCompile Include="hud_rageinfo.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="CharacterPanel.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

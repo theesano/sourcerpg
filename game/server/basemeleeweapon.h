@@ -78,6 +78,11 @@ public:
 	float			m_flRageMax;
 	bool			ApplyRagePower();
 
+	void			Rage_GiveMP();
+	void			Rage_GiveStamina();
+	void			Rage_GiveHealth();
+	void			Rage_GiveMovementSpeed();
+
 
 protected:
 	virtual	void	ImpactEffect(trace_t &trace);
@@ -90,6 +95,7 @@ private:
 	float			m_nSkillHitRefireTime;
 	float			m_flNPCFreezeTime;
 	float			m_flInAirTime;
+	float			m_flMovementSpeedtimer;
 
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
@@ -99,11 +105,13 @@ private:
 
 	void			HandlePlayerMP(void);
 	void			HandleRage(void);
+	void			UtilSlotExecuteOptionsID(int optionsID);
 
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);
 	void			AddKnockbackXY(float magnitude,int options);
 	void			AddSkillMovementImpulse(float magnitude);
+
 	void			Swing(int bIsSecondary);
 
 	void			Skill_Evade(void);

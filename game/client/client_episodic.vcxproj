@@ -514,7 +514,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="ifpspanel.h" />
     <ClInclude Include="..\..\game\shared\econ\ihasowner.h" />
     <ClInclude Include="ihudlcd.h" />
-    <ClInclude Include="Ihudskillinfo.h" />
+    <ClInclude Include="ICharacterPanel.h" />
     <ClInclude Include="iinput.h" />
     <ClInclude Include="iloadingdisc.h" />
     <ClInclude Include="imessagechars.h" />
@@ -875,7 +875,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClCompile Include="hud_playerquickstats.cpp" />
     <ClCompile Include="hud_rageinfo.cpp" />
     <ClCompile Include="hud_skillcd.cpp" />
-    <ClCompile Include="hud_skillinfo.cpp" />
+    <ClCompile Include="CharacterPanel.cpp" />
     <ClCompile Include="hud_stamina.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />

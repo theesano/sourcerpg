@@ -88,6 +88,8 @@ extern ConVar sk_plr_skills_6_cooldown_time("sk_plr_skills_6_cooldown_time", "30
 
 extern ConVar sk_plr_skills_cooldown_timereduction("sk_plr_skills_cooldown_timereduction", "1");
 
+
+
 //-----------------------------------------------------------------------------
 // Constructor
 //-----------------------------------------------------------------------------
@@ -111,6 +113,7 @@ void CBaseMeleeWeapon::Spawn(void)
 	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
 	PrecacheParticleSystem("choreo_skyflower_nexus");
 	PrecacheParticleSystem("tornado1");
+
 
 	m_iPlayerMP = 50;
 	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
@@ -144,6 +147,7 @@ void CBaseMeleeWeapon::Spawn(void)
 	m_flSkillAttributeRange = 0.0f;
 	m_flTotalAttackTime = 0.0f;
 	m_flInAirTime = 0.0f;
+	m_flMovementSpeedtimer = 0.0f;
 
 
 	BaseClass::Spawn();
@@ -287,71 +291,61 @@ void CBaseMeleeWeapon::HandlePlayerMP(void)
 		m_iPlayerMP = m_iPlayerMPMax;
 	}
 }
-float flMovementSpeedtimer;
+
+ConVar sk_plr_utilslot1_option_id("sk_plr_utilslot1_option_id", "0");
+ConVar sk_plr_utilslot2_option_id("sk_plr_utilslot2_option_id", "0");
+ConVar sk_plr_utilslot3_option_id("sk_plr_utilslot3_option_id", "0");
+ConVar sk_plr_utilslot4_option_id("sk_plr_utilslot4_option_id", "0");
+
+
 void CBaseMeleeWeapon::HandleRage(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
 	clamp(m_flRageCurrent, 0, m_flRageMax);
 
-	Msg("Rage Power: %.2f \n", m_flRageCurrent);
+	//Msg("Rage Power: %.2f \n", m_flRageCurrent);
 	
 
-	if (flMovementSpeedtimer > gpGlobals->curtime)
+	if (m_flMovementSpeedtimer > gpGlobals->curtime)
 	{
 		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
 		pMovementSpeed->SetValue(sk_plr_rage_speed_given.GetFloat());
-		if ((flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
+		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
 		{
 			pOwner->SetMaxSpeed(sk_plr_rage_speed_given.GetFloat());
 		}
 	}
 	else
 	{
-		if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT3)
-		{
-			if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
-			{
-				flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
-				m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
-			}
-		}
-
 		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
 		pMovementSpeed->SetValue(280.0f);
-		if ((flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
+		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
 		{
 			pOwner->SetMaxSpeed(280.f);
 		}
 	
 	}
 	
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT4)
-	{
-		//if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
-		//{		
-		//	pOwner->SetHealth(pOwner->GetHealth() + sk_plr_rage_heal_given.GetFloat());
-		//	m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
-		//}
-	}
 
 	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT1)
 	{
-		if (m_flRageCurrent >= sk_plr_rage_2_consumption.GetFloat())
-		{			
-			m_iPlayerMP += sk_plr_rage_mp_given.GetFloat();
-			m_flRageCurrent -= sk_plr_rage_2_consumption.GetFloat();
-		}
+		UtilSlotExecuteOptionsID(sk_plr_utilslot1_option_id.GetInt());
 	}
 
 	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT2)
 	{
-		if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
-		{
-			CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(pOwner);
-			pPlayer->SuitPower_Charge(sk_plr_rage_stamina_given.GetFloat());
-			m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
-		}
+		UtilSlotExecuteOptionsID(sk_plr_utilslot2_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT3)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot3_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT4)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot4_option_id.GetInt());
 	}
 
 	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
@@ -369,6 +363,92 @@ void CBaseMeleeWeapon::HandleRage(void)
 	//press F2 to consumer Rage points to run faster
 	//press C to Rage
 }
+
+void CBaseMeleeWeapon::UtilSlotExecuteOptionsID(int optionsID)
+{
+	if (optionsID == 0)
+	{
+		Msg("Not Assigned \n");
+	}
+	else if (optionsID == 1)
+	{
+		Rage_GiveHealth();
+		Msg("Giving Health \n");
+
+	}
+	else if (optionsID == 2)
+	{
+		Rage_GiveMP();
+		Msg("Giving MP \n");
+	}
+	else if (optionsID == 3)
+	{
+		Rage_GiveStamina();
+		Msg("Giving Stamina \n");
+	}
+	else if (optionsID == 4)
+	{
+		Rage_GiveMovementSpeed();
+		Msg("Increasing Movement Speed for 10s \n");
+	}
+	else
+	{
+		Msg("Not Assigned \n");
+	}
+}
+
+
+void CBaseMeleeWeapon::Rage_GiveHealth()
+{
+	if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
+	{		
+		UTIL_GetLocalPlayer()->SetHealth(UTIL_GetLocalPlayer()->GetHealth() + sk_plr_rage_heal_given.GetFloat());
+		m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+}
+
+void CBaseMeleeWeapon::Rage_GiveMP()
+{
+	if (m_flRageCurrent >= sk_plr_rage_2_consumption.GetFloat())
+	{
+		m_iPlayerMP += sk_plr_rage_mp_given.GetFloat();
+		m_flRageCurrent -= sk_plr_rage_2_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+
+}
+
+void CBaseMeleeWeapon::Rage_GiveStamina()
+{
+	if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
+	{
+		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+		pPlayer->SuitPower_Charge(sk_plr_rage_stamina_given.GetFloat());
+		m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+
+
+}
+
+void CBaseMeleeWeapon::Rage_GiveMovementSpeed()
+{
+	if (m_flMovementSpeedtimer > gpGlobals->curtime)
+	{
+
+	}
+	else
+	{
+		if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
+		{
+			m_flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
+			m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
+			DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+		}
+	}
+}
+
 extern ConVar sk_rage_item_pickup("sk_rage_item_pickup", "10");
 
 bool CBaseMeleeWeapon::ApplyRagePower()
@@ -816,73 +896,6 @@ void CBaseMeleeWeapon::PrimaryAttack()
 	Swing(false);
 }
 
-
-//------------------------------------------------------------------------------
-// Purpose: Implement impact function
-//------------------------------------------------------------------------------
-//void CBaseMeleeWeapon::Hit(trace_t &traceHit, Activity nHitActivity, bool bIsSecondary)
-//{
-//	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-//
-//	//Do view kick
-//	AddViewKick();
-//
-//	//Make sound for the AI
-//	CSoundEnt::InsertSound(SOUND_BULLET_IMPACT, traceHit.endpos, 400, 0.2f, pPlayer);
-//
-//	// This isn't great, but it's something for when the crowbar hits.
-//	pPlayer->RumbleEffect(RUMBLE_AR2, 0, RUMBLE_FLAG_RESTART);
-//
-//	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
-//
-//	//Apply damage to a hit target
-//	if (pHitEntity != NULL)
-//	{
-//		float m_nDamageRadius = 128.0f;
-//		Vector hit1 = GetAbsOrigin();
-//		Vector hitDirection;
-//		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
-//		VectorNormalize(hitDirection);
-//
-//		Vector	dir = traceHit.endpos;
-//		Vector vecForce = dir * ImpulseScale(75, 700);
-//		VectorNormalize(dir);
-//		dir *= 500.0f;
-//		ApplyAbsVelocityImpulse(dir);
-//
-//		CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
-//		//CTakeDamageInfo info(this, m_hThrower, GetBlastForce(), GetAbsOrigin(), m_flDamage, bitsDamageType, 0, &vecReported);
-//
-//		//Makes weapon produce AoE damage
-//		//RadiusDamage(info, hit1, m_nDamageRadius, CLASS_NONE, NULL);
-//
-//		if (pPlayer && pHitEntity->IsNPC())
-//		{
-//			// If bonking an NPC, adjust damage.
-//			info.AdjustPlayerDamageInflictedForSkillLevel();
-//		}
-//
-//		UTIL_GetLocalPlayer()->SetAbsVelocity(vec3_origin);
-//
-//
-//
-//		CalculateMeleeDamageForce( &info, hitDirection, traceHit.endpos );
-//
-//		pHitEntity->DispatchTraceAttack( info, hitDirection, &traceHit ); 
-//		ApplyMultiDamage();
-//
-//		// Now hit all triggers along the ray that... 
-//		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
-//
-//		if (ToBaseCombatCharacter(pHitEntity))
-//		{
-//			gamestats->Event_WeaponHit(pPlayer, !bIsSecondary, GetClassname(), info);
-//		}
-//	}
-//
-//	// Apply an impact effect
-//	ImpactEffect(traceHit);
-//}
 
 Activity CBaseMeleeWeapon::ChooseIntersectionPointAndActivity(trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner)
 {
@@ -1466,7 +1479,8 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 
 		for (int i = 0; i < nAIs; i++)
 		{
-			if (ppAIs[i]->m_iClassname == iszNPCName)
+			//if (ppAIs[i]->m_iClassname == iszNPCName)
+			if (ppAIs[i])
 			{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
@@ -1556,7 +1570,8 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 			for (int i = 0; i < nAIs; i++)
 			{
 				//if (ppAIs[i]->m_iClassname == iszNPCName)
-				if (ppAIs[i])
+				//if (ppAIs[i]) //affects all NPCs
+				if (ppAIs[i]->m_iClassname == iszNPCExcludeName)
 				{
 					SkillOriginNPCdist.x = abs(effectpos.x - ppAIs[i]->GetAbsOrigin().x);
 					SkillOriginNPCdist.y = abs(effectpos.y - ppAIs[i]->GetAbsOrigin().y);
@@ -1724,9 +1739,10 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 
 	for (int i = 0; i < nAIs; i++)
 	{
+		//TODO: use exclusion list. 
 		//if (ppAIs[i]->m_iClassname == iszNPCName)
-
-		if (ppAIs[i])
+		//if (ppAIs[i])  //affects every npcs ingame.
+		if (ppAIs[i]->m_iClassname == iszNPCName)
 		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);

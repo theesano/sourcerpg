@@ -33,10 +33,7 @@ ConVar	sk_wpnthrow_guidefactor("sk_wpnthrow_guidefactor", "0.5", FCVAR_REPLICATE
 ConVar	sk_wpnthrow_search_radius("sk_wpnthrow_search_radius", "512", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_angle("sk_wpnthrow_seek_angle", "15.0", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_seek_kill("sk_wpnthrow_seek_kill", "0", FCVAR_REPLICATED);
-ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/weapons/melee/lilyscythe_u.mdl");
-
-
-
+ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/weapons/melee/alt/sawblade.mdl");
 
 // For our ring explosion
 int s_nExplosionTextureWpnThrow = -1;
@@ -236,9 +233,8 @@ void CWeaponThrowingSkills::Precache(void)
 {
 	//NOTENOTE: We don't call into the base class because it chains multiple 
 	//			precaches we don't need to incur
-
 	//PrecacheModel(lilyss_skill2_throwmodel.GetString());
-	PrecacheModel(lilyss_skill2_throwmodel.GetString());
+	PrecacheModel("models/weapons/melee/alt/sawblade.mdl");
 	s_nExplosionTextureWpnThrow = PrecacheModel("sprites/lgtning.vmt");
 	
 	PrecacheScriptSound("NPC_CombineBall.Launch");
@@ -349,6 +345,8 @@ bool CWeaponThrowingSkills::CreateVPhysics()
 //-----------------------------------------------------------------------------
 void CWeaponThrowingSkills::Spawn(void)
 {
+	Precache();
+
 	BaseClass::Spawn();
 
 	SetModel(lilyss_skill2_throwmodel.GetString());
