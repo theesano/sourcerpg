@@ -1802,6 +1802,9 @@
     <ClInclude Include="npc_metropolice_backup.h">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="npcbob.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gamedll_replay.cpp">
@@ -3538,14 +3541,18 @@
     <ClCompile Include="Skills_WeaponThrow.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="npc_mob1.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
     <ClCompile Include="npc_metropolice_backup.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
-    <ClCompile Include="item_rotatingpickup.cpp">
+    <ClCompile Include="item_rage.cpp" />
+    <ClCompile Include="npcbob.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="npc_bob2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npc_bob3.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

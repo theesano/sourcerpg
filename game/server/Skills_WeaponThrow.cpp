@@ -26,7 +26,7 @@
 
 #define SF_WPNTHROW_BALL_BOUNCING_IN_SPAWNER		0x10000
 
-#define	MAX_WPNTHROW_RADIUS	12
+#define	MAX_WPNTHROW_RADIUS	128
 
 ConVar	sk_npc_dmg_wpnthrow("sk_npc_dmg_wpnthrow", "15", FCVAR_REPLICATED);
 ConVar	sk_wpnthrow_guidefactor("sk_wpnthrow_guidefactor", "0.5", FCVAR_REPLICATED);
@@ -233,8 +233,7 @@ void CWeaponThrowingSkills::Precache(void)
 {
 	//NOTENOTE: We don't call into the base class because it chains multiple 
 	//			precaches we don't need to incur
-	//PrecacheModel(lilyss_skill2_throwmodel.GetString());
-	PrecacheModel("models/weapons/melee/alt/sawblade.mdl");
+	PrecacheModel(lilyss_skill2_throwmodel.GetString());
 	s_nExplosionTextureWpnThrow = PrecacheModel("sprites/lgtning.vmt");
 	
 	PrecacheScriptSound("NPC_CombineBall.Launch");
@@ -325,6 +324,8 @@ bool CWeaponThrowingSkills::CreateVPhysics()
 	float flAngDamping = 0.5f;
 	pPhysicsObject->SetDamping(&flDamping, &flAngDamping);
 	pPhysicsObject->SetInertia(Vector(1e30, 1e30, 1e30));
+
+
 
 	if (WasFiredByNPC())
 	{

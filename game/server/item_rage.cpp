@@ -4,14 +4,12 @@
 
 #include "tier0/memdbgon.h"
 
-#define PICKUP_DECAL  "decals/item_base"
-#define	PICKUP_MODEL "models/items/healthkit.mdl"
+#define	PICKUP_MODEL "models/items/dummy.mdl"
 #define PICKUP_MIN_HEIGHT 50
-int PickupDecalIndex;  //set by CRagePickup::Precache()
-
-#define SF_SUPPRESS_PICKUP_DECAL 0x00000002
 
 //RAGE ENERGY PICKUP
+
+ConVar sk_item_rage_selfremovaltime("sk_item_rage_selfremovaltime", "20");
 
 class CRagePickup : public CItem
 {
@@ -25,15 +23,13 @@ public:
 	void	Spawn();
 	void	Activate();
 	void	Precache();
+	void	Think();
+	void	Remove();
 
 	bool	MyTouch(CBasePlayer *pPlayer);
 
-	CBaseEntity*	Respawn();
-	void			Materialize();
-
-	int m_iHealthToGive;
-	float m_flRageToGive;
-	float m_fRespawnTime;
+	int m_iRageToGive;
+	float m_flSelfRemovalTime;
 	CNetworkVar(bool, m_bRespawning);
 
 private:
@@ -46,9 +42,7 @@ LINK_ENTITY_TO_CLASS(item_rage, CRagePickup);
 PRECACHE_REGISTER(item_rage);
 
 BEGIN_DATADESC(CRagePickup)
-	DEFINE_KEYFIELD(m_iHealthToGive, FIELD_INTEGER, "givehealth"),
-	DEFINE_KEYFIELD(m_flRageToGive, FIELD_FLOAT, "giverage"),
-	DEFINE_KEYFIELD(m_fRespawnTime, FIELD_FLOAT, "respawntime"),
+	DEFINE_KEYFIELD(m_iRageToGive, FIELD_INTEGER, "giverage"),
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CRagePickup, DT_RagePickup)
@@ -58,14 +52,9 @@ END_SEND_TABLE()
 
 CRagePickup::CRagePickup()
 {
-	if (m_iHealthToGive <= 0)
-		m_iHealthToGive = 25;
+	if (m_iRageToGive <= 0)
+		m_iRageToGive = 12;
 
-	if (m_flRageToGive <= 0)
-		m_flRageToGive = 12;
-
-	if (m_fRespawnTime <= 0)
-		m_fRespawnTime = 20;
 }
 
 void CRagePickup::Spawn()
@@ -86,11 +75,13 @@ void CRagePickup::Spawn()
 	MdlTop.z += GetModelPtr()->hull_max().z;
 
 	SetSolid(SOLID_NONE);
-	CollisionProp()->UseTriggerBounds(true, 6); // Reign in the volume added to the trigger collision box
+	CollisionProp()->UseTriggerBounds(true, 8); // Reign in the volume added to the trigger collision box
 	Vector OBBSize = Vector(CollisionProp()->OBBSize().Length() / 2); // need to use length as the model will be rotated at 45 degrees on clients
 	SetSize(-OBBSize, OBBSize); // Resize the bounding box
 
 	AddEffects(EF_NOSHADOW);
+
+	SetNextThink(gpGlobals->curtime + sk_item_rage_selfremovaltime.GetInt()); //Set time to run Think(); 
 }
 
 void CRagePickup::Activate()
@@ -102,11 +93,9 @@ void CRagePickup::Activate()
 	UTIL_TraceLine(MdlTop, MdlTop + Vector(0, 0, -PICKUP_MIN_HEIGHT), MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &tr); // measuring from MdlTop
 	if (tr.DidHit())
 	{
-		if (!HasSpawnFlags(SF_SUPPRESS_PICKUP_DECAL))
-			engine->StaticDecal(tr.endpos, PickupDecalIndex, 0, 0, false); // mark the location of the pickup
 		SetAbsOrigin(GetAbsOrigin() + (Vector(0, 0, PICKUP_MIN_HEIGHT*(1 - tr.fraction))));
 	}
-
+	
 }
 
 void CRagePickup::Precache()
@@ -114,52 +103,32 @@ void CRagePickup::Precache()
 	PrecacheModel(PICKUP_MODEL);
 	PrecacheScriptSound("HealthKit.Touch");
 	PrecacheScriptSound("AlyxEmp.Charge");
-	PickupDecalIndex = UTIL_PrecacheDecal(PICKUP_DECAL, true);
+
+}
+
+void CRagePickup::Think()
+{
+	BaseClass::Think();
+	Remove();
+	//SetNextThink(gpGlobals->curtime + 1); // Think again in 1 second
 
 }
 
 // Called from CItem::ItemTouch()
 bool CRagePickup::MyTouch(CBasePlayer *pPlayer)
 {		
-	//if (pPlayer->GetActiveWeapon()->GetName() == "weapon_melee")
-	//{
-	//	CSingleUserRecipientFilter PlayerFilter(pPlayer);
-	//	PlayerFilter.MakeReliable();
-
-	//	UserMessageBegin(PlayerFilter, "ItemPickup");
-	//	WRITE_STRING(GetClassname());
-	//	MessageEnd();
-	//	EmitSound(PlayerFilter, pPlayer->entindex(), "HealthKit.Touch"); // this should be done by the HUD really
-
-	//	//Respawn();
-	//	return true;
-	//}
-
-	//return false;
 	
 	CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(pPlayer->GetActiveWeapon());
 		return (pWeapon && pWeapon->ApplyRagePower());
 
 }
 
-//Disappear
-CBaseEntity* CRagePickup::Respawn()
+void CRagePickup::Remove()
 {
-	SetTouch(NULL);
-	m_bRespawning = true;
-
-	SetThink(&CRagePickup::Materialize);
-	SetNextThink(gpGlobals->curtime + m_fRespawnTime);
-
-	return this;
+	UTIL_Remove(this);
+	//Msg("My World Position Is %f %f %f.\n", GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z);
+	//Msg("Removed \n");
 
 }
 
-//Reappear
-void CRagePickup::Materialize()
-{
-	EmitSound("AlyxEmp.Charge");
-	m_bRespawning = false;
-	SetTouch(&CItem::ItemTouch);
 
-}

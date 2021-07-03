@@ -46,6 +46,8 @@ static kbutton_t cam_pitchup, cam_pitchdown, cam_yawleft, cam_yawright;
 static kbutton_t cam_in, cam_out; // -- "cam_move" is unused
 
 extern ConVar cl_thirdperson;
+extern ConVar thirdperson_platformer;
+
 
 
 // API Wrappers
@@ -108,12 +110,32 @@ void CAM_ToThirdPerson_MayaMode(void)
 	bool &rb = Is_CAM_ThirdPerson_MayaMode();
 	rb = !rb;
 }
+
 //Reset the pitch & yaw Value to 0
 void CAM_Reset(void)
 {
 	cam_idealyaw.SetValue(0);
 	cam_idealpitch.SetValue(0);
 }
+
+void CAM_Switch(void)
+{
+	CAM_Reset();
+	
+	if (thirdperson_platformer.GetInt() == 1)
+	{
+		//switch to aiming mode
+		thirdperson_platformer.SetValue(0);
+		Msg("Aiming mode \n");
+	}
+	else
+	{
+		thirdperson_platformer.SetValue(1);
+		Msg("Default mode \n");
+	}
+
+}
+
 /*
 ==============================
 CAM_ToFirstPerson
@@ -1004,6 +1026,7 @@ static ConCommand startcamout( "+camout", CAM_OutDown );
 static ConCommand camout( "-camout", CAM_OutUp );
 static ConCommand thirdperson_mayamode( "thirdperson_mayamode", ::CAM_ToThirdPerson_MayaMode, "Switch to thirdperson Maya-like camera controls.", FCVAR_CHEAT );
 static ConCommand thirdpersoncamreset("thirdpersoncamreset", ::CAM_Reset, "Reset the pitch,yaw of the third person camera.");
+static ConCommand ToggleThirdpersonMode("ToggleThirdpersonMode", ::CAM_Switch, "Change the thirdperson mode");
 
 // TF allows servers to push people into first/thirdperson, for mods
 #ifdef TF_CLIENT_DLL

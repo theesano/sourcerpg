@@ -490,6 +490,7 @@ void CHL2_Player::Precache( void )
 	PrecacheModel(lilyss_player_model.GetString(), true);
 	PrecacheModel("models/weapons/melee/lilyscythe_u.mdl", true);
 	PrecacheScriptSound("Player.Evade");
+	PrecacheScriptSound("ItemRage.Pickup");
 
 }
 
@@ -563,11 +564,12 @@ void CHL2_Player::HandleSpeedChanges( void )
 	//		m_nButtons &= ~IN_SPEED;
 	//}
 
-	//if (m_afButtonPressed & IN_SPEED && !m_bEvadeDelayedUse)
+	//if (m_nButtons & IN_SPEED && !m_bEvadeDelayedUse)
 	if (m_afButtonPressed & IN_SPEED)
 	{
 		Evade();
 	}
+
 	bool bIsWalking = IsWalking();
 	// have suit, pressing button, not sprinting or ducking
 	bool bWantWalking;
@@ -718,7 +720,7 @@ void CHL2_Player::Evade(void)
 			
 		}
 		else if (sk_evadestyle.GetInt() == 1)
-		{//pPlayer->SetAbsOrigin(EvadeEndPoint);
+		{	pPlayer->SetAbsOrigin(EvadeEndPoint);
 			TargetEvadePoint = EvadeEndPoint;
 			m_bIsEvade = true;
 		}
@@ -969,6 +971,17 @@ void CHL2_Player::PreThink(void)
 				StartAutoRunning();
 		}
 	}
+
+	//Another hack: prevent players from moving at cl_forwardspeed limit when hitting IN_SPEED & movement keys & IN_ATTACK
+	if ((m_nButtons & IN_SPEED) && (m_nButtons & IN_FORWARD 
+		|| m_nButtons & IN_MOVELEFT 
+		|| m_nButtons & IN_MOVERIGHT 
+		|| m_nButtons & IN_BACK) && (m_nButtons & IN_ATTACK))
+	{
+		SetAbsVelocity(vec3_origin);	
+		
+	}
+
 
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )

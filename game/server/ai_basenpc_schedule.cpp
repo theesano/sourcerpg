@@ -4400,7 +4400,8 @@ int CAI_BaseNPC::SelectIdleSchedule()
 		 HasCondition ( COND_HEAR_BULLET_IMPACT ) ||
 		 HasCondition ( COND_HEAR_PLAYER ) )
 	{
-		return SCHED_ALERT_FACE_BESTSOUND;
+		//return SCHED_ALERT_FACE_BESTSOUND;
+		return SCHED_INVESTIGATE_SOUND;
 	}
 	
 	// no valid route!

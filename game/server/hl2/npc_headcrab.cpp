@@ -2404,7 +2404,9 @@ void CBaseHeadcrab::CreateDust( bool placeDecal )
 //-----------------------------------------------------------------------------
 void CHeadcrab::Precache( void )
 {
-	PrecacheModel( "models/headcrabclassic.mdl" );
+	//PrecacheModel( "models/headcrabclassic.mdl" );
+	PrecacheModel("models/monster/mob1_puppet.mdl");
+
 
 	PrecacheScriptSound( "NPC_HeadCrab.Gib" );
 	PrecacheScriptSound( "NPC_HeadCrab.Idle" );
@@ -2426,7 +2428,9 @@ void CHeadcrab::Precache( void )
 void CHeadcrab::Spawn( void )
 {
 	Precache();
-	SetModel( "models/headcrabclassic.mdl" );
+	//SetModel( "models/headcrabclassic.mdl" );
+	SetModel("models/monster/mob1_puppet.mdl");
+
 
 	BaseClass::Spawn();
 

@@ -107,12 +107,6 @@ void CBaseMeleeWeapon::Spawn(void)
 	m_fMinRange2 = 0;
 	m_fMaxRange1 = 64;
 	m_fMaxRange2 = 64;
-	//Call base class first
-	PrecacheParticleSystem("aoehint");
-	PrecacheParticleSystem("aoehint2");
-	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
-	PrecacheParticleSystem("choreo_skyflower_nexus");
-	PrecacheParticleSystem("tornado1");
 
 
 	m_iPlayerMP = 50;
@@ -168,6 +162,15 @@ void CBaseMeleeWeapon::Precache(void)
 	PrecacheScriptSound("Weapon_Melee.AIRATTACK1");
 	PrecacheScriptSound("Weapon_Melee.AIRATTACK2");
 	PrecacheScriptSound("Weapon_Melee.AIRATTACK3");
+
+	//Call base class first
+	PrecacheParticleSystem("aoehint");
+	PrecacheParticleSystem("aoehint2");
+	PrecacheParticleSystem("aoehint22");
+	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
+	PrecacheParticleSystem("choreo_skyflower_nexus");
+	PrecacheParticleSystem("tornado1");
+
 }
 
 int CBaseMeleeWeapon::CapabilitiesGet()
@@ -250,7 +253,7 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 		{
 			PrimaryAttack();
 		}
-		else if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+		else if ((pOwner->m_afButtonPressed & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
 		{
 			//SecondaryAttack();
 		}
@@ -457,17 +460,18 @@ bool CBaseMeleeWeapon::ApplyRagePower()
 	if (m_flRageCurrent < m_flRageMax)
 	{
 		m_flRageCurrent += sk_rage_item_pickup.GetFloat();
+	}
 		CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
 		PlayerFilter.MakeReliable();
 
 		UserMessageBegin(PlayerFilter, "ItemPickup");
 		WRITE_STRING(GetClassname());
 		MessageEnd();
-		EmitSound(PlayerFilter, UTIL_GetLocalPlayer()->entindex(), "HealthKit.Touch"); // this should be done by the HUD really
+		EmitSound(PlayerFilter, UTIL_GetLocalPlayer()->entindex(), "ItemRage.Pickup"); // this should be done by the HUD really
 
 		return true;
-	}
-	return false;
+
+//	return false;
 }
 
 //m_nExecutionTime handles freezing the player for a certain amount of time
@@ -792,9 +796,9 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	//		DevMsg("Time In Air:0 \n");
 
 		//if (m_nExecutionTime - gpGlobals->curtime >= 0)
-			//DevMsg("Time: Total Execution (Freeze Mvmt): %.2f \n", m_nExecutionTime - gpGlobals->curtime);
+		//	DevMsg("Time: Total Execution (Freeze Mvmt): %.2f \n", m_nExecutionTime - gpGlobals->curtime);
 		//else
-			//DevMsg("Time: Total Execution (Freeze Mvmt): 0 \n");
+		//	DevMsg("Time: Total Execution (Freeze Mvmt): 0 \n");
 	//}
 	
 	/*if (m_flNextPrimaryAttack - gpGlobals->curtime >=0)
@@ -1663,7 +1667,7 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 	triggerInfo.SetDamagePosition(traceHit.startpos);
 	triggerInfo.SetDamageForce(forward);
 	triggerInfo.ScaleDamage(1.5f);
-
+	
 
 	if (m_bIsSkCoolDown6 && gpGlobals->curtime < m_nSkCoolDownTime6)
 	{
@@ -1742,7 +1746,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 		//TODO: use exclusion list. 
 		//if (ppAIs[i]->m_iClassname == iszNPCName)
 		//if (ppAIs[i])  //affects every npcs ingame.
-		if (ppAIs[i]->m_iClassname == iszNPCName)
+		if (ppAIs[i])
 		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
@@ -1753,6 +1757,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 				if (playernpcdist.x <= m_flSkillAttributeRange && playernpcdist.y <= m_flSkillAttributeRange)
 				{
 					m_iEnemyHealth = ppAIs[i]->GetHealth();
+
 
 					if (ppAIs[i]->IsAlive())
 					{
@@ -1779,7 +1784,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					else if (options == 2)
 					{
 						if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
-						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
+						ppAIs[i]->SetCondition(COND_NPC_FREEZE);						
 						//ppAIs[i]->SetMoveType(MOVETYPE_NONE);
 						ppAIs[i]->SetActivity(ACT_IDLE);
 					}
