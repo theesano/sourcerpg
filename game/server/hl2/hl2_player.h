@@ -57,20 +57,20 @@ struct commandgoal_t
 
 //=============================================================================
 //=============================================================================
-class CSuitPowerDevice
+class CStaminaDevice
 {
 public:
-	CSuitPowerDevice( int bitsID, float flDrainRate ) { m_bitsDeviceID = bitsID; m_flDrainRate = flDrainRate; }
+	CStaminaDevice( int bitsID, float flDrainRate ) { m_bitsDeviceID = bitsID; m_flDrainRate = flDrainRate; }
 private:
 	int		m_bitsDeviceID;	// tells what the device is. DEVICE_SPRINT, DEVICE_FLASHLIGHT, etc. BITMASK!!!!!
-	float	m_flDrainRate;	// how quickly does this device deplete suit power? ( percent per second )
+	float	m_flDrainRate;	// how quickly does this device deplete stamina? ( percent per second )
 	
 
 public:
 	int		GetDeviceID( void ) const { return m_bitsDeviceID; }
 	float	GetDeviceDrainRate( void ) const
 	{	
-		if( g_pGameRules->GetSkillLevel() == SKILL_EASY && hl2_episodic.GetBool() && !(GetDeviceID()&bits_SUIT_DEVICE_SPRINT) )
+		if( g_pGameRules->GetSkillLevel() == SKILL_EASY && hl2_episodic.GetBool() && !(GetDeviceID()&bits_STAMINA_SPRINT) )
 			return m_flDrainRate * 0.5f;
 		else
 			return m_flDrainRate; 
@@ -132,22 +132,22 @@ public:
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
 	// Suit Power Interface
-	void SuitPower_Update( void );
-	bool SuitPower_Drain( float flPower ); // consume some of the suit's power.
-	void SuitPower_Charge( float flPower ); // add suit power.
-	void SuitPower_SetCharge( float flPower ) { m_HL2Local.m_flSuitPower = flPower; }
-	void SuitPower_Initialize( void );
-	bool SuitPower_IsDeviceActive( const CSuitPowerDevice &device );
-	bool SuitPower_AddDevice( const CSuitPowerDevice &device );
-	bool SuitPower_RemoveDevice( const CSuitPowerDevice &device );
-	bool SuitPower_ShouldRecharge( void );
-	float SuitPower_GetCurrentPercentage( void ) { return m_HL2Local.m_flSuitPower; }
+	void Stamina_Update( void );
+	bool Stamina_Drain( float flPower ); // consume some stamina.
+	void Stamina_Charge( float flPower ); // add stamina.
+	void Stamina_SetCharge( float flStamina ) { m_HL2Local.m_flStamina = flStamina; }
+	void Stamina_Initialize( void );
+	bool Stamina_IsDeviceActive( const CStaminaDevice &device );
+	bool Stamina_AddDevice( const CStaminaDevice &device );
+	bool Stamina_RemoveDevice( const CStaminaDevice &device );
+	bool Stamina_ShouldRecharge( void );
+	float Stamina_GetCurrentPercentage( void ) { return m_HL2Local.m_flStamina; }
 	
 	void SetFlashlightEnabled( bool bState );
 
 	// Apply a battery
 	bool ApplyBattery( float powerMultiplier = 1.0 );
-	bool ApplySuitPower();
+	bool ApplyStamina();
 
 	// Commander Mode for controller NPCs
 	enum CommanderCommand_t
@@ -168,16 +168,6 @@ public:
 
 	// Locator
 	void UpdateLocatorPosition( const Vector &vecPosition );
-
-	// Sprint Device
-	void StartAutoSprint( void );
-	void StartSprinting( void );
-	void StopSprinting( void );
-	void InitSprinting( void );
-	bool IsSprinting( void ) { return m_fIsSprinting; }
-	bool CanSprint( void );
-	void EnableSprint( bool bEnable);
-	
 
 	//Double Tap Sprinting
 	void StartAutoRunning(void);
@@ -263,7 +253,7 @@ public:
 
 	// Underwater breather device
 	virtual void		SetPlayerUnderwater( bool state );
-	virtual bool		CanBreatheUnderwater() const { return m_HL2Local.m_flSuitPower > 0.0f; }
+	virtual bool		CanBreatheUnderwater() const { return m_HL2Local.m_flStamina > 0.0f; }
 
 	// physics interactions
 	virtual void		PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize );
@@ -284,11 +274,6 @@ public:
 	virtual void		ExitLadder();
 	virtual surfacedata_t *GetLadderSurface( const Vector &origin );
 
-	virtual void EquipSuit( bool bPlayEffects = true );
-	virtual void RemoveSuit( void );
-	void  HandleAdmireGlovesAnimation( void );
-	void  StartAdmireGlovesAnimation( void );
-	
 	void  HandleSpeedChanges( void );
 	void  HandleThrowGrenade(void);
 	void  ThrowGrenade(void);
@@ -303,10 +288,6 @@ public:
 	void StopWaterDeathSounds( void );
 
 	bool IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
-	void HandleArmorReduction( void );
-	void StartArmorReduction( void ) { m_flArmorReductionTime = gpGlobals->curtime + ARMOR_DECAY_TIME; 
-									   m_iArmorReductionFrom = ArmorValue(); 
-									 }
 
 	void MissedAR2AltFire();
 
@@ -319,7 +300,7 @@ public:
 	CSoundPatch *m_sndLeeches;
 	CSoundPatch *m_sndWaterSplashes;
 
-	//Player Combat Status
+	// Normal attack melee combo
 	bool m_bIsAttack1;
 	bool m_bIsAttack2;
 	bool m_bIsAttack3;
@@ -347,7 +328,7 @@ private:
 	//  the player and not to other players.
 	CNetworkVarEmbedded( CHL2PlayerLocalData, m_HL2Local );
 
-	float				m_flTimeAllSuitDevicesOff;
+	float				m_flTimeAllStaminaDevicesOff;
 
 	bool				m_bSprintEnabled;		// Used to disable sprint temporarily
 
@@ -374,8 +355,7 @@ private:
 	bool				m_bIgnoreFallDamageResetAfterImpact;
 
 	// Suit power fields
-	float				m_flSuitPowerLoad;	// net suit power drain (total of all device's drainrates)
-	float				m_flAdmireGlovesAnimTime;
+	float				m_flStaminaLoad;	// net suit power drain (total of all device's drainrates)
 
 	float				m_flNextFlashlightCheckTime;
 	float				m_flFlashlightPowerDrainScale;
@@ -391,9 +371,6 @@ private:
 	bool				m_bFlashlightDisabled;
 	bool				m_bUseCappedPhysicsDamageTable;
 	
-	float				m_flArmorReductionTime;
-	int					m_iArmorReductionFrom;
-
 	float				m_flTimeUseSuspended;
 
 	CSimpleSimTimer		m_LowerWeaponTimer;

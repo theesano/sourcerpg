@@ -11,8 +11,11 @@ using namespace vgui;
 #include "tier0/memdbgon.h" 
 
 DECLARE_HUDELEMENT(CHudPlayerQuickStats);
+DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
+
 
 # define HULL_INIT -1
+# define ARMOR_INIT -1
 
 //------------------------------------------------------------------------
 // Purpose: Constructor
@@ -32,7 +35,11 @@ CHudElement(pElementName), BaseClass(NULL, "HUDPlayerQuickStats")
 
 void CHudPlayerQuickStats::Init()
 {
+	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
 	Reset();
+	m_iBat		= ARMOR_INIT;
+	m_iNewBat	= 0;
+
 }
 
 //------------------------------------------------------------------------
@@ -47,6 +54,14 @@ void CHudPlayerQuickStats::Reset(void)
 	SetBgColor(Color(0, 0, 0, 0));
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHudPlayerQuickStats::VidInit(void)
+{
+	Reset();
+}
+
 
 //------------------------------------------------------------------------
 // Purpose:
@@ -54,6 +69,7 @@ void CHudPlayerQuickStats::Reset(void)
 
 void CHudPlayerQuickStats::OnThink(void)
 {
+
 	float newHull = 0;
 	C_BasePlayer * local = C_BasePlayer::GetLocalPlayer();
 	
@@ -72,6 +88,8 @@ void CHudPlayerQuickStats::OnThink(void)
 		//return;
 
 	m_flHull = newHull;
+
+	m_flPlayerArmor;
 
 
 }
@@ -160,7 +178,6 @@ void CHudPlayerQuickStats::Paint()
 		xpos2 += (m_flBarChunkWidth2 + m_flBarChunkGap2);
 	}
 	
-
 	V_swprintf_safe(sz, L"%i", m_iGetPlayerMP);
 
 	surface()->DrawSetTextFont(m_hTextFont);
@@ -168,4 +185,47 @@ void CHudPlayerQuickStats::Paint()
 	surface()->DrawSetTextPos(text_xpos3, text_ypos3);
 	surface()->DrawPrintText(sz, wcslen(sz));
 
+	// Get bar chunks SA
+	int chunkCount3 = m_flBarWidth3 / (m_flBarChunkWidth3 + m_flBarChunkGap3);
+	int enabledChunks3 = (int)((float)chunkCount3* (m_iNewBat / 100.0f) + 0.5f);
+
+	// Draw Armor bar
+	surface()->DrawSetColor(m_HullColor3);
+
+	V_swprintf_safe(sz, L"SA		%i/100", m_iNewBat);
+
+	surface()->DrawSetTextFont(m_hTextFont);
+	surface()->DrawSetTextColor(m_HullColor3);
+	surface()->DrawSetTextPos(text_xposArmorNum, text_yposArmorNum);
+	surface()->DrawPrintText(sz, wcslen(sz));
+
+	int xpos3 = m_flBarInsetX3, ypos3 = m_flBarInsetY3;
+
+	//reversed
+
+	for (int i = 0; i < enabledChunks3; i++)
+	{
+		surface()->DrawFilledRect(xpos3, ypos3, xpos3 + m_flBarChunkWidth3, ypos3 + m_flBarHeight3);
+		xpos3 += (m_flBarChunkWidth3 + m_flBarChunkGap3);
+	}
+
+	// Draw the exhausted portion of the bar. MP
+
+	//reversed
+	surface()->DrawSetColor(Color(m_HullColor3[0], m_HullColor3[1], m_HullColor3[2], m_iHullDisabledAlpha));
+	for (int i = enabledChunks3; i < chunkCount3; i++)
+	{
+		surface()->DrawFilledRect(xpos3, ypos3, xpos3 + m_flBarChunkWidth3, ypos3 + m_flBarHeight3);
+		xpos3 += (m_flBarChunkWidth3 + m_flBarChunkGap3);
+	}
+
+
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHudPlayerQuickStats::MsgFunc_Battery(bf_read &msg)
+{
+	m_iNewBat = msg.ReadShort();
 }

@@ -23,6 +23,11 @@ public:
 	virtual void Init(void);
 	virtual void Reset(void);
 	virtual void OnThink(void);
+	void VidInit(void);
+
+
+	void MsgFunc_Battery(bf_read &msg);
+
 
 protected:
 	virtual void Paint();
@@ -30,6 +35,7 @@ protected:
 private:
 	CPanelAnimationVar(Color, m_HullColor, "HullColor", "255 255 255 255");
 	CPanelAnimationVar(Color, m_HullColor2, "HullColor2", "255 255 255 255");
+	CPanelAnimationVar(Color, m_HullColor3, "HullColor3", "255 255 0 255");
 	CPanelAnimationVar(int, m_iHullDisabledAlpha, "HullDisabledAlpha", "50");
 
 	CPanelAnimationVarAliasType(float, m_flBarInsetX, "BarInsetX", "26", "proportional_float");
@@ -49,6 +55,14 @@ private:
 	CPanelAnimationVarAliasType(float, m_flBarChunkWidth2, "BarChunkWidth2", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_flBarChunkGap2, "BarChunkGap2", "0", "proportional_float");
 
+	CPanelAnimationVarAliasType(float, m_flBarInsetX3, "BarInsetX3", "26", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarInsetY3, "BarInsetY3", "3", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarWidth3, "BarWidth3", "84", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarHeight3, "BarHeight3", "4", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarChunkWidth3, "BarChunkWidth3", "2", "proportional_float");
+	CPanelAnimationVarAliasType(float, m_flBarChunkGap3, "BarChunkGap3", "0", "proportional_float");
+
+
 	CPanelAnimationVarAliasType(float, text_xpos2, "text_xpos2", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, text_ypos2, "text_ypos2", "2", "proportional_float");
 
@@ -57,6 +71,9 @@ private:
 
 	CPanelAnimationVarAliasType(float, text_xposHPNum, "text_xposHPNum", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, text_yposHPNum, "text_yposHPNum", "2", "proportional_float");
+
+	CPanelAnimationVarAliasType(float, text_xposArmorNum, "text_xposArmorNum", "2", "proportional_float");
+	CPanelAnimationVarAliasType(float, text_yposArmorNum, "text_yposArmorNum", "2", "proportional_float");
 	
 	
 	float m_flHull;
@@ -64,6 +81,11 @@ private:
 	int m_nHullLow;
 
 	int m_iGetPlayerMP;
+
+	int m_flPlayerArmor;
+
+	int		m_iBat;
+	int		m_iNewBat;
 
 };
 

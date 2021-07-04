@@ -3109,10 +3109,10 @@ void CWeaponPhysCannon::DoEffectIdle( void )
 
 			CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>( pOwner );
 
-			if ( pPlayer )
-			{
-				pPlayer->StartArmorReduction();
-			}
+			//if ( pPlayer )
+			//{
+			//	pPlayer->StartArmorReduction();
+			//}
 #endif
 
 			CCitadelEnergyCore *pCore = static_cast<CCitadelEnergyCore*>( CreateEntityByName( "env_citadel_energy_core" ) );

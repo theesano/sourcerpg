@@ -745,7 +745,7 @@ void CNPC_Alyx::GatherConditions()
 				// If the power level is low, consider it expired, due
 				// to it running out or the player turning it off in anticipation.
 				CHL2_Player *pHLPlayer = assert_cast<CHL2_Player*>( pPlayer );
-				if ( pHLPlayer->SuitPower_GetCurrentPercentage() < 15 )
+				if ( pHLPlayer->Stamina_GetCurrentPercentage() < 15 )
 				{
 					SetCondition( COND_ALYX_PLAYER_FLASHLIGHT_EXPIRED );
 				}

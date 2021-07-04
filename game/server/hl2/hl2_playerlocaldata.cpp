@@ -15,7 +15,7 @@
 #include "tier0/memdbgon.h"
 
 BEGIN_SEND_TABLE_NOBASE( CHL2PlayerLocalData, DT_HL2Local )
-	SendPropFloat( SENDINFO(m_flSuitPower), 10, SPROP_UNSIGNED | SPROP_ROUNDUP, 0.0, 100.0 ),
+	SendPropFloat( SENDINFO(m_flStamina), 10, SPROP_UNSIGNED | SPROP_ROUNDUP, 0.0, 100.0 ),
 	SendPropInt( SENDINFO(m_bZooming), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO(m_bitsActiveDevices), MAX_SUIT_DEVICES, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO(m_iSquadMemberCount) ),
@@ -35,7 +35,7 @@ BEGIN_SEND_TABLE_NOBASE( CHL2PlayerLocalData, DT_HL2Local )
 END_SEND_TABLE()
 
 BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
-	DEFINE_FIELD( m_flSuitPower, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flStamina, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bZooming, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bitsActiveDevices, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSquadMemberCount, FIELD_INTEGER ),
@@ -55,7 +55,7 @@ END_DATADESC()
 
 CHL2PlayerLocalData::CHL2PlayerLocalData()
 {
-	m_flSuitPower = 0.0;
+	m_flStamina = 0.0;
 	m_bZooming = false;
 	m_bWeaponLowered = false;
 	m_hAutoAimTarget.Set(NULL);

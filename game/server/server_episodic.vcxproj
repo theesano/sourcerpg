@@ -1093,7 +1093,7 @@ exit 1
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="item_rage.cpp" />
-    <ClCompile Include="item_suitpowerconsumable.cpp" />
+    <ClCompile Include="item_stamina.cpp" />
     <ClCompile Include="item_world.cpp" />
     <ClCompile Include="..\..\public\keyframe\keyframe.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

@@ -82,7 +82,7 @@ bool CHudSuitPower::ShouldDraw()
 		return false;
 
 	// needs draw if suit power changed or animation in progress
-	bNeedsDraw = ( ( pPlayer->m_HL2Local.m_flSuitPower != m_flSuitPower ) || ( m_AuxPowerColor[3] > 0 ) );
+	bNeedsDraw = ( ( pPlayer->m_HL2Local.m_flStamina != m_flSuitPower ) || ( m_AuxPowerColor[3] > 0 ) );
 
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 	
@@ -98,7 +98,7 @@ void CHudSuitPower::OnThink( void )
 	if ( !pPlayer )
 		return;
 
-	flCurrentPower = pPlayer->m_HL2Local.m_flSuitPower;
+	flCurrentPower = pPlayer->m_HL2Local.m_flStamina;
 
 	// Only update if we've changed suit power
 	if ( flCurrentPower == m_flSuitPower )

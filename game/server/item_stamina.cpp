@@ -16,10 +16,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class CItemSuitPowerConsumable : public CItem
+class CItemStamina : public CItem
 {
 public:
-	DECLARE_CLASS(CItemSuitPowerConsumable, CItem);
+	DECLARE_CLASS(CItemStamina, CItem);
 
 	void Spawn(void)
 	{
@@ -38,9 +38,9 @@ public:
 	bool MyTouch(CBasePlayer *pPlayer) //Gives player Stamina
 	{
 		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>(pPlayer);
-		return (pHL2Player && pHL2Player->ApplySuitPower());
+		return (pHL2Player && pHL2Player->ApplyStamina());
 	}
 };
 
-LINK_ENTITY_TO_CLASS(item_suitpowerconsumable, CItemSuitPowerConsumable);
-PRECACHE_REGISTER(item_suitpowerconsumable);
+LINK_ENTITY_TO_CLASS(item_stamina, CItemStamina);
+PRECACHE_REGISTER(item_stamina);

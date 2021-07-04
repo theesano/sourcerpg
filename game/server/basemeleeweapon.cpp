@@ -61,12 +61,12 @@ extern ConVar sk_plr_melee_normal_range("sk_plr_melee_normal_range", "128");
 extern ConVar sk_plr_rage_current("sk_plr_rage_current", "0");
 extern ConVar sk_plr_rage_max("sk_plr_rage_max", "100");
 
-extern ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "10");
-extern ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "10");
-extern ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "10");
-extern ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "10");
+extern ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "30");
+extern ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "30");
+extern ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "30");
+extern ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "30");
 
-extern ConVar sk_plr_rage_heal_given("sk_plr_rage_heal_given", "15");
+extern ConVar sk_plr_rage_armor_given("sk_plr_rage_heal_given", "15");
 extern ConVar sk_plr_rage_mp_given("sk_plr_rage_mp_given", "15");
 extern ConVar sk_plr_rage_speed_given("sk_plr_rage_speed_given", "350");
 extern ConVar sk_plr_rage_stamina_given("sk_plr_rage_stamina_given", "33");
@@ -375,7 +375,7 @@ void CBaseMeleeWeapon::UtilSlotExecuteOptionsID(int optionsID)
 	}
 	else if (optionsID == 1)
 	{
-		Rage_GiveHealth();
+		Rage_GiveArmor();
 		Msg("Giving Health \n");
 
 	}
@@ -401,11 +401,11 @@ void CBaseMeleeWeapon::UtilSlotExecuteOptionsID(int optionsID)
 }
 
 
-void CBaseMeleeWeapon::Rage_GiveHealth()
+void CBaseMeleeWeapon::Rage_GiveArmor()
 {
 	if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
 	{		
-		UTIL_GetLocalPlayer()->SetHealth(UTIL_GetLocalPlayer()->GetHealth() + sk_plr_rage_heal_given.GetFloat());
+		UTIL_GetLocalPlayer()->SetArmorValue(UTIL_GetLocalPlayer()->ArmorValue()+sk_plr_rage_armor_given.GetFloat());
 		m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
 		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
 	}
@@ -427,7 +427,7 @@ void CBaseMeleeWeapon::Rage_GiveStamina()
 	if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
 	{
 		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
-		pPlayer->SuitPower_Charge(sk_plr_rage_stamina_given.GetFloat());
+		pPlayer->Stamina_Charge(sk_plr_rage_stamina_given.GetFloat());
 		m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
 		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
 	}
@@ -786,7 +786,7 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 
 	//engine->Con_NPrintf(9, "Current Attack in the chain %i %i %i %i %i ", m_bWIsAttack1, m_bWIsAttack2, m_bWIsAttack3, m_bWIsAttack4, m_bWIsAttack5);
 	
-//	engine->Con_NPrintf(11, "Current Attack Interval %.2f ",m_flAttackInterval );
+	//engine->Con_NPrintf(11, "Current Attack Interval %.2f ",m_flAttackInterval );
 
 	//if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
 	//{
@@ -863,7 +863,7 @@ void CBaseMeleeWeapon::SkillStatNotification_HUD(int messageoption)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
 	hudtextparms_s tTextParam;
-	tTextParam.x = 0.7;
+	tTextParam.x = 0.6;
 	tTextParam.y = 0.65;
 	tTextParam.effect = 0;
 	tTextParam.r1 = 255;
@@ -878,11 +878,12 @@ void CBaseMeleeWeapon::SkillStatNotification_HUD(int messageoption)
 	tTextParam.fadeoutTime = 0;
 	tTextParam.holdTime = 0.6;
 	tTextParam.fxTime = 0;
-	tTextParam.channel = 1;
+	tTextParam.channel = 2;
 
 		if (messageoption == 1)
 		{
 			UTIL_HudMessage(pOwner, tTextParam, "SG insufficient");
+			//ClientPrint(pOwner, HUD_PRINTCENTER, "SG insufficient");
 		}
 		else if (messageoption == 2)
 		{
@@ -1554,7 +1555,7 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
-	string_t iszNPCExcludeName = AllocPooledString("npc_metropolice");
+	string_t iszNPCExcludeName = AllocPooledString("npc_bob");
 	Vector SkillOriginNPCdist;
 
 	trace_t traceHit;

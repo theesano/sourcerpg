@@ -48,7 +48,7 @@ private:
 	CPanelAnimationVarAliasType(float, text2_xpos, "text2_xpos", "8", "proportional_float");
 	CPanelAnimationVarAliasType(float, text2_ypos, "text2_ypos", "40", "proportional_float");
 
-	float m_flStamina;
+	float m_flStaminaHUD;
 };
 
 #endif 

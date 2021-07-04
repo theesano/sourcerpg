@@ -23,7 +23,6 @@
 #include "ai_behavior_rappel.h"
 #include "ai_behavior_police.h"
 #include "ai_behavior_follow.h"
-#include "ai_sentence.h"
 #include "props.h"
 
 class CNPC_Bob;
@@ -85,9 +84,6 @@ public:
 	// TraceAttack
 	virtual void TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 
-	// Speaking
-	virtual void SpeakSentence(int nSentenceType);
-
 	// Set up the shot regulator based on the equipped weapon
 	virtual void OnUpdateShotRegulator();
 
@@ -100,8 +96,6 @@ public:
 
 	void	SetBatonState(bool state);
 	bool	BatonActive(void);
-
-	CAI_Sentence< CNPC_Bob > *GetSentences() { return &m_Sentences; }
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
 
@@ -119,25 +113,12 @@ private:
 	bool		PlayerIsCriminal(void);
 	void		ReleaseManhack(void);
 
-	// Speech-related methods
-	void		AnnounceTakeCoverFromDanger(CSound *pSound);
-	void		AnnounceEnemyType(CBaseEntity *pEnemy);
-	void		AnnounceEnemyKill(CBaseEntity *pEnemy);
-	void		AnnounceHarrassment();
-	void		AnnounceOutOfAmmo();
-
-	// Behavior-related sentences
-	void		SpeakFuncTankSentence(int nSentenceType);
-	void		SpeakAssaultSentence(int nSentenceType);
-	void		SpeakStandoffSentence(int nSentenceType);
-
 	virtual void	LostEnemySound(void);
 	virtual void	FoundEnemySound(void);
 	virtual void	AlertSound(void);
 	virtual void	PainSound(const CTakeDamageInfo &info);
 	virtual void	DeathSound(const CTakeDamageInfo &info);
 	virtual void	IdleSound(void);
-	virtual bool	ShouldPlayIdleSound(void);
 
 	// Burst mode!
 	void		SetBurstMode(bool bEnable);
@@ -166,9 +147,6 @@ private:
 	void InputEnableManhackToss(inputdata_t &inputdata);
 	void InputSetPoliceGoal(inputdata_t &inputdata);
 	void InputActivateBaton(inputdata_t &inputdata);
-
-	void NotifyDeadFriend(CBaseEntity* pFriend);
-
 	// Stitch aiming!
 	void AimBurstRandomly(int nMinCount, int nMaxCount, float flMinDelay, float flMaxDelay);
 	void AimBurstAtEnemy(float flReactionTime);
@@ -198,18 +176,8 @@ private:
 
 	bool TryToEnterPistolSlot(int nSquadSlot);
 
-	// Airboat schedule selection
-	int SelectAirboatCombatSchedule();
-	int SelectAirboatRangeAttackSchedule();
-
 	// Handle flinching
 	bool IsHeavyDamage(const CTakeDamageInfo &info);
-
-	// Is my enemy currently in an airboat?
-	bool IsEnemyInAnAirboat() const;
-
-	// Returns the airboat
-	CBaseEntity *GetEnemyAirboat() const;
 
 	// Compute a predicted enemy position n seconds into the future
 	void PredictShootTargetPosition(float flDeltaTime, float flMinLeadDist, float flAddVelocity, Vector *pVecTarget, Vector *pVecTargetVel);
@@ -341,11 +309,7 @@ private:
 		SCHED_BOB_BURNING_STAND,
 		SCHED_BOB_SMG_NORMAL_ATTACK,
 		SCHED_BOB_SMG_BURST_ATTACK,
-		SCHED_BOB_AIM_STITCH_AT_AIRBOAT,
-		SCHED_BOB_AIM_STITCH_IN_FRONT_OF_AIRBOAT,
 		SCHED_BOB_AIM_STITCH_TIGHTLY,
-		SCHED_BOB_AIM_STITCH_ALONG_SIDE_OF_AIRBOAT,
-		SCHED_BOB_AIM_STITCH_BEHIND_AIRBOAT,
 		SCHED_BOB_ESTABLISH_STITCH_LINE_OF_FIRE,
 		SCHED_BOB_INVESTIGATE_SOUND,
 		SCHED_BOB_WARN_AND_ARREST_ENEMY,
@@ -370,11 +334,7 @@ private:
 		TASK_BOB_BURST_ATTACK,
 		TASK_BOB_STOP_FIRE_BURST,
 		TASK_BOB_AIM_STITCH_AT_PLAYER,
-		TASK_BOB_AIM_STITCH_AT_AIRBOAT,
 		TASK_BOB_AIM_STITCH_TIGHTLY,
-		TASK_BOB_AIM_STITCH_IN_FRONT_OF_AIRBOAT,
-		TASK_BOB_AIM_STITCH_ALONG_SIDE_OF_AIRBOAT,
-		TASK_BOB_AIM_STITCH_BEHIND_AIRBOAT,
 		TASK_BOB_RELOAD_FOR_BURST,
 		TASK_BOB_GET_PATH_TO_STITCH,
 		TASK_BOB_RESET_LEDGE_CHECK_TIME,
@@ -427,7 +387,6 @@ private:
 	// Sentences
 	float			m_flNextPainSoundTime;
 	float			m_flNextLostSoundTime;
-	int				m_nIdleChatterType;
 	bool			m_bPlayerIsNear;
 
 	// Policing state
@@ -453,8 +412,6 @@ private:
 	CAI_RappelBehavior		m_RappelBehavior;
 	CAI_PolicingBehavior	m_PolicingBehavior;
 	CAI_FollowBehavior		m_FollowBehavior;
-
-	CAI_Sentence< CNPC_Bob > m_Sentences;
 
 	int				m_nRecentDamage;
 	float			m_flRecentDamageTime;

@@ -29,7 +29,7 @@ public:
 
 	C_HL2PlayerLocalData();
 
-	float	m_flSuitPower;
+	float	m_flStamina;
 	bool	m_bZooming;
 	int		m_bitsActiveDevices;
 	int		m_iSquadMemberCount;

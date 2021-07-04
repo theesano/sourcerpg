@@ -43,7 +43,7 @@ void CHudStamina::Init()
 
 void CHudStamina::Reset(void)
 {
-	m_flStamina = HULL_INIT;
+	m_flStaminaHUD = HULL_INIT;
 
 	SetBgColor(Color(0, 0, 0, 0));
 }
@@ -60,9 +60,9 @@ void CHudStamina::OnThink(void)
 	if (!pPlayer)
 		return;
 
-	flCurrentPower = pPlayer->m_HL2Local.m_flSuitPower;
+	flCurrentPower = pPlayer->m_HL2Local.m_flStamina;
 
-	m_flStamina = flCurrentPower;
+	m_flStaminaHUD = flCurrentPower;
 
 }
 
@@ -82,7 +82,7 @@ void CHudStamina::Paint()
 
 	// Get bar chunks
 	int chunkCount = m_flBarWidth / (m_flBarChunkWidth + m_flBarChunkGap);
-	int enabledChunks = (int)((float)chunkCount * (m_flStamina / 100.0f) + 0.5f);
+	int enabledChunks = (int)((float)chunkCount * (m_flStaminaHUD / 100.0f) + 0.5f);
 
 	// Draw the suit power bar MP
 	surface()->DrawSetColor(m_StaminaColor);
@@ -104,7 +104,7 @@ void CHudStamina::Paint()
 		xpos += (m_flBarChunkWidth + m_flBarChunkGap);
 	}
 
-	V_swprintf_safe(sz,L"%.0f /100",m_flStamina);
+	V_swprintf_safe(sz,L"%.0f /100",m_flStaminaHUD);
 	surface()->DrawSetTextFont(m_hTextFont);
 	surface()->DrawSetTextColor(m_StaminaColor);
 	surface()->DrawSetTextPos(text2_xpos, text2_ypos);

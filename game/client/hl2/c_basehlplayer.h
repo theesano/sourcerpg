@@ -34,9 +34,9 @@ public:
 	float				GetZoom( void );
 	bool				IsZoomed( void )	{ return m_HL2Local.m_bZooming; }
 
-	bool				IsSprinting( void ) { return m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_SPRINT; }
-	bool				IsFlashlightActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_FLASHLIGHT; }
-	bool				IsBreatherActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_SUIT_DEVICE_BREATHER; }
+	bool				IsSprinting( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_SPRINT; }
+	bool				IsFlashlightActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_FLASHLIGHT; }
+	bool				IsBreatherActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_BREATHER; }
 
 	virtual int			DrawModel( int flags );
 	virtual	void		BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );

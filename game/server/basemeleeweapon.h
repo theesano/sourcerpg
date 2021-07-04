@@ -80,7 +80,7 @@ public:
 
 	void			Rage_GiveMP();
 	void			Rage_GiveStamina();
-	void			Rage_GiveHealth();
+	void			Rage_GiveArmor();
 	void			Rage_GiveMovementSpeed();
 
 

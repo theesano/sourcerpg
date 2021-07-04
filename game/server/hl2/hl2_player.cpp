@@ -95,6 +95,7 @@ ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting
 ConVar sk_evadedistance("sk_evadedistance", "512"); // Set the dash distance.
 ConVar sk_evadestyle("sk_evadestyle", "0");
 ConVar sk_evadestaminacost("sk_evadestaminacost", "33.3");
+ConVar sk_staminachargerate("sk_staminachargerate", "12");
 
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
@@ -340,8 +341,7 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_EMBEDDED( m_HL2Local ),
 
 	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
-	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_flTimeAllStaminaDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 
 	/*
@@ -366,14 +366,13 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_bIgnoreFallDamageResetAfterImpact, FIELD_BOOLEAN ),
 
 	// Suit power fields
-	DEFINE_FIELD( m_flSuitPowerLoad, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flStaminaLoad, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_flIdleTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flMoveTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flLastDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flTargetFindTime, FIELD_TIME ),
 
-	DEFINE_FIELD( m_flAdmireGlovesAnimTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flFlashlightPowerDrainScale, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
@@ -395,9 +394,6 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_SOUNDPATCH( m_sndLeeches ),
 	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
 
-	DEFINE_FIELD( m_flArmorReductionTime, FIELD_TIME ),
-	DEFINE_FIELD( m_iArmorReductionFrom, FIELD_INTEGER ),
-
 	DEFINE_FIELD( m_flTimeUseSuspended, FIELD_TIME ),
 
 	DEFINE_FIELD( m_hLocatorTargetEntity, FIELD_EHANDLE ),
@@ -414,9 +410,6 @@ CHL2_Player::CHL2_Player()
 	m_pPlayerAISquad = 0;
 	m_bSprintEnabled = true;
 
-	m_flArmorReductionTime = 0.0f;
-	m_iArmorReductionFrom = 0;
-
 	// Here we create and init the player animation state.
 	m_pPlayerAnimState = CreatePlayerAnimationState(this);
 	m_angEyeAngles.Init();
@@ -426,8 +419,6 @@ CHL2_Player::CHL2_Player()
 	m_pPlayerAISquad = 0;
 	m_bSprintEnabled = true;
 
-	m_flArmorReductionTime = 0.0f;
-	m_iArmorReductionFrom = 0;
 	// Sprint handling
 
 	m_bIsAttack1 = true;
@@ -435,6 +426,7 @@ CHL2_Player::CHL2_Player()
 	m_bIsAttack3 = false;
 	m_bIsAttack4 = false;
 	m_bIsAttack5 = false;
+
 	m_flAtkAnimationChangingTime = 0.0f;
 	m_flTimeBetweenAttack = 0.0f;
 	m_flCanRunTimeWindowFwd = 0.0f;//Do not change
@@ -450,27 +442,24 @@ CHL2_Player::CHL2_Player()
 
 
 //
-// SUIT POWER DEVICES
 //
-#define SUITPOWER_CHARGE_RATE	12.0											// 100 units in 8 seconds
-
+//
 #ifdef HL2MP
 	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 25.0f );				// 100 units in 4 seconds
 #else
-	CSuitPowerDevice SuitDeviceSprint( bits_SUIT_DEVICE_SPRINT, 33.3f );				// 100 units in 8 seconds
+	CStaminaDevice SuitDeviceSprint( bits_STAMINA_SPRINT, 33.3f );				// 100 units in 8 seconds
 #endif
 
 #ifdef HL2_EPISODIC
-	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 1.111 );	// 100 units in 90 second
+	CStaminaDevice SuitDeviceFlashlight( bits_STAMINA_FLASHLIGHT, 1.111 );	// 100 units in 90 second
 #else
-	CSuitPowerDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 2.222 );	// 100 units in 45 second
+	CStaminaDevice SuitDeviceFlashlight( bits_SUIT_DEVICE_FLASHLIGHT, 2.222 );	// 100 units in 45 second
 #endif
-CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 units in 15 seconds (plus three padded seconds)
+CStaminaDevice SuitDeviceBreather( bits_STAMINA_BREATHER, 6.7f );		// 100 units in 15 seconds (plus three padded seconds)
 
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
-	SendPropBool( SENDINFO(m_fIsSprinting) ),
 END_SEND_TABLE()
 
 
@@ -491,6 +480,7 @@ void CHL2_Player::Precache( void )
 	PrecacheModel("models/weapons/melee/lilyscythe_u.mdl", true);
 	PrecacheScriptSound("Player.Evade");
 	PrecacheScriptSound("ItemRage.Pickup");
+	PrecacheParticleSystem("aoehint22");
 
 }
 
@@ -516,53 +506,9 @@ void CHL2_Player::CheckSuitZoom( void )
 //#endif//_XBOX
 }
 
-void CHL2_Player::EquipSuit( bool bPlayEffects )
-{
-	MDLCACHE_CRITICAL_SECTION();
-	BaseClass::EquipSuit();
-	
-	m_HL2Local.m_bDisplayReticle = true;
-
-	if ( bPlayEffects == true )
-	{
-		StartAdmireGlovesAnimation();
-	}
-}
-
-void CHL2_Player::RemoveSuit( void )
-{
-	BaseClass::RemoveSuit();
-
-	m_HL2Local.m_bDisplayReticle = false;
-}
-
-
-
 void CHL2_Player::HandleSpeedChanges( void )
 {
 	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
-
-	//bool bCanSprint = CanSprint();
-	//bool bIsSprinting = IsSprinting();
-	//bool bWantSprint = (bCanSprint && IsSuitEquipped() && (m_nButtons & IN_SPEED));
-
-	//if (bIsSprinting != bWantSprint && (buttonsChanged & IN_SPEED))
-	//{
-	//	// If someone wants to sprint, make sure they've pressed the button to do so. We want to prevent the
-	//	// case where a player can hold down the sprint key and burn tiny bursts of sprint as the suit recharges
-	//	// We want a full debounce of the key to resume sprinting after the suit is completely drained
-	//	if (bWantSprint )
-	//	{
-	//			StartSprinting();
-	//	}
-	//	
-	//	else 
-	//	{
-	//			StopSprinting();
-	//	}
-	//		 //Reset key, so it will be activated post whatever is suppressing it.
-	//		m_nButtons &= ~IN_SPEED;
-	//}
 
 	//if (m_nButtons & IN_SPEED && !m_bEvadeDelayedUse)
 	if (m_afButtonPressed & IN_SPEED)
@@ -576,7 +522,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 	
 	if( IsSuitEquipped() )
 	{
-		bWantWalking = (m_nButtons & IN_WALK) && !IsSprinting() && !(m_nButtons & IN_DUCK);
+		bWantWalking = (m_nButtons & IN_WALK) && !m_bIsRunning && !(m_nButtons & IN_DUCK);
 	}
 	else
 	{
@@ -682,7 +628,7 @@ void CHL2_Player::Evade(void)
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
 	
-	if (m_HL2Local.m_flSuitPower >= sk_evadestaminacost.GetFloat())
+	if (m_HL2Local.m_flStamina >= sk_evadestaminacost.GetFloat())
 	{
 		if (sk_evadestyle.GetInt() == 0)
 		{
@@ -701,7 +647,7 @@ void CHL2_Player::Evade(void)
 			}
 			
 			if (!sv_infinite_aux_power.GetInt() == 1)
-				m_HL2Local.m_flSuitPower -= sk_evadestaminacost.GetFloat();
+				m_HL2Local.m_flStamina -= sk_evadestaminacost.GetFloat();
 			
 			EmitSound("Player.Evade");
 			SetAnimation(PLAYER_EVADE);
@@ -791,24 +737,6 @@ void CHL2_Player::EvadeHandler(void)
 	}
 
 }
-//-----------------------------------------------------------------------------
-// This happens when we powerdown from the mega physcannon to the regular one
-//-----------------------------------------------------------------------------
-void CHL2_Player::HandleArmorReduction( void )
-{
-	if ( m_flArmorReductionTime < gpGlobals->curtime )
-		return;
-
-	if ( ArmorValue() <= 0 )
-		return;
-
-	float flPercent = 1.0f - (( m_flArmorReductionTime - gpGlobals->curtime ) / ARMOR_DECAY_TIME );
-
-	int iArmor = Lerp( flPercent, m_iArmorReductionFrom, 0 );
-
-	SetArmorValue( iArmor );
-}
-
 
 //void CHL2_Player::HandleThrowGrenade(void)
 //{
@@ -950,12 +878,23 @@ void CHL2_Player::PreThink(void)
 	{
 		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
 		//HACK! : This is a temporary patch job for the evade bug, ala whenever a skill that requires the player to stand still for a certain amount of time , using evade wouldn't give them the speed boost.
-		SetMaxSpeed(600);
+		SetMaxSpeed(600); //This cause bug that grants you up to 600 unit/s if you hold down shift while pressing movement keys and attack, this is because even if you set the player velocity to 0 , it is not 0, you still actually move a bit.
 		if (m_afButtonPressed & IN_SPEED)
 			flReturnSpeedAfterEvaded = gpGlobals->curtime + 0.3f;
-		
+		// Bug theory: due to the constant switching of pIsPlayerAttacking->GetInt() returning 0 and 1 , m_afBtnpressed becomes m_nButtons? and giving you that speed boost?
+	
 		//HACK! Evade bug
 		flReturnSpeed = gpGlobals->curtime + 0.3f;
+
+		//Another hack: prevent players from moving at cl_forwardspeed limit when hitting IN_SPEED & movement keys & IN_ATTACK
+		if ((m_nButtons & IN_SPEED) && (m_nButtons & IN_FORWARD 
+			|| m_nButtons & IN_MOVELEFT 
+			|| m_nButtons & IN_MOVERIGHT 
+			|| m_nButtons & IN_BACK) && (m_nButtons & IN_ATTACK))
+		{
+			SetAbsVelocity(vec3_origin);	
+			
+		}
 
 	}
 	else
@@ -972,15 +911,8 @@ void CHL2_Player::PreThink(void)
 		}
 	}
 
-	//Another hack: prevent players from moving at cl_forwardspeed limit when hitting IN_SPEED & movement keys & IN_ATTACK
-	if ((m_nButtons & IN_SPEED) && (m_nButtons & IN_FORWARD 
-		|| m_nButtons & IN_MOVELEFT 
-		|| m_nButtons & IN_MOVERIGHT 
-		|| m_nButtons & IN_BACK) && (m_nButtons & IN_ATTACK))
-	{
-		SetAbsVelocity(vec3_origin);	
-		
-	}
+	//Debug Armor
+	DevMsg("Current Armor %i \n",ArmorValue() );
 
 
 #ifdef HL2_EPISODIC
@@ -1012,11 +944,7 @@ void CHL2_Player::PreThink(void)
 		m_bIsAttack5 = false;
 	}
 
-
-
 	//engine->Con_NPrintf(10, "Attack Animation in the chain %i %i %i %i %i ", m_bIsAttack1, m_bIsAttack2, m_bIsAttack3, m_bIsAttack4, m_bIsAttack5);
-
-
 	//DevMsg("Current Animation %d\n", GetSequenceActivity();
 
 
@@ -1033,7 +961,7 @@ void CHL2_Player::PreThink(void)
 		CheckTimeBasedDamage();
 
 		// Allow the suit to recharge when in the vehicle.
-		SuitPower_Update();
+		Stamina_Update();
 		CheckSuitUpdate();
 		CheckSuitZoom();
 
@@ -1094,9 +1022,7 @@ void CHL2_Player::PreThink(void)
 
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Speed" );
 	HandleSpeedChanges();
-#ifdef HL2_EPISODIC
-	HandleArmorReduction();
-#endif
+
 	//Handle AutoRunning
 	if (m_bIsAutoRunning)
 	{
@@ -1116,15 +1042,6 @@ void CHL2_Player::PreThink(void)
 	//		StopSprinting();
 	//	}
 		
-	// if ( IsSprinting() )
-	//{
-	//	// Disable sprint while ducked unless we're in the air (jumping)
-	//	if ( IsDucked() && ( GetGroundEntity() != NULL ) )
-	//	{
-	//		StopSprinting();
-	//	}
-	//}
-
 	VPROF_SCOPE_END();
 
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
@@ -1153,8 +1070,8 @@ void CHL2_Player::PreThink(void)
 	VPROF_SCOPE_END();
 
 	// Operate suit accessories and manage power consumption/charge
-	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-SuitPower_Update" );
-	SuitPower_Update();
+	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-Stamina_Update" );
+	Stamina_Update();
 	VPROF_SCOPE_END();
 
 	// checks if new client data (for HUD and view control) needs to be sent to the client
@@ -1357,11 +1274,6 @@ void CHL2_Player::PreThink(void)
 void CHL2_Player::PostThink( void )
 {
 	BaseClass::PostThink();
-
-	if ( !g_fGameOver && !IsPlayerLockedInPlace() && IsAlive() )
-	{
-		 HandleAdmireGlovesAnimation();
-	}
 	
 	m_angEyeAngles = EyeAngles();
 
@@ -1370,50 +1282,6 @@ void CHL2_Player::PostThink( void )
 	SetLocalAngles(angles);
 
 	m_pPlayerAnimState->Update();
-}
-
-void CHL2_Player::StartAdmireGlovesAnimation( void )
-{
-	MDLCACHE_CRITICAL_SECTION();
-	CBaseViewModel *vm = GetViewModel( 0 );
-
-	if ( vm && !GetActiveWeapon() )
-	{
-		vm->SetWeaponModel( "models/weapons/v_hands.mdl", NULL );
-		ShowViewModel( true );
-						
-		int	idealSequence = vm->SelectWeightedSequence( ACT_VM_IDLE );
-		
-		if ( idealSequence >= 0 )
-		{
-			vm->SendViewModelMatchingSequence( idealSequence );
-			m_flAdmireGlovesAnimTime = gpGlobals->curtime + vm->SequenceDuration( idealSequence ); 
-		}
-	}
-}
-
-void CHL2_Player::HandleAdmireGlovesAnimation( void )
-{
-	CBaseViewModel *pVM = GetViewModel();
-
-	if ( pVM && pVM->GetOwningWeapon() == NULL )
-	{
-		if ( m_flAdmireGlovesAnimTime != 0.0 )
-		{
-			if ( m_flAdmireGlovesAnimTime > gpGlobals->curtime )
-			{
-				pVM->m_flPlaybackRate = 1.0f;
-				pVM->StudioFrameAdvance( );
-			}
-			else if ( m_flAdmireGlovesAnimTime < gpGlobals->curtime )
-			{
-				m_flAdmireGlovesAnimTime = 0.0f;
-				pVM->SetWeaponModel( NULL, NULL );
-			}
-		}
-	}
-	else
-		m_flAdmireGlovesAnimTime = 0.0f;
 }
 
 #define HL2PLAYER_RELOADGAME_ATTACK_DELAY 1.0f
@@ -1598,7 +1466,7 @@ void CHL2_Player::Spawn(void)
 	//Hack fix for movement speed rage increase!!!
 	hl2_normspeed.SetValue(280);
 
-	SuitPower_SetCharge( 100 );
+	Stamina_SetCharge( 100 );
 
 	m_Local.m_iHideHUD |= HIDEHUD_CHAT;
 
@@ -1628,112 +1496,6 @@ void CHL2_Player::UpdateLocatorPosition( const Vector &vecPosition )
 	m_HL2Local.m_vecLocatorOrigin = vecPosition;
 #endif//HL2_EPISODIC 
 }
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::InitSprinting( void )
-{
-	StopSprinting();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns whether or not we are allowed to sprint now.
-//-----------------------------------------------------------------------------
-bool CHL2_Player::CanSprint()
-{
-	return ( m_bSprintEnabled &&										// Only if sprint is enabled 
-			!IsWalking() &&												// Not if we're walking
-			!( m_Local.m_bDucked && !m_Local.m_bDucking ) &&			// Nor if we're ducking
-			(GetWaterLevel() != 3) &&									// Certainly not underwater
-			(GlobalEntity_GetState("suit_no_sprint") != GLOBAL_ON) );	// Out of the question without the sprint module
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//void CHL2_Player::StartAutoSprint() 
-//{
-//	if( IsSprinting() )
-//	{
-//		StopSprinting();
-//	}
-//	else
-//	{
-//		StartSprinting();
-//		m_bIsAutoSprinting = true;
-//		m_fAutoSprintMinTime = gpGlobals->curtime + 1.5f;
-//	}
-//}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::StartSprinting( void )
-{
-	if( m_HL2Local.m_flSuitPower < 8 )
-	{
-		// Don't sprint unless there's a reasonable
-		// amount of suit power.
-		
-		// debounce the button for sound playing
-		if ( m_afButtonPressed & IN_SPEED )
-		{
-			CPASAttenuationFilter filter( this );
-			filter.UsePredictionRules();
-			EmitSound( filter, entindex(), "HL2Player.SprintNoPower" );
-		}
-		return;
-	}
-
-	if( !SuitPower_AddDevice( SuitDeviceSprint ) )
-		return;
-
-	CPASAttenuationFilter filter( this );
-	filter.UsePredictionRules();
-	EmitSound( filter, entindex(), "HL2Player.SprintStart" );
-
-	SetMaxSpeed( HL2_SPRINT_SPEED );
-	m_fIsSprinting = true;
-
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CHL2_Player::StopSprinting( void )
-{
-	if ( m_HL2Local.m_bitsActiveDevices & SuitDeviceSprint.GetDeviceID() )
-	{
-		SuitPower_RemoveDevice( SuitDeviceSprint );
-	}
-
-	if( IsSuitEquipped() )
-	{
-		SetMaxSpeed( HL2_NORM_SPEED );
-	}
-	else
-	{
-		SetMaxSpeed( HL2_WALK_SPEED );
-	}
-
-	m_fIsSprinting = false;
-
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Called to disable and enable sprint due to temporary circumstances:
-//			- Carrying a heavy object with the physcannon
-//-----------------------------------------------------------------------------
-void CHL2_Player::EnableSprint( bool bEnable )
-{
-	if ( !bEnable && IsSprinting() )
-	{
-		StopSprinting();
-	}
-
-	m_bSprintEnabled = bEnable;
-}
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -2728,19 +2490,19 @@ void CHL2_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs,
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CHL2_Player::SuitPower_Update( void )
+void CHL2_Player::Stamina_Update( void )
 {
-	if( SuitPower_ShouldRecharge() )
+	if( Stamina_ShouldRecharge() )
 	{
-		SuitPower_Charge( SUITPOWER_CHARGE_RATE * gpGlobals->frametime );
+		Stamina_Charge( sk_staminachargerate.GetInt() * gpGlobals->frametime );
 	}
 	else if( m_HL2Local.m_bitsActiveDevices )
 	{
-		float flPowerLoad = m_flSuitPowerLoad;
+		float flPowerLoad = m_flStaminaLoad;
 
 		//Since stickysprint quickly shuts off sprint if it isn't being used, this isn't an issue.
 		
-			if( SuitPower_IsDeviceActive(SuitDeviceSprint) )
+			if( Stamina_IsDeviceActive(SuitDeviceSprint) )
 			{
 				if( !fabs(GetAbsVelocity().x) && !fabs(GetAbsVelocity().y) )
 				{
@@ -2750,7 +2512,7 @@ void CHL2_Player::SuitPower_Update( void )
 			}
 		
 
-		if( SuitPower_IsDeviceActive(SuitDeviceFlashlight) )
+		if( Stamina_IsDeviceActive(SuitDeviceFlashlight) )
 		{
 			float factor;
 
@@ -2759,7 +2521,7 @@ void CHL2_Player::SuitPower_Update( void )
 			flPowerLoad -= ( SuitDeviceFlashlight.GetDeviceDrainRate() * (1.0f - factor) );
 		}
 
-		if( !SuitPower_Drain( flPowerLoad * gpGlobals->frametime ) )
+		if( !Stamina_Drain( flPowerLoad * gpGlobals->frametime ) )
 		{
 			// TURN OFF ALL DEVICES!!
 			 //!!temp
@@ -2782,7 +2544,7 @@ void CHL2_Player::SuitPower_Update( void )
 		if ( Flashlight_UseLegacyVersion() )
 		{
 			// turn off flashlight a little bit after it hits below one aux power notch (5%)
-			if( m_HL2Local.m_flSuitPower < 4.8f && FlashlightIsOn() )
+			if( m_HL2Local.m_flStamina < 4.8f && FlashlightIsOn() )
 			{
 #ifndef HL2MP
 				FlashlightTurnOff();
@@ -2796,11 +2558,11 @@ void CHL2_Player::SuitPower_Update( void )
 //-----------------------------------------------------------------------------
 // Charge battery fully, turn off all devices.
 //-----------------------------------------------------------------------------
-void CHL2_Player::SuitPower_Initialize( void )
+void CHL2_Player::Stamina_Initialize( void )
 {
 	m_HL2Local.m_bitsActiveDevices = 0x00000000;
-	m_HL2Local.m_flSuitPower = 100.0;
-	m_flSuitPowerLoad = 0.0;
+	m_HL2Local.m_flStamina = 100.0;
+	m_flStaminaLoad = 0.0;
 }
 
 
@@ -2809,19 +2571,19 @@ void CHL2_Player::SuitPower_Initialize( void )
 // Input:	Amount of charge to remove (expressed as percentage of full charge)
 // Output:	Returns TRUE if successful, FALSE if not enough power available.
 //-----------------------------------------------------------------------------
-bool CHL2_Player::SuitPower_Drain( float flPower )
+bool CHL2_Player::Stamina_Drain( float flPower )
 {
 	// Suitpower cheat on?
 	if ( sv_infinite_aux_power.GetBool() )
 		return true;
 
-	m_HL2Local.m_flSuitPower -= flPower;
+	m_HL2Local.m_flStamina -= flPower;
 
-	if( m_HL2Local.m_flSuitPower < 0.0 )
+	if( m_HL2Local.m_flStamina < 0.0 )
 	{
 		// Power is depleted!
 		// Clamp and fail
-		m_HL2Local.m_flSuitPower = 0.0;
+		m_HL2Local.m_flStamina = 0.0;
 		return false;
 	}
 
@@ -2832,27 +2594,27 @@ bool CHL2_Player::SuitPower_Drain( float flPower )
 // Purpose: Interface to add power to the suit's power supply
 // Input:	Amount of charge to add
 //-----------------------------------------------------------------------------
-void CHL2_Player::SuitPower_Charge( float flPower )
+void CHL2_Player::Stamina_Charge( float flPower )
 {
-	m_HL2Local.m_flSuitPower += flPower;
+	m_HL2Local.m_flStamina += flPower;
 
-	if( m_HL2Local.m_flSuitPower > 100.0 )
+	if( m_HL2Local.m_flStamina > 100.0 )
 	{
 		// Full charge, clamp.
-		m_HL2Local.m_flSuitPower = 100.0;
+		m_HL2Local.m_flStamina = 100.0;
 	}
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CHL2_Player::SuitPower_IsDeviceActive( const CSuitPowerDevice &device )
+bool CHL2_Player::Stamina_IsDeviceActive( const CStaminaDevice &device )
 {
 	return (m_HL2Local.m_bitsActiveDevices & device.GetDeviceID()) != 0;
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CHL2_Player::SuitPower_AddDevice( const CSuitPowerDevice &device )
+bool CHL2_Player::Stamina_AddDevice(const CStaminaDevice &device)
 {
 	// Make sure this device is NOT active!!
 	if( m_HL2Local.m_bitsActiveDevices & device.GetDeviceID() )
@@ -2862,14 +2624,14 @@ bool CHL2_Player::SuitPower_AddDevice( const CSuitPowerDevice &device )
 		return false;
 
 	m_HL2Local.m_bitsActiveDevices |= device.GetDeviceID();
-	m_flSuitPowerLoad += device.GetDeviceDrainRate();
+	m_flStaminaLoad += device.GetDeviceDrainRate();
 	return true;
 }
 
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-bool CHL2_Player::SuitPower_RemoveDevice( const CSuitPowerDevice &device )
+bool CHL2_Player::Stamina_RemoveDevice(const CStaminaDevice &device)
 {
 	// Make sure this device is active!!
 	if( ! (m_HL2Local.m_bitsActiveDevices & device.GetDeviceID()) )
@@ -2882,16 +2644,16 @@ bool CHL2_Player::SuitPower_RemoveDevice( const CSuitPowerDevice &device )
 	// because the battery is drained, no harm done, the battery charge cannot go below 0. 
 	// This code in combination with the delay before the suit can start recharging are a defense
 	// against exploits where the player could rapidly tap sprint and never run out of power.
-	SuitPower_Drain( device.GetDeviceDrainRate() * 0.1f );
+	Stamina_Drain( device.GetDeviceDrainRate() * 0.1f );
 
 	m_HL2Local.m_bitsActiveDevices &= ~device.GetDeviceID();
-	m_flSuitPowerLoad -= device.GetDeviceDrainRate();
+	m_flStaminaLoad -= device.GetDeviceDrainRate();
 
 	if( m_HL2Local.m_bitsActiveDevices == 0x00000000 )
 	{
 		// With this device turned off, we can set this timer which tells us when the
 		// suit power system entered a no-load state.
-		m_flTimeAllSuitDevicesOff = gpGlobals->curtime;
+		m_flTimeAllStaminaDevicesOff = gpGlobals->curtime;
 	}
 
 	return true;
@@ -2899,20 +2661,20 @@ bool CHL2_Player::SuitPower_RemoveDevice( const CSuitPowerDevice &device )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-#define SUITPOWER_BEGIN_RECHARGE_DELAY	0.5f
-bool CHL2_Player::SuitPower_ShouldRecharge( void )
+#define STAMINA_BEGIN_RECHARGE_DELAY	0.5f
+bool CHL2_Player::Stamina_ShouldRecharge( void )
 {
 	// Make sure all devices are off.
 	if( m_HL2Local.m_bitsActiveDevices != 0x00000000 )
 		return false;
 
 	// Is the system fully charged?
-	if( m_HL2Local.m_flSuitPower >= 100.0f )
+	if( m_HL2Local.m_flStamina >= 100.0f )
 		return false; 
 
 	// Has the system been in a no-load state for long enough
 	// to begin recharging?
-	if( gpGlobals->curtime < m_flTimeAllSuitDevicesOff + SUITPOWER_BEGIN_RECHARGE_DELAY )
+	if( gpGlobals->curtime < m_flTimeAllStaminaDevicesOff + STAMINA_BEGIN_RECHARGE_DELAY )
 		return false;
 
 	return true;
@@ -2925,7 +2687,8 @@ ConVar	sk_battery( "sk_battery","0" );
 bool CHL2_Player::ApplyBattery( float powerMultiplier )
 {
 	const float MAX_NORMAL_BATTERY = 100;
-	if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
+	//if ((ArmorValue() < MAX_NORMAL_BATTERY) && IsSuitEquipped())
+	if (ArmorValue() < MAX_NORMAL_BATTERY)
 	{
 		int pct;
 		char szcharge[64];
@@ -2961,14 +2724,14 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-ConVar	sk_suitpowerconsumable("sk_suitpowerconsumable", "33");
+ConVar	sk_staminagiven("sk_staminagiven", "33");
 
-bool CHL2_Player::ApplySuitPower()
+bool CHL2_Player::ApplyStamina()
 {
-	const float MAX_NORMAL_SUITPOWER = 100;
-	if ((m_HL2Local.m_flSuitPower < MAX_NORMAL_SUITPOWER) && IsSuitEquipped())
+	const float MAX_NORMAL_STAMINA = 100;
+	if ((m_HL2Local.m_flStamina < MAX_NORMAL_STAMINA))
 	{
-		SuitPower_SetCharge(m_HL2Local.m_flSuitPower + sk_suitpowerconsumable.GetFloat());
+		Stamina_SetCharge(m_HL2Local.m_flStamina + sk_staminagiven.GetFloat());
 
 		CPASAttenuationFilter filter(this, "ItemBattery.Touch");
 		EmitSound(filter, entindex(), "ItemBattery.Touch");
@@ -3003,7 +2766,7 @@ void CHL2_Player::FlashlightTurnOn( void )
 
 	if ( Flashlight_UseLegacyVersion() )
 	{
-		if( !SuitPower_AddDevice( SuitDeviceFlashlight ) )
+		if( !Stamina_AddDevice( SuitDeviceFlashlight ) )
 			return;
 	}
 #ifdef HL2_DLL
@@ -3015,7 +2778,7 @@ void CHL2_Player::FlashlightTurnOn( void )
 	EmitSound( "HL2Player.FlashLightOn" );
 
 	variant_t flashlighton;
-	flashlighton.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+	flashlighton.SetFloat( m_HL2Local.m_flStamina / 100.0f );
 	FirePlayerProxyOutput( "OnFlashlightOn", flashlighton, this, this );
 }
 
@@ -3026,7 +2789,7 @@ void CHL2_Player::FlashlightTurnOff( void )
 {
 	if ( Flashlight_UseLegacyVersion() )
 	{
-		if( !SuitPower_RemoveDevice( SuitDeviceFlashlight ) )
+		if( !Stamina_RemoveDevice( SuitDeviceFlashlight ) )
 			return;
 	}
 
@@ -3034,7 +2797,7 @@ void CHL2_Player::FlashlightTurnOff( void )
 	EmitSound( "HL2Player.FlashLightOff" );
 
 	variant_t flashlightoff;
-	flashlightoff.SetFloat( m_HL2Local.m_flSuitPower / 100.0f );
+	flashlightoff.SetFloat( m_HL2Local.m_flStamina / 100.0f );
 	FirePlayerProxyOutput( "OnFlashlightOff", flashlightoff, this, this );
 }
 
@@ -3128,11 +2891,11 @@ void CHL2_Player::SetPlayerUnderwater( bool state )
 {
 	if ( state )
 	{
-		SuitPower_AddDevice( SuitDeviceBreather );
+		Stamina_AddDevice( SuitDeviceBreather );
 	}
 	else
 	{
-  		SuitPower_RemoveDevice( SuitDeviceBreather );
+  		Stamina_RemoveDevice( SuitDeviceBreather );
 	}
 
 	BaseClass::SetPlayerUnderwater( state );
