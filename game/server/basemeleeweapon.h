@@ -90,6 +90,9 @@ protected:
 private:
 	CHandle<CSpriteTrail>	m_pGlowTrail;
 
+	float			m_flPlayerStats_BaseDamage;
+	float			m_flPlayerStats_AttackSpeed;
+
 	float			m_SpeedModActiveTime;
 	float			m_nExecutionTime;
 	float			m_nSkillHitRefireTime;

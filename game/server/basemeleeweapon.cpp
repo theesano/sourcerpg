@@ -41,9 +41,8 @@ static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUD
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
 //TODO : Hook attackspeed mod to attack, skills and everything
-extern ConVar sk_plr_attackspeedmod("sk_plr_attackspeedmod", "1");
 extern ConVar pl_isattacking("pl_isattacking", "0");
-
+extern ConVar sk_plr_attackinterval("sk_plr_attackinterval", "0.6");
 //Weapon Effects
 extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 
@@ -85,9 +84,6 @@ extern ConVar sk_plr_skills_3_cooldown_time("sk_plr_skills_3_cooldown_time", "15
 extern ConVar sk_plr_skills_4_cooldown_time("sk_plr_skills_4_cooldown_time", "15");
 extern ConVar sk_plr_skills_5_cooldown_time("sk_plr_skills_5_cooldown_time", "16");
 extern ConVar sk_plr_skills_6_cooldown_time("sk_plr_skills_6_cooldown_time", "30");
-
-extern ConVar sk_plr_skills_cooldown_timereduction("sk_plr_skills_cooldown_timereduction", "1");
-
 
 
 //-----------------------------------------------------------------------------
@@ -223,15 +219,10 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	HandlePlayerMP();
 	HandleRage();
 
-	ConVar* pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
-	m_flAttackInterval = pAttackInterval->GetFloat();
+	m_flAttackInterval = sk_plr_attackinterval.GetFloat();
 
 	ConVar* pAnimTime = cvar->FindVar("animtime");
 	m_flAnimTime = pAnimTime->GetFloat();
-
-	ConVar* pAnimSpeed = cvar->FindVar("animspeed");
-	pAnimSpeed->SetValue(sk_plr_attackspeedmod.GetFloat());
-
 	
 	//The timer that makes combo chain reverts back to 1 when expired.
 	if ((m_flTotalAttackTime < gpGlobals->curtime) && (!m_bWIsAttack1))
@@ -295,10 +286,10 @@ void CBaseMeleeWeapon::HandlePlayerMP(void)
 	}
 }
 
-ConVar sk_plr_utilslot1_option_id("sk_plr_utilslot1_option_id", "0");
-ConVar sk_plr_utilslot2_option_id("sk_plr_utilslot2_option_id", "0");
-ConVar sk_plr_utilslot3_option_id("sk_plr_utilslot3_option_id", "0");
-ConVar sk_plr_utilslot4_option_id("sk_plr_utilslot4_option_id", "0");
+ConVar sk_plr_utilslot1_option_id("sk_plr_utilslot1_option_id", "0",FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot2_option_id("sk_plr_utilslot2_option_id", "0",FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot3_option_id("sk_plr_utilslot3_option_id", "0", FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot4_option_id("sk_plr_utilslot4_option_id", "0", FCVAR_ARCHIVE);
 
 
 void CBaseMeleeWeapon::HandleRage(void)
@@ -478,30 +469,25 @@ bool CBaseMeleeWeapon::ApplyRagePower()
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+
+	m_flPlayerStats_BaseDamage = pPlayer->GetPlayerBaseDamage();
+	m_flPlayerStats_AttackSpeed = pPlayer->GetPlayerAttackSpeed();
+
 	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
 
-	m_flSkillsCDReductionRate = 1/sk_plr_skills_cooldown_timereduction.GetFloat();
+	m_flSkillsCDReductionRate = 1/pPlayer->GetPlayerCooldownReductionRate();
 	
 	/*CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);*/
-	ConVar *pBaseDamage = cvar->FindVar("sk_plr_dmg_melee");
 
 	//Warning("Attack speed %.2f \n", sk_atkspeedmod.GetFloat());
 	if (m_SpeedModActiveTime >= gpGlobals->curtime )
 	{
-		sk_plr_attackspeedmod.SetValue(1.5f);
-		pBaseDamage->SetValue(38.0f);
-		sk_plr_skills_cooldown_timereduction.SetValue(1.5f);
 		SetModel("models/weapons/melee/lilyscythe_u.mdl");
-	
 	}
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime )
 	{
 		//Reason why some stats can't be changed on the character panel
-		sk_plr_attackspeedmod.SetValue(1.0f);
-		pBaseDamage->SetValue(RandomFloat(18.0f,24.0f));
-		//pBaseDamage->SetValue(18.0f);
-		sk_plr_skills_cooldown_timereduction.SetValue(1.0f);
 
 	}
 
@@ -971,13 +957,15 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 {
 	Vector vecShootOrigin, vecShootDir;
 
-	float speedmod = 1/sk_plr_attackspeedmod.GetFloat();
+	float speedmod = 1 / m_flPlayerStats_AttackSpeed;
 	// Try a ray
 	trace_t traceHit;
 	
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+
+
 
 	float AoeDamageRadius = sk_plr_melee_normal_range.GetFloat();
 
@@ -986,7 +974,10 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	Activity nHitActivity = ACT_MELEE_ATTACK1;
 	// Damage info for 
 	CTakeDamageInfo dmginfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	//dmginfo.SetDamagePosition( traceHit.startpos );
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		dmginfo.SetDamage(GetDamageForActivity(nHitActivity)*2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		dmginfo.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
 
 	//Makes weapon produce AoE damage
 	RadiusDamage_EX(dmginfo, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner,true);
@@ -1217,7 +1208,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 //Skill1: Spinning Demon.
 void CBaseMeleeWeapon::Skill_Evade(void)
 {
-	float speedmod = 1 / sk_plr_attackspeedmod.GetFloat();
+	float speedmod = 1 / m_flPlayerStats_AttackSpeed;
 
 	trace_t traceHit;
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
@@ -1430,7 +1421,6 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	Vector vecVelocity = vecAiming * 1000.0f;
 
 	// Fire!
-	
 	m_nExecutionTime = gpGlobals->curtime + 1.0f;
 	AddSkillMovementImpulse(2.0f);
 	CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
@@ -1628,6 +1618,7 @@ float flSkillActiveTime;
 void CBaseMeleeWeapon::Skill_Tornado(void)
 {
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player *>(pOwner);
 	float skillrange = 224.0f;
 
 	WeaponSound(SPECIAL2);
@@ -1645,6 +1636,8 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 	m_nSkCoolDownTime6 = gpGlobals->curtime + (sk_plr_skills_6_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
 	flSkillActiveTime = gpGlobals->curtime + 4.0f;
 	m_SpeedModActiveTime = gpGlobals->curtime + 10.0f;
+	pPlayer->SetPlayerAttackSpeedBonus(0.5f, 10.f);
+	pPlayer->SetPlayerCooldownReductionRateBonus(0.5f, 10.f);
 	m_bIsSkCoolDown6 = true;
 
 }

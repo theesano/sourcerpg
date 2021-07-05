@@ -4889,9 +4889,9 @@ int CNPC_MetroPolice::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	}
 
 	//show damage number
-	char tempstr[512];
-	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
-	EntityText(5, tempstr, 1);
+	//char tempstr[512];
+	//Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
+	//EntityText(5, tempstr, 1);
 
 	return BaseClass::OnTakeDamage_Alive( info ); 
 }

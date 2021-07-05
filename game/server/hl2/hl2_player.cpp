@@ -65,8 +65,9 @@
 
 extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
+
 extern ConVar animtime("animtime", "0.2"); // the period for selecting the next animation in the combo , if runs out the attack animation will revert back to the first animation in the chain.
-extern ConVar animspeed("animspeed", "1.0");
+extern ConVar lilyss_player_attackspeed("lilyss_player_attackspeed", "1.0");
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -82,8 +83,6 @@ extern ConVar animspeed("animspeed", "1.0");
 
 #define TIME_IGNORE_FALL_DAMAGE 10.0
 
-
-
 extern int gEvilImpulse101;
 
 ConVar sv_autojump( "sv_autojump", "0" );
@@ -91,6 +90,7 @@ ConVar sv_autojump( "sv_autojump", "0" );
 ConVar hl2_walkspeed("hl2_walkspeed", "150", FCVAR_REPLICATED);
 ConVar hl2_normspeed("hl2_normspeed", "280", FCVAR_REPLICATED);
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "400" );
+
 ConVar sv_runmode("sv_runmode", "0"); //Determines methods to trigger Sprtinting, 0(default) = double-tapping; 1 = pressing sprint key
 ConVar sk_evadedistance("sk_evadedistance", "512"); // Set the dash distance.
 ConVar sk_evadestyle("sk_evadestyle", "0");
@@ -101,6 +101,9 @@ ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
 ConVar lilyss_player_model("lilyss_player_model", "models/player/lilyproto.mdl");
 
+ConVar lilyss_player_basedamage("lilyss_player_basedamage", "5",FCVAR_REPLICATED);
+
+ConVar lilyss_skills_cooldown_timereduction("lilyss_skills_cooldown_timereduction", "1");
 
 
 #ifdef HL2MP
@@ -343,6 +346,9 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flTimeAllStaminaDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_flBaseDamage,FIELD_FLOAT),
+	DEFINE_FIELD(m_flAttackSpeed,FIELD_FLOAT),
+	DEFINE_FIELD(m_flCooldownReductionRate,FIELD_FLOAT),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -847,6 +853,7 @@ void CHL2_Player::EvadeHandler(void)
 
 float flReturnSpeed;
 float flReturnSpeedAfterEvaded;
+
 //-----------------------------------------------------------------------------
 // Purpose: Allow pre-frame adjustments on the player
 //-----------------------------------------------------------------------------
@@ -862,8 +869,22 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
-	EvadeHandler();
+	//PlayerStats
+	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
+	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
 
+	if (m_flCooldownReductionRate >= gpGlobals->curtime)
+	{
+
+	}
+	else if (m_flCooldownReductionRate <= gpGlobals->curtime)
+	{
+		lilyss_skills_cooldown_timereduction.SetValue(1.0f);
+	}
+
+	HandleAttackSpeedChanges();
+
+	EvadeHandler();
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 
 	//Set thirdperson turning state. 
@@ -912,7 +933,7 @@ void CHL2_Player::PreThink(void)
 	}
 
 	//Debug Armor
-	DevMsg("Current Armor %i \n",ArmorValue() );
+	//DevMsg("Current Armor %i \n",ArmorValue() );
 
 
 #ifdef HL2_EPISODIC
@@ -1472,7 +1493,8 @@ void CHL2_Player::Spawn(void)
 
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 
-	//InitSprinting();
+//Player Stats
+	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
 
 	// Setup our flashlight values
 #ifdef HL2_EPISODIC
@@ -1485,6 +1507,64 @@ void CHL2_Player::Spawn(void)
 
 	// A fix for the bug that doesn't allow player to move when they die and the server reload
 		RemoveFlag(FL_FROZEN_ACT);
+
+}
+//Player Stats Functions
+float CHL2_Player::GetPlayerBaseDamage()
+{
+	return m_flBaseDamage;
+}
+
+float CHL2_Player::GetPlayerAttackSpeed()
+{
+	return m_flAttackSpeed;
+}
+
+float CHL2_Player::GetPlayerCooldownReductionRate()
+{
+	return m_flCooldownReductionRate;
+}
+
+void CHL2_Player::SetPlayerCooldownReductionRateBonus(float flBonus, float flDuration)
+{
+	
+	if (m_flCooldownReductionTimer >= gpGlobals->curtime)
+	{
+		m_flCooldownReductionTimer = gpGlobals->curtime + flDuration;
+	}
+	else
+	{
+		lilyss_skills_cooldown_timereduction.SetValue(lilyss_skills_cooldown_timereduction.GetFloat() + flBonus);
+		m_flCooldownReductionTimer = gpGlobals->curtime + flDuration;
+	}
+}
+
+void CHL2_Player::SetPlayerAttackSpeedBonus(float flBonus, float flDuration)
+{
+	m_flOldAttackSpeed = m_flAttackSpeed;
+	if (m_flAttackSpeedBonusTimer >= gpGlobals->curtime)
+	{
+		m_flAttackSpeedBonusTimer = gpGlobals->curtime + flDuration;
+	}
+	else
+	{
+		lilyss_player_attackspeed.SetValue(lilyss_player_attackspeed.GetFloat() + flBonus);
+		m_flAttackSpeedBonusTimer = gpGlobals->curtime + flDuration;
+	}
+}
+
+void CHL2_Player::HandleAttackSpeedChanges() 
+{
+	m_flAttackSpeed = lilyss_player_attackspeed.GetFloat();
+
+	if (m_flAttackSpeedBonusTimer >= gpGlobals->curtime)
+	{
+
+	}
+	else if (m_flAttackSpeedBonusTimer <= gpGlobals->curtime)
+	{
+		lilyss_player_attackspeed.SetValue(1.0f);
+	}
 
 }
 
@@ -2003,11 +2083,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	float speed;
 	speed = GetAbsVelocity().Length2D();
-	float flPlayRunToIdleAnim = 0.0f;
+	float flPlayRunToIdleAnim = 0.0f; //Not implemented
 
 	ConVar *pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
-	ConVar *pAttackSpeedMod = cvar->FindVar("sk_plr_attackspeedmod");
-	float attackanimspeedmod = 1 / pAttackSpeedMod->GetFloat();
+	float attackanimspeedmod = 1 / m_flAttackSpeed;
 
 	//Select Animation for different attacking stages.
 	
@@ -2343,7 +2422,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
 		// FIXME: this seems a bit wacked
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
 		Weapon_SetActivity(Weapon_TranslateActivity(ACT_MELEE_ATTACK1), 0);
 		return;
 	}
@@ -2351,32 +2430,32 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (idealActivity == ACT_MELEE_ATTACK2)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(1, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(1, m_flAttackSpeed);
 		return;
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK3)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK4)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 
 	if (idealActivity == ACT_MELEE_ATTACK5)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 
@@ -2389,8 +2468,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (idealActivity == ACT_MELEE_SPEVADE)
 	{
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 
@@ -2403,8 +2482,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (idealActivity == ACT_EVADE)
 	{
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
-		SetLayerPlaybackRate(0, animspeed.GetFloat());
-		SetLayerPlaybackRate(2, animspeed.GetFloat());
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 

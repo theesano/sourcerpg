@@ -889,6 +889,12 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		NotifyFriendsOfDamage( info.GetAttacker() );
 	}
 
+	//show damage number
+	char tempstr[512];
+	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
+	EntityText(5, tempstr, 1);
+
+
 	// ---------------------------------------------------------------
 	//  Insert a combat sound so that nearby NPCs know I've been hit
 	// ---------------------------------------------------------------

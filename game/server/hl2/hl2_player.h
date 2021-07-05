@@ -36,6 +36,7 @@ enum HL2PlayerPhysFlag_e
 
 class IPhysicsPlayerController;
 class CLogicPlayerProxy;
+class CPlayerStats;
 
 struct commandgoal_t
 {
@@ -131,7 +132,7 @@ public:
 	// from CBasePlayer
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
-	// Suit Power Interface
+	// Stamina Interface
 	void Stamina_Update( void );
 	bool Stamina_Drain( float flPower ); // consume some stamina.
 	void Stamina_Charge( float flPower ); // add stamina.
@@ -144,6 +145,14 @@ public:
 	float Stamina_GetCurrentPercentage( void ) { return m_HL2Local.m_flStamina; }
 	
 	void SetFlashlightEnabled( bool bState );
+
+	//Player Stats
+	float GetPlayerBaseDamage();
+	float GetPlayerAttackSpeed();
+	void SetPlayerAttackSpeedBonus(float bonus, float duration);
+	void SetPlayerCooldownReductionRateBonus(float bonus, float duration);
+	void HandleAttackSpeedChanges(void);
+	float GetPlayerCooldownReductionRate();
 
 	// Apply a battery
 	bool ApplyBattery( float powerMultiplier = 1.0 );
@@ -306,6 +315,10 @@ public:
 	bool m_bIsAttack3;
 	bool m_bIsAttack4;
 	bool m_bIsAttack5;
+
+	float m_flAttackSpeedBonusTimer;
+	float m_flCooldownReductionTimer;
+	float m_flOldAttackSpeed;
 	
 
 protected:
@@ -335,14 +348,20 @@ private:
 	CNetworkVar ( float, m_fSprintReboundTime);	// 
 
 	CNetworkVar( bool, m_fIsSprinting );
+	CNetworkVar(float, m_flBaseDamage);
+	CNetworkVar(float, m_flAttackSpeed);
+	CNetworkVar(float, m_flCooldownReductionRate);
 	CNetworkVarForDerived( bool, m_fIsWalking );
 
 protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
 
 private:
+	
 	float m_flAtkAnimationChangingTime;
 	float m_flTimeBetweenAttack;
+
+
 	CAI_Squad *			m_pPlayerAISquad;
 	CSimpleSimTimer		m_CommanderUpdateTimer;
 	float				m_RealTimeLastSquadCommand;

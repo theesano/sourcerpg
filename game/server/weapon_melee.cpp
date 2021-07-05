@@ -22,8 +22,7 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
+ConVar    sk_plr_dmg_melee("sk_plr_dmg_melee", "0");
 
 //-----------------------------------------------------------------------------
 // CWeaponMelee
@@ -77,8 +76,6 @@ float CWeaponMelee::GetDamageForActivity(Activity hitActivity)
 {
 	if ((GetOwner() != NULL) && (GetOwner()->IsPlayer()))
 		return sk_plr_dmg_melee.GetFloat();
-
-	return sk_npc_dmg_melee.GetFloat();
 }
 
 
@@ -101,121 +98,3 @@ void CWeaponMelee::AddViewKick(void)
 	pPlayer->ViewPunch(punchAng);
 }
 
-
-//-----------------------------------------------------------------------------
-// Attempt to lead the target (needed because citizens can't hit manhacks with the crowbar!)
-//-----------------------------------------------------------------------------
-ConVar sk_melee_lead_time("sk_melee_lead_time", "0.9");
-
-int CWeaponMelee::WeaponMeleeAttack1Condition(float flDot, float flDist)
-{
-	// Attempt to lead the target (needed because citizens can't hit manhacks with the crowbar!)
-	CAI_BaseNPC *pNPC = GetOwner()->MyNPCPointer();
-	CBaseEntity *pEnemy = pNPC->GetEnemy();
-	if (!pEnemy)
-		return COND_NONE;
-
-	Vector vecVelocity;
-	vecVelocity = pEnemy->GetSmoothedVelocity();
-
-	// Project where the enemy will be in a little while
-	float dt = sk_melee_lead_time.GetFloat();
-	dt += random->RandomFloat(-0.3f, 0.2f);
-	if (dt < 0.0f)
-		dt = 0.0f;
-
-	Vector vecExtrapolatedPos;
-	VectorMA(pEnemy->WorldSpaceCenter(), dt, vecVelocity, vecExtrapolatedPos);
-
-	Vector vecDelta;
-	VectorSubtract(vecExtrapolatedPos, pNPC->WorldSpaceCenter(), vecDelta);
-
-	if (fabs(vecDelta.z) > 70)
-	{
-		return COND_TOO_FAR_TO_ATTACK;
-	}
-
-	Vector vecForward = pNPC->BodyDirection2D();
-	vecDelta.z = 0.0f;
-	float flExtrapolatedDist = Vector2DNormalize(vecDelta.AsVector2D());
-	if ((flDist > 64) && (flExtrapolatedDist > 64))
-	{
-		return COND_TOO_FAR_TO_ATTACK;
-	}
-
-	float flExtrapolatedDot = DotProduct2D(vecDelta.AsVector2D(), vecForward.AsVector2D());
-	if ((flDot < 0.7) && (flExtrapolatedDot < 0.7))
-	{
-		return COND_NOT_FACING_ATTACK;
-	}
-
-	return COND_CAN_MELEE_ATTACK1;
-}
-
-
-//-----------------------------------------------------------------------------
-// Animation event handlers
-//-----------------------------------------------------------------------------
-void CWeaponMelee::HandleAnimEventMeleeHit(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	// Trace up or down based on where the enemy is...
-	// But only if we're basically facing that direction
-	Vector vecDirection;
-	AngleVectors(GetAbsAngles(), &vecDirection);
-
-	CBaseEntity *pEnemy = pOperator->MyNPCPointer() ? pOperator->MyNPCPointer()->GetEnemy() : NULL;
-	if (pEnemy)
-	{
-		Vector vecDelta;
-		VectorSubtract(pEnemy->WorldSpaceCenter(), pOperator->Weapon_ShootPosition(), vecDelta);
-		VectorNormalize(vecDelta);
-
-		Vector2D vecDelta2D = vecDelta.AsVector2D();
-		Vector2DNormalize(vecDelta2D);
-		if (DotProduct2D(vecDelta2D, vecDirection.AsVector2D()) > 0.8f)
-		{
-			vecDirection = vecDelta;
-		}
-	}
-
-	Vector vecEnd;
-	VectorMA(pOperator->Weapon_ShootPosition(), 50, vecDirection, vecEnd);
-	CBaseEntity *pHurt = pOperator->CheckTraceHullAttack(pOperator->Weapon_ShootPosition(), vecEnd,
-		Vector(-16, -16, -16), Vector(36, 36, 36), sk_npc_dmg_melee.GetFloat(), DMG_SLASH, 1.75,true);
-
-	// did I hit someone?
-	if (pHurt)
-	{
-		// play sound
-		WeaponSound(MELEE_HIT);
-
-		// Fake a trace impact, so the effects work out like a player's crowbaw
-		trace_t traceHit;
-		UTIL_TraceLine(pOperator->Weapon_ShootPosition(), pHurt->GetAbsOrigin(), MASK_SHOT_HULL, pOperator, COLLISION_GROUP_NONE, &traceHit);
-		ImpactEffect(traceHit);
-	}
-	else
-	{
-		WeaponSound(MELEE_MISS);
-	}
-
-	//Give the NPC a little knockback
-	
-}
-
-
-//-----------------------------------------------------------------------------
-// Animation event
-//-----------------------------------------------------------------------------
-void CWeaponMelee::Operator_HandleAnimEvent(animevent_t *pEvent, CBaseCombatCharacter *pOperator)
-{
-	switch (pEvent->event)
-	{
-	case EVENT_WEAPON_MELEE_HIT:
-		HandleAnimEventMeleeHit(pEvent, pOperator);
-		break;
-	default:
-		BaseClass::Operator_HandleAnimEvent(pEvent, pOperator);
-		break;
-	}
-}

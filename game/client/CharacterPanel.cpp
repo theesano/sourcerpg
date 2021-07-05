@@ -33,6 +33,8 @@ private:
 	//Other used VGUI control Elements:
 	Label *m_StatsInfo;
 	Label *m_StatsBaseDamage;
+	Label *m_StatsCooldownReduction;
+	Label *m_StatsMoveSpeed;
 	Label *m_pUtilSlotLabel;
 	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
 	Button *m_pCloseButton;
@@ -60,6 +62,9 @@ private:
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Trebuchet18");
 	float m_flGetPlayerAttackSpeedMod;
 	float m_flPlayerBaseDamage;
+	float m_flWeaponDamage;
+	float m_flPlayerCooldownReductionRate;
+	float m_flPlayerMovementSpeed;
 };
 
 //Constructor: Initialize the Panel
@@ -99,15 +104,26 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	
 	//imagePanel->SetImage(scheme()->GetImage("panel", false));
 
-	m_StatsInfo = new Label(this, "AttackSpeedDisp", "aspd");
-	m_StatsInfo->SetPos(64,76);
-	m_StatsInfo->SetFont(m_hTextFont);
-	m_StatsInfo->SetWide(128);
 
 	m_StatsBaseDamage = new Label(this, "BaseDamage", "bdmg");
 	m_StatsBaseDamage->SetPos(64,64);
 	m_StatsBaseDamage->SetFont(m_hTextFont);
 	m_StatsBaseDamage->SetWide(128);
+
+	m_StatsInfo = new Label(this, "AttackSpeedDisp", "aspd");
+	m_StatsInfo->SetPos(64, 76);
+	m_StatsInfo->SetFont(m_hTextFont);
+	m_StatsInfo->SetWide(128);
+
+	m_StatsCooldownReduction = new Label(this, "CooldownReductionDisp", "aspd");
+	m_StatsCooldownReduction->SetPos(64, 88);
+	m_StatsCooldownReduction->SetFont(m_hTextFont);
+	m_StatsCooldownReduction->SetWide(169);
+
+	m_StatsMoveSpeed = new Label(this, "MovementSpeedDisp", "aspd");
+	m_StatsMoveSpeed->SetPos(64, 100);
+	m_StatsMoveSpeed->SetFont(m_hTextFont);
+	m_StatsMoveSpeed->SetWide(144);
 
 	m_pUtilSlotLabel = new Label(this, "UtilSlotGeneral", "uslot");
 	m_pUtilSlotLabel->SetPos(64, 180);
@@ -115,22 +131,22 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	m_pUtilSlotLabel->SetWide(96);
 
 	m_pAspdUpButton = new Button(this, "ButtonIncreaseASPD", "", this);
-	m_pAspdUpButton->SetPos(175,75);
+	m_pAspdUpButton->SetPos(225,75);
 	m_pAspdUpButton->SetText("Increase");
 
 	m_pAspdDownButton = new Button(this, "ButtonDecreaseASPD", "", this);
-	m_pAspdDownButton->SetPos(175,100);
+	m_pAspdDownButton->SetPos(225, 100);
 	m_pAspdDownButton->SetText("Decrease");
 
 	m_pNormalModeButton = new Button(this, "ButtonNormalMode", "", this);
-	m_pNormalModeButton->SetPos(175, 130);
+	m_pNormalModeButton->SetPos(225, 130);
 	m_pNormalModeButton->SetText("Normal Difficulty");
 	m_pNormalModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
 	m_pNormalModeButton->SetReleasedSound("ui/buttonclick.wav");
 	m_pNormalModeButton->SetWide(112);
 
 	m_pHardModeButton = new Button(this, "ButtonHardMode", "", this);
-	m_pHardModeButton->SetPos(175, 155);
+	m_pHardModeButton->SetPos(225, 155);
 	m_pHardModeButton->SetText("Very Hard Difficulty");
 	m_pHardModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
 	m_pHardModeButton->SetReleasedSound("ui/buttonclick.wav");
@@ -231,20 +247,25 @@ ConVar cl_showcharacterpanel("cl_showcharacterpanel", "0", FCVAR_CLIENTDLL, "Set
 
 void CCharacterPanel::OnTick()
 {
-	ConVar *pGetPlayerAttackSpeedMod = cvar->FindVar("sk_plr_attackspeedmod");
+	ConVar *pGetPlayerAttackSpeedMod = cvar->FindVar("lilyss_player_attackspeed");
 	m_flGetPlayerAttackSpeedMod = pGetPlayerAttackSpeedMod->GetFloat();
+
+	ConVar *pGetPlayerCooldownRate = cvar->FindVar("lilyss_skills_cooldown_timereduction");
+	m_flPlayerCooldownReductionRate = pGetPlayerCooldownRate->GetFloat();
+
+	ConVar *pGetPlayerMovementSpeed = cvar->FindVar("hl2_normspeed");
+	m_flPlayerMovementSpeed = pGetPlayerMovementSpeed->GetFloat();
+
 
 	if (m_pAspdUpButton->IsDepressed())
 	{
-		pGetPlayerAttackSpeedMod->SetValue(pGetPlayerAttackSpeedMod->GetFloat() + 0.1f);
+		pGetPlayerAttackSpeedMod->SetValue(m_flGetPlayerAttackSpeedMod + 0.1f);
 	}
 
 	if (m_pAspdDownButton->IsDepressed())
 	{
-		pGetPlayerAttackSpeedMod->SetValue(pGetPlayerAttackSpeedMod->GetFloat() - 0.1f);
+		pGetPlayerAttackSpeedMod->SetValue(m_flGetPlayerAttackSpeedMod - 0.1f);
 	}
-
-	
 
 	BaseClass::OnTick();
 	SetVisible(cl_showcharacterpanel.GetBool()); 
@@ -268,9 +289,13 @@ void CCharacterPanel::OnThink()
 		pGetMetropoliceStats->SetValue("1");
 		pGetNPCHpKnockback->SetValue("50");
 	}
-
-	ConVar *pGetPlayerBaseDamage = cvar->FindVar("sk_plr_dmg_melee");
+	//Change to adjust player damage
+	ConVar *pGetPlayerBaseDamage = cvar->FindVar("lilyss_player_basedamage");
 	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();
+
+	ConVar *pGetWeaponDamage = cvar->FindVar("sk_plr_dmg_melee");
+	m_flWeaponDamage = pGetWeaponDamage->GetFloat();
+
 	
 }
 
@@ -383,8 +408,18 @@ void CCharacterPanel::Paint()
 	m_StatsInfo->SetText(aspd);
 
 	wchar_t bdmg[64];
-	V_swprintf_safe(bdmg, L"Base Damage: %.0f", m_flPlayerBaseDamage);
+	V_swprintf_safe(bdmg, L"Damage: %.0f + %.0f", m_flPlayerBaseDamage,m_flWeaponDamage);
 	m_StatsBaseDamage->SetText(bdmg);
+
+
+	wchar_t cdr[64];
+	V_swprintf_safe(cdr, L"Cooldown Reduction: %.0f", m_flPlayerCooldownReductionRate*100);
+	m_StatsCooldownReduction->SetText(cdr);
+
+	wchar_t mvmtspd[64];
+	V_swprintf_safe(mvmtspd, L"Movement Speed: %.0f", (m_flPlayerMovementSpeed/280)*100);
+	m_StatsMoveSpeed->SetText(mvmtspd);
+
 
 	m_pUtilSlotLabel->SetText("Utility Slot");
 
