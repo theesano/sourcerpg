@@ -1,6 +1,6 @@
 #include "cbase.h"
 #include "items.h"
-#include "basemeleeweapon.h"
+#include "hl2_player.h"
 
 #include "tier0/memdbgon.h"
 
@@ -118,8 +118,8 @@ void CRagePickup::Think()
 bool CRagePickup::MyTouch(CBasePlayer *pPlayer)
 {		
 	
-	CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(pPlayer->GetActiveWeapon());
-		return (pWeapon && pWeapon->ApplyRagePower());
+	CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>(pPlayer);
+	return (pHL2Player && pHL2Player->ApplyRagePower());
 
 }
 

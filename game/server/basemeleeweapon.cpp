@@ -50,25 +50,9 @@ extern ConVar sk_npcknockbackathealth("sk_npcknockbackathealth", "100");
 extern ConVar sk_plr_melee_dmg_critical("sk_plr_melee_dmg_critical", "0");
 extern ConVar sk_plr_melee_dmg_critical_chance("sk_plr_melee_dmg_critical", "0");
 
-extern ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
-extern ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
-extern ConVar sk_plr_mp_restore("sk_plr_mp_restore", "3");
-
 extern ConVar sk_plr_melee_mp_bonus("sk_plr_melee_mp_bonus", "4");
 extern ConVar sk_plr_melee_normal_range("sk_plr_melee_normal_range", "128");
 
-extern ConVar sk_plr_rage_current("sk_plr_rage_current", "0");
-extern ConVar sk_plr_rage_max("sk_plr_rage_max", "100");
-
-extern ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "30");
-extern ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "30");
-extern ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "30");
-extern ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "30");
-
-extern ConVar sk_plr_rage_armor_given("sk_plr_rage_heal_given", "15");
-extern ConVar sk_plr_rage_mp_given("sk_plr_rage_mp_given", "15");
-extern ConVar sk_plr_rage_speed_given("sk_plr_rage_speed_given", "350");
-extern ConVar sk_plr_rage_stamina_given("sk_plr_rage_stamina_given", "33");
 
 //Current cooldown time (Shared Variables with server)
 extern ConVar sk_plr_skills_2_cd("sk_plr_skills_2_cd", "0");
@@ -104,14 +88,6 @@ void CBaseMeleeWeapon::Spawn(void)
 	m_fMaxRange1 = 64;
 	m_fMaxRange2 = 64;
 
-
-	m_iPlayerMP = 50;
-	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
-	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
-
-	m_flRageCurrent = 0;
-	m_flRageMax = sk_plr_rage_max.GetFloat();
-
 	m_bIsSkCoolDown = false;
 	m_nSkCoolDownTime = 0.0f;
 	m_bIsSkCoolDown2 = false;
@@ -137,7 +113,6 @@ void CBaseMeleeWeapon::Spawn(void)
 	m_flSkillAttributeRange = 0.0f;
 	m_flTotalAttackTime = 0.0f;
 	m_flInAirTime = 0.0f;
-	m_flMovementSpeedtimer = 0.0f;
 
 
 	BaseClass::Spawn();
@@ -216,8 +191,6 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 
 	SkillsHandler();
-	HandlePlayerMP();
-	HandleRage();
 
 	m_flAttackInterval = sk_plr_attackinterval.GetFloat();
 
@@ -258,213 +231,6 @@ void CBaseMeleeWeapon::ItemPostFrame(void)
 
 }
 
-void CBaseMeleeWeapon::HandlePlayerMP(void)
-{
-	if (m_iPlayerMP <= 0)
-	{
-		// clamp to 0 
-		// +10 MP unit per second
-		m_iPlayerMP = 0;
-		m_iPlayerMP += 1;
-
-	}
-	else if (m_iPlayerMP < m_iPlayerMPMax)
-	{
-		// + 10 MP unit per second
-		// if ( mp under max limit  , then for each < unit of time>  , restore a certain amount of mp.)
-
-		if (gpGlobals->curtime >= m_flPlayerMPRestoreInterval)
-		{
-			m_iPlayerMP += sk_plr_mp_restore.GetInt();
-			m_flPlayerMPRestoreInterval = gpGlobals->curtime + 1;
-		}
-
-	}
-	else if (m_iPlayerMP > m_iPlayerMPMax)
-	{
-		m_iPlayerMP = m_iPlayerMPMax;
-	}
-}
-
-ConVar sk_plr_utilslot1_option_id("sk_plr_utilslot1_option_id", "0",FCVAR_ARCHIVE);
-ConVar sk_plr_utilslot2_option_id("sk_plr_utilslot2_option_id", "0",FCVAR_ARCHIVE);
-ConVar sk_plr_utilslot3_option_id("sk_plr_utilslot3_option_id", "0", FCVAR_ARCHIVE);
-ConVar sk_plr_utilslot4_option_id("sk_plr_utilslot4_option_id", "0", FCVAR_ARCHIVE);
-
-
-void CBaseMeleeWeapon::HandleRage(void)
-{
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-
-	clamp(m_flRageCurrent, 0, m_flRageMax);
-
-	//Msg("Rage Power: %.2f \n", m_flRageCurrent);
-	
-
-	if (m_flMovementSpeedtimer > gpGlobals->curtime)
-	{
-		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
-		pMovementSpeed->SetValue(sk_plr_rage_speed_given.GetFloat());
-		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
-		{
-			pOwner->SetMaxSpeed(sk_plr_rage_speed_given.GetFloat());
-		}
-	}
-	else
-	{
-		ConVar *pMovementSpeed = cvar->FindVar("hl2_normspeed");
-		pMovementSpeed->SetValue(280.0f);
-		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
-		{
-			pOwner->SetMaxSpeed(280.f);
-		}
-	
-	}
-	
-
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT1)
-	{
-		UtilSlotExecuteOptionsID(sk_plr_utilslot1_option_id.GetInt());
-	}
-
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT2)
-	{
-		UtilSlotExecuteOptionsID(sk_plr_utilslot2_option_id.GetInt());
-	}
-
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT3)
-	{
-		UtilSlotExecuteOptionsID(sk_plr_utilslot3_option_id.GetInt());
-	}
-
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT4)
-	{
-		UtilSlotExecuteOptionsID(sk_plr_utilslot4_option_id.GetInt());
-	}
-
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
-	{
-		if (m_flRageCurrent >= 100)
-		{
-			Msg("RAGE ENABLED \n");
-			m_flRageCurrent -= 100;
-		}
-	}
-	//press Q to transfer Rage points to HP
-	// How many Rage should be used
-	//press E to transfer Rage points to MP
-	//press F1 to transfer Rage points to Stamina
-	//press F2 to consumer Rage points to run faster
-	//press C to Rage
-}
-
-void CBaseMeleeWeapon::UtilSlotExecuteOptionsID(int optionsID)
-{
-	if (optionsID == 0)
-	{
-		Msg("Not Assigned \n");
-	}
-	else if (optionsID == 1)
-	{
-		Rage_GiveArmor();
-		Msg("Giving Health \n");
-
-	}
-	else if (optionsID == 2)
-	{
-		Rage_GiveMP();
-		Msg("Giving MP \n");
-	}
-	else if (optionsID == 3)
-	{
-		Rage_GiveStamina();
-		Msg("Giving Stamina \n");
-	}
-	else if (optionsID == 4)
-	{
-		Rage_GiveMovementSpeed();
-		Msg("Increasing Movement Speed for 10s \n");
-	}
-	else
-	{
-		Msg("Not Assigned \n");
-	}
-}
-
-
-void CBaseMeleeWeapon::Rage_GiveArmor()
-{
-	if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
-	{		
-		UTIL_GetLocalPlayer()->SetArmorValue(UTIL_GetLocalPlayer()->ArmorValue()+sk_plr_rage_armor_given.GetFloat());
-		m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
-		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
-	}
-}
-
-void CBaseMeleeWeapon::Rage_GiveMP()
-{
-	if (m_flRageCurrent >= sk_plr_rage_2_consumption.GetFloat())
-	{
-		m_iPlayerMP += sk_plr_rage_mp_given.GetFloat();
-		m_flRageCurrent -= sk_plr_rage_2_consumption.GetFloat();
-		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
-	}
-
-}
-
-void CBaseMeleeWeapon::Rage_GiveStamina()
-{
-	if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
-	{
-		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
-		pPlayer->Stamina_Charge(sk_plr_rage_stamina_given.GetFloat());
-		m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
-		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
-	}
-
-
-}
-
-void CBaseMeleeWeapon::Rage_GiveMovementSpeed()
-{
-	if (m_flMovementSpeedtimer > gpGlobals->curtime)
-	{
-
-	}
-	else
-	{
-		if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
-		{
-			m_flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
-			m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
-			DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
-		}
-	}
-}
-
-extern ConVar sk_rage_item_pickup("sk_rage_item_pickup", "10");
-
-bool CBaseMeleeWeapon::ApplyRagePower()
-{
-
-	if (m_flRageCurrent < m_flRageMax)
-	{
-		m_flRageCurrent += sk_rage_item_pickup.GetFloat();
-	}
-		CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
-		PlayerFilter.MakeReliable();
-
-		UserMessageBegin(PlayerFilter, "ItemPickup");
-		WRITE_STRING(GetClassname());
-		MessageEnd();
-		EmitSound(PlayerFilter, UTIL_GetLocalPlayer()->entindex(), "ItemRage.Pickup"); // this should be done by the HUD really
-
-		return true;
-
-//	return false;
-}
-
 //m_nExecutionTime handles freezing the player for a certain amount of time
 void CBaseMeleeWeapon::SkillsHandler(void)
 {
@@ -481,15 +247,14 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	/*CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);*/
 
 	//Warning("Attack speed %.2f \n", sk_atkspeedmod.GetFloat());
-	if (m_SpeedModActiveTime >= gpGlobals->curtime )
-	{
-		SetModel("models/weapons/melee/lilyscythe_u.mdl");
-	}
-	else if (m_SpeedModActiveTime <= gpGlobals->curtime )
-	{
-		//Reason why some stats can't be changed on the character panel
+	//if (m_SpeedModActiveTime >= gpGlobals->curtime )
+	//{
+	//}
+	//else if (m_SpeedModActiveTime <= gpGlobals->curtime )
+	//{
+	//	//Reason why some stats can't be changed on the character panel
 
-	}
+	//}
 
 	//Freeze NPC Time 
 	if (m_flNPCFreezeTime > gpGlobals->curtime)
@@ -520,7 +285,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Run the Evil Slash skill code
 	if ((pOwner->m_afButtonPressed & IN_SLOT1) && !m_bIsSkCoolDown2)
 	{
-		if (m_iPlayerMP > 30)
+		if (pPlayer->GetPlayerMP() > 30)
 		{
 			if (!m_bIsSkCoolDown2)
 			{
@@ -545,7 +310,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	// Skill 3 loop
 	if ((pOwner->m_afButtonPressed & IN_SLOT2) && !m_bIsSkCoolDown3)
 	{
-		if (m_iPlayerMP > 25)
+		if (pPlayer->GetPlayerMP() > 25)
 		{
 			if (!m_bIsSkCoolDown3)
 			{
@@ -565,7 +330,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	//Skill 4 loop
 	if ((pOwner->m_afButtonPressed & IN_SLOT3) && !m_bIsSkCoolDown4)
 	{
-		if (m_iPlayerMP > 50)
+		if (pPlayer->GetPlayerMP() > 50)
 		{
 			if (!m_bIsSkCoolDown4)
 			{ 
@@ -584,7 +349,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		//Skill 5 loop
 	if (pOwner->m_afButtonPressed & IN_SLOT4 && !m_bIsSkCoolDown5)
 	{
-		if (m_iPlayerMP > 30)
+		if (pPlayer->GetPlayerMP() > 30)
 		{
 			if (!m_bIsSkCoolDown5)
 			{
@@ -606,7 +371,7 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 		//Skill 6 loop
 	if (pOwner->m_afButtonPressed & IN_SLOT5 && !m_bIsSkCoolDown6)
 	{
-		if (m_iPlayerMP > 50)
+		if (pPlayer->GetPlayerMP() > 50)
 		{
 			if (!m_bIsSkCoolDown6)
 			{
@@ -767,8 +532,6 @@ void CBaseMeleeWeapon::SkillStatNotification(void)
 	int skill6cdtimer = m_nSkCoolDownTime6 - gpGlobals->curtime;
 	sk_plr_skills_6_cd.SetValue(skill6cdtimer);
 
-	sk_plr_current_mp.SetValue(m_iPlayerMP);
-	sk_plr_rage_current.SetValue(m_flRageCurrent);
 
 	//engine->Con_NPrintf(9, "Current Attack in the chain %i %i %i %i %i ", m_bWIsAttack1, m_bWIsAttack2, m_bWIsAttack3, m_bWIsAttack4, m_bWIsAttack5);
 	
@@ -964,8 +727,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
-
-
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
 
 	float AoeDamageRadius = sk_plr_melee_normal_range.GetFloat();
 
@@ -1028,9 +790,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AddKnockbackXY(2.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
 			//Give the player MP for each enemy hit
-			if (m_bIsEnemyInAtkRange)
-			m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
-
+			if (m_bIsEnemyInAtkRange)			
+			pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() + sk_plr_melee_mp_bonus.GetInt());
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod );
 			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* speedmod); 	//Hard coded value, should change to SequenceDuration()
@@ -1054,7 +815,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AddKnockbackXY(1, 5); //for npc hitting sound
 			//Give the player MP for each enemy hit
 			if (m_bIsEnemyInAtkRange)
-				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+				pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() + sk_plr_melee_mp_bonus.GetInt());
 
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod);
@@ -1079,7 +840,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AddKnockbackXY(1, 5); //for npc hitting sound
 			//Give the player MP for each enemy hit
 			if (m_bIsEnemyInAtkRange)
-				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt();
+				pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() + sk_plr_melee_mp_bonus.GetInt());
 
 
 			m_nExecutionTime = gpGlobals->curtime + (0.6666f * speedmod);
@@ -1102,7 +863,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 			//Give the player MP for each enemy hit
 			if (m_bIsEnemyInAtkRange)
-				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt()+2;
+				pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() + sk_plr_melee_mp_bonus.GetInt()+ 2);
 
 
 			m_nExecutionTime = gpGlobals->curtime + (1.0f * speedmod);
@@ -1124,7 +885,7 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			AddKnockbackXY(3.0f, 1);
 			AddKnockbackXY(1, 5); //for npc hitting sound
 			if (m_bIsEnemyInAtkRange)
-				m_iPlayerMP += sk_plr_melee_mp_bonus.GetInt() + 4;
+				pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() + sk_plr_melee_mp_bonus.GetInt()+4);
 
 
 			m_nExecutionTime = gpGlobals->curtime + (1.0f * speedmod);
@@ -1223,10 +984,17 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	//Use Base Damage
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward); //apply force to physics props 
-	triggerInfo.ScaleDamage(2.0f);
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	
+	info.SetDamagePosition(traceHit.startpos);
+	info.SetDamageForce(forward); //apply force to physics props 
+	info.ScaleDamage(2.0f);
+
+
 
 	float AoeDamageRadius = 192.0f;
 	//Only run when the cooldown time is 0
@@ -1253,7 +1021,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 	UTIL_ScreenShake(GetAbsOrigin(), 2.0f, 100.0, 0.7, 256.0f, SHAKE_START);
 
-	RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner);
+	RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner);
 		
 	EmitSound("Weapon_Melee.SPEVADE");
 	pOwner->SetAnimation(PLAYER_EVADE); 
@@ -1272,10 +1040,18 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+
+
 	float AoeDamageRadius = 264.0f;
 	Activity nHitActivity = ACT_VM_IDLE;
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+
 				//Initialize the variable for moving the player on each attack
 	AddSkillMovementImpulse(1.0f);
 	GetPlayerAnglesOnce();
@@ -1284,12 +1060,12 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	m_nSkillHitRefireTime = gpGlobals->curtime + 0.3f; //delta between refire
 				if (gpGlobals->curtime - m_nExecutionTime < 0)
 				{
-					RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
+					RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
 					WeaponSound(SPECIAL3);
 					pOwner->SetAnimation(PLAYER_SKILL_USE);
 					DispatchParticleEffect("aoehint", GetAbsOrigin(), vec3_angle);
-					
-					m_iPlayerMP -= 30;
+									
+					pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 30);
 				}
 
 				m_nSkCoolDownTime2 = gpGlobals->curtime + (sk_plr_skills_2_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
@@ -1314,10 +1090,15 @@ void CBaseMeleeWeapon::Skill_RadialSlash_LogicEx(void)
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	//Setting up the damage info for the skill
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward * 10);
-	triggerInfo.ScaleDamage(0.8f);
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	
+	info.SetDamagePosition(traceHit.startpos);
+	info.SetDamageForce(forward * 10);
+	info.ScaleDamage(0.8f);
 
 	//TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
 
@@ -1336,7 +1117,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash_LogicEx(void)
 				if (gpGlobals->curtime >= m_nSkillHitRefireTime)
 				{
 					//DevMsg("Evil Slash Hit! \n");
-					RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
+					RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
 					AddKnockbackXY(1, 5); //for npc hitting sound
 					UTIL_ScreenShake(GetAbsOrigin(), 1.5f, 100.0, 0.5, 256.0f, SHAKE_START);
 
@@ -1353,7 +1134,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash_LogicEx(void)
 
 				if (gpGlobals->curtime >= m_nSkillHitRefireTime)
 				{
-					RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
+					RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
 					AddKnockbackXY(1, 5); //for npc hitting sound
 
 					m_nSkillHitRefireTime = gpGlobals->curtime + 0.5f; //delta between refire
@@ -1410,6 +1191,9 @@ void CBaseMeleeWeapon::Skill_Grenade(void)
 void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 {
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
 
 	// Fire the bullets
 	Vector vecSrc = pOwner->Weapon_ShootPosition();
@@ -1426,7 +1210,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
 	UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
 
-	m_iPlayerMP -= 25;
+	pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 25);
 	WeaponSound(SINGLE);
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
 
@@ -1443,15 +1227,21 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
 
 	Vector forward;
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward);
-	triggerInfo.ScaleDamage(2.0f);
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+
+	info.SetDamagePosition(traceHit.startpos);
+	info.SetDamageForce(forward);
+	info.ScaleDamage(2.0f);
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
@@ -1466,7 +1256,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 	m_nExecutionTime = gpGlobals->curtime + 1.5f;
 		
 	AddKnockbackXY(10.0f, 1);
-	RadiusDamage(triggerInfo, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
+	RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), m_nDamageRadius, CLASS_NONE, pOwner);
 	//WeaponSound(SINGLE);
 	EmitSound("Weapon_Melee.SPECIAL5");
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
@@ -1486,7 +1276,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 				}
 			}
 		}
-		m_iPlayerMP -= 50;
+		pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 50);
 
 		m_nSkCoolDownTime4 = gpGlobals->curtime + (sk_plr_skills_4_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
 		m_bIsSkCoolDown4 = true;
@@ -1502,9 +1292,15 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
 		return;
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
 
 		Vector fwd;
 		AngleVectors(pOwner->GetAbsAngles(), &fwd);
@@ -1519,9 +1315,9 @@ void CBaseMeleeWeapon::Skill_Trapping()
 			//WeaponSound(SPECIAL4);
 			EmitSound("Weapon_Melee.SPECIAL4");
 			pOwner->SetAnimation(PLAYER_SKILL_USE);
-			RadiusDamage(triggerInfo, effectpos, 192.0f, CLASS_NONE, pOwner);
+			RadiusDamage(info, effectpos, 192.0f, CLASS_NONE, pOwner);
 			m_nExecutionTime = gpGlobals->curtime + 1.0f;
-			m_iPlayerMP -= 30;
+			pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 30);
 			DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 
 			//Init Cooldown
@@ -1553,12 +1349,6 @@ void CBaseMeleeWeapon::Skill_Trapping_LogicEx(void)
 	Vector forward;
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
 	Activity nHitActivity = ACT_VM_HITCENTER;
-
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward);
-	triggerInfo.ScaleDamage(2.0f);
-
 
 		if (flSkillTrapping_ActiveTime > gpGlobals->curtime)
 		{
@@ -1618,6 +1408,8 @@ float flSkillActiveTime;
 void CBaseMeleeWeapon::Skill_Tornado(void)
 {
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
 	CHL2_Player* pPlayer = dynamic_cast<CHL2_Player *>(pOwner);
 	float skillrange = 224.0f;
 
@@ -1625,7 +1417,7 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
 	m_flSkillAttributeRange = skillrange;
 	m_nExecutionTime = gpGlobals->curtime + 1.0f;
-	m_iPlayerMP -= 50;
+	pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 50);
 
 	skpos = pOwner->GetAbsOrigin();
 
@@ -1657,10 +1449,15 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 	forward = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT, GetRange());
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
-	triggerInfo.SetDamagePosition(traceHit.startpos);
-	triggerInfo.SetDamageForce(forward);
-	triggerInfo.ScaleDamage(1.5f);
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	if (m_SpeedModActiveTime >= gpGlobals->curtime)
+		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
+	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
+		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+
+	info.SetDamagePosition(traceHit.startpos);
+	info.SetDamageForce(forward);
+	info.ScaleDamage(1.5f);
 	
 
 	if (m_bIsSkCoolDown6 && gpGlobals->curtime < m_nSkCoolDownTime6)
@@ -1674,7 +1471,7 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 				if (gpGlobals->curtime >= flTorSkillRefireTime)
 				{
 					AddKnockbackXY(1, 4);
-					RadiusDamage(triggerInfo, skpos, skillrange, CLASS_PLAYER, pOwner);
+					RadiusDamage(info, skpos, skillrange, CLASS_PLAYER, pOwner);
 					AddKnockbackXY(1, 5); //for npc hitting sound
 				
 					flTorSkillRefireTime = gpGlobals->curtime + 0.3f;

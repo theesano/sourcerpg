@@ -1912,6 +1912,12 @@
     <ClInclude Include="ICharacterPanel.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ISkillPanel.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IInventoryPanel.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3457,6 +3463,10 @@
     <ClCompile Include="CharacterPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SkillPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InventoryPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

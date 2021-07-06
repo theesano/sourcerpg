@@ -105,6 +105,23 @@ ConVar lilyss_player_basedamage("lilyss_player_basedamage", "5",FCVAR_REPLICATED
 
 ConVar lilyss_skills_cooldown_timereduction("lilyss_skills_cooldown_timereduction", "1");
 
+ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
+ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
+ConVar sk_plr_mp_restore("sk_plr_mp_restore", "3");
+
+ConVar sk_plr_rage_current("sk_plr_rage_current", "0");
+ConVar sk_plr_rage_max("sk_plr_rage_max", "100");
+ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "30");
+ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "30");
+ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "30");
+ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "30");
+
+ConVar sk_plr_rage_armor_given("sk_plr_rage_heal_given", "15");
+ConVar sk_plr_rage_mp_given("sk_plr_rage_mp_given", "15");
+ConVar sk_plr_rage_speed_given("sk_plr_rage_speed_given", "350");
+ConVar sk_plr_rage_stamina_given("sk_plr_rage_stamina_given", "33");
+
+
 
 #ifdef HL2MP
 	#define	HL2_WALK_SPEED 150
@@ -872,6 +889,8 @@ void CHL2_Player::PreThink(void)
 	//PlayerStats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
 	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
+	sk_plr_rage_current.SetValue(m_flRageCurrent);
+	sk_plr_current_mp.SetValue(m_iPlayerMP);
 
 	if (m_flCooldownReductionRate >= gpGlobals->curtime)
 	{
@@ -882,9 +901,14 @@ void CHL2_Player::PreThink(void)
 		lilyss_skills_cooldown_timereduction.SetValue(1.0f);
 	}
 
+	HandlePlayerMP();
+
+	HandleRage();
+
 	HandleAttackSpeedChanges();
 
 	EvadeHandler();
+
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 
 	//Set thirdperson turning state. 
@@ -1308,6 +1332,211 @@ void CHL2_Player::PostThink( void )
 #define HL2PLAYER_RELOADGAME_ATTACK_DELAY 1.0f
 
 
+void CHL2_Player::HandlePlayerMP(void)
+{
+	if (m_iPlayerMP <= 0)
+	{
+		// clamp to 0 
+		// +10 MP unit per second
+		m_iPlayerMP = 0;
+		m_iPlayerMP += 1;
+
+	}
+	else if (m_iPlayerMP < m_iPlayerMPMax)
+	{
+		// + 10 MP unit per second
+		// if ( mp under max limit  , then for each < unit of time>  , restore a certain amount of mp.)
+
+		if (gpGlobals->curtime >= m_flPlayerMPRestoreInterval)
+		{
+			m_iPlayerMP += sk_plr_mp_restore.GetInt();
+			m_flPlayerMPRestoreInterval = gpGlobals->curtime + 1;
+		}
+
+	}
+	else if (m_iPlayerMP > m_iPlayerMPMax)
+	{
+		m_iPlayerMP = m_iPlayerMPMax;
+	}
+}
+
+
+ConVar sk_plr_utilslot1_option_id("sk_plr_utilslot1_option_id", "0", FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot2_option_id("sk_plr_utilslot2_option_id", "0", FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot3_option_id("sk_plr_utilslot3_option_id", "0", FCVAR_ARCHIVE);
+ConVar sk_plr_utilslot4_option_id("sk_plr_utilslot4_option_id", "0", FCVAR_ARCHIVE);
+
+
+void CHL2_Player::HandleRage(void)
+{
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+
+	clamp(m_flRageCurrent, 0, m_flRageMax);
+
+	//Msg("Rage Power: %.2f \n", m_flRageCurrent);
+
+
+	if (m_flMovementSpeedtimer > gpGlobals->curtime)
+	{
+		hl2_normspeed.SetValue(sk_plr_rage_speed_given.GetFloat());
+		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
+		{
+			pPlayer->SetMaxSpeed(sk_plr_rage_speed_given.GetFloat());
+		}
+	}
+	else
+	{
+		hl2_normspeed.SetValue(280.0f);
+		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
+		{
+			pPlayer->SetMaxSpeed(280.f);
+		}
+
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT1)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot1_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT2)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot2_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT3)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot3_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT4)
+	{
+		UtilSlotExecuteOptionsID(sk_plr_utilslot4_option_id.GetInt());
+	}
+
+	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
+	{
+		if (m_flRageCurrent >= 100)
+		{
+			Msg("RAGE ENABLED \n");
+			m_flRageCurrent -= 100;
+		}
+	}
+	//press Q to transfer Rage points to HP
+	// How many Rage should be used
+	//press E to transfer Rage points to MP
+	//press F1 to transfer Rage points to Stamina
+	//press F2 to consumer Rage points to run faster
+	//press C to Rage
+}
+
+void CHL2_Player::UtilSlotExecuteOptionsID(int optionsID)
+{
+	if (optionsID == 0)
+	{
+		Msg("Not Assigned \n");
+	}
+	else if (optionsID == 1)
+	{
+		Rage_GiveArmor();
+		Msg("Giving Health \n");
+
+	}
+	else if (optionsID == 2)
+	{
+		Rage_GiveMP();
+		Msg("Giving MP \n");
+	}
+	else if (optionsID == 3)
+	{
+		Rage_GiveStamina();
+		Msg("Giving Stamina \n");
+	}
+	else if (optionsID == 4)
+	{
+		Rage_GiveMovementSpeed();
+		Msg("Increasing Movement Speed for 10s \n");
+	}
+	else
+	{
+		Msg("Not Assigned \n");
+	}
+}
+
+
+void CHL2_Player::Rage_GiveArmor()
+{
+	if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
+	{
+		UTIL_GetLocalPlayer()->SetArmorValue(UTIL_GetLocalPlayer()->ArmorValue() + sk_plr_rage_armor_given.GetFloat());
+		m_flRageCurrent -= sk_plr_rage_1_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+}
+
+void CHL2_Player::Rage_GiveMP()
+{
+	if (m_flRageCurrent >= sk_plr_rage_2_consumption.GetFloat())
+	{
+		m_iPlayerMP += sk_plr_rage_mp_given.GetFloat();
+		m_flRageCurrent -= sk_plr_rage_2_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+
+}
+
+void CHL2_Player::Rage_GiveStamina()
+{
+	if (m_flRageCurrent >= sk_plr_rage_4_consumption.GetFloat())
+	{
+		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+		pPlayer->Stamina_Charge(sk_plr_rage_stamina_given.GetFloat());
+		m_flRageCurrent -= sk_plr_rage_4_consumption.GetFloat();
+		DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+	}
+
+
+}
+
+void CHL2_Player::Rage_GiveMovementSpeed()
+{
+	if (m_flMovementSpeedtimer > gpGlobals->curtime)
+	{
+
+	}
+	else
+	{
+		if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
+		{
+			m_flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
+			m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
+			DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
+		}
+	}
+}
+
+extern ConVar sk_rage_item_pickup("sk_rage_item_pickup", "10");
+
+bool CHL2_Player::ApplyRagePower()
+{
+
+	if (m_flRageCurrent < m_flRageMax)
+	{
+		m_flRageCurrent += sk_rage_item_pickup.GetFloat();
+	}
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+
+	UserMessageBegin(PlayerFilter, "ItemPickup");
+	WRITE_STRING(GetClassname());
+	MessageEnd();
+	EmitSound(PlayerFilter, UTIL_GetLocalPlayer()->entindex(), "ItemRage.Pickup"); // this should be done by the HUD really
+
+	return true;
+
+	//	return false;
+}
+
 void CHL2_Player::Activate( void )
 {
 	BaseClass::Activate();
@@ -1482,6 +1711,11 @@ void CHL2_Player::Spawn(void)
 	//
 	//m_flMaxspeed = 320;
 
+	m_iPlayerMP = 50;
+	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
+	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
+
+
 	if ( !IsSuitEquipped() )
 		 StartWalking();
 	//Hack fix for movement speed rage increase!!!
@@ -1495,6 +1729,10 @@ void CHL2_Player::Spawn(void)
 
 //Player Stats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
+	m_flRageCurrent = 0;
+	m_flRageMax = sk_plr_rage_max.GetFloat();
+	m_flMovementSpeedtimer = 0.0f;
+
 
 	// Setup our flashlight values
 #ifdef HL2_EPISODIC
@@ -1523,6 +1761,11 @@ float CHL2_Player::GetPlayerAttackSpeed()
 float CHL2_Player::GetPlayerCooldownReductionRate()
 {
 	return m_flCooldownReductionRate;
+}
+
+int CHL2_Player::GetPlayerMP()
+{
+	return m_iPlayerMP;
 }
 
 void CHL2_Player::SetPlayerCooldownReductionRateBonus(float flBonus, float flDuration)
@@ -1567,6 +1810,12 @@ void CHL2_Player::HandleAttackSpeedChanges()
 	}
 
 }
+
+void CHL2_Player::SetPlayerMP(int amount)
+{
+	m_iPlayerMP = amount;
+}
+
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

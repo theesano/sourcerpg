@@ -1,4 +1,4 @@
-//IHudSkillInfo.h
+
 class ICharacterPanel
 {
 public:

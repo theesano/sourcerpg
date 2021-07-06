@@ -24,6 +24,8 @@
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
 #include "ICharacterPanel.h"
+#include "ISkillPanel.h"
+#include "IInventoryPanel.h"
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -225,6 +227,8 @@ void VGui_CreateGlobalPanels( void )
 #endif
 
 	characterpanel->Create(gameParent);
+	skillpanel->Create(gameParent);
+	inventorypanel->Create(gameParent);
 
 
 }
@@ -258,6 +262,8 @@ void VGui_Shutdown()
 	vgui::ivgui()->RunFrame();
 
 	characterpanel->Destroy();
+	skillpanel->Destroy();
+	inventorypanel->Destroy();
 }
 
 static ConVar cl_showpausedimage( "cl_showpausedimage", "1", 0, "Show the 'Paused' image when game is paused." );

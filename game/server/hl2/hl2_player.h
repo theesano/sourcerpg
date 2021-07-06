@@ -149,10 +149,32 @@ public:
 	//Player Stats
 	float GetPlayerBaseDamage();
 	float GetPlayerAttackSpeed();
+	int		GetPlayerMP();
+	void	SetPlayerMP(int amount);
 	void SetPlayerAttackSpeedBonus(float bonus, float duration);
 	void SetPlayerCooldownReductionRateBonus(float bonus, float duration);
 	void HandleAttackSpeedChanges(void);
 	float GetPlayerCooldownReductionRate();
+
+	int				m_iPlayerMP;
+	int				m_iPlayerMPMax;
+	float			m_flPlayerMPRestoreInterval;
+
+	float			m_flRageCurrent;
+	float			m_flRageMax;
+	float			m_flMovementSpeedtimer;
+	bool			ApplyRagePower();
+
+	void			HandlePlayerMP(void);
+
+	void			Rage_GiveMP();
+	void			Rage_GiveStamina();
+	void			Rage_GiveArmor();
+	void			Rage_GiveMovementSpeed();
+
+	void			HandleRage(void);
+	void			UtilSlotExecuteOptionsID(int optionsID);
+
 
 	// Apply a battery
 	bool ApplyBattery( float powerMultiplier = 1.0 );

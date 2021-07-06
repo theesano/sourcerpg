@@ -516,6 +516,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="ihudlcd.h" />
     <ClInclude Include="ICharacterPanel.h" />
     <ClInclude Include="iinput.h" />
+    <ClInclude Include="IInventoryPanel.h" />
     <ClInclude Include="iloadingdisc.h" />
     <ClInclude Include="imessagechars.h" />
     <ClInclude Include="in_main.h" />
@@ -525,6 +526,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClInclude Include="interpolatedvar.h" />
     <ClInclude Include="ipresence.h" />
     <ClInclude Include="iprofiling.h" />
+    <ClInclude Include="ISkillPanel.h" />
     <ClInclude Include="itextmessage.h" />
     <ClInclude Include="ivieweffects.h" />
     <ClInclude Include="iviewrender.h" />
@@ -877,6 +879,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClCompile Include="hud_skillcd.cpp" />
     <ClCompile Include="CharacterPanel.cpp" />
     <ClCompile Include="hud_stamina.cpp" />
+    <ClCompile Include="InventoryPanel.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />
     <ClCompile Include="replay\replaycamera.cpp" />
@@ -1246,6 +1249,7 @@ if ERRORLEVEL 1 exit /b 1
     <ClCompile Include="..\..\game\shared\SoundEmitterSystem.cpp" />
     <ClCompile Include="..\..\game\shared\soundenvelope.cpp" />
     <ClCompile Include="..\..\public\SoundParametersInternal.cpp" />
+    <ClCompile Include="SkillPanel.cpp" />
     <ClCompile Include="splinepatch.cpp" />
     <ClCompile Include="..\..\game\shared\Sprite.cpp" />
     <ClCompile Include="spritemodel.cpp" />

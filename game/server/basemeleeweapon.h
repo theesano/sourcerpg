@@ -65,23 +65,10 @@ public:
 	float			m_nSkCoolDownTime6;
 
 	float			m_flSkillAttributeRange;
-	float			m_flPlayerMPRestoreInterval;
 
 	float			m_flSkillsCDReductionRate;
 
 	int				m_iEnemyHealth;
-
-	int				m_iPlayerMP;
-	int				m_iPlayerMPMax;
-
-	float			m_flRageCurrent;
-	float			m_flRageMax;
-	bool			ApplyRagePower();
-
-	void			Rage_GiveMP();
-	void			Rage_GiveStamina();
-	void			Rage_GiveArmor();
-	void			Rage_GiveMovementSpeed();
 
 
 protected:
@@ -98,7 +85,6 @@ private:
 	float			m_nSkillHitRefireTime;
 	float			m_flNPCFreezeTime;
 	float			m_flInAirTime;
-	float			m_flMovementSpeedtimer;
 
 	bool			m_bWIsAttack1;
 	bool			m_bWIsAttack2;
@@ -106,9 +92,6 @@ private:
 	bool			m_bWIsAttack4;
 	bool			m_bWIsAttack5;
 
-	void			HandlePlayerMP(void);
-	void			HandleRage(void);
-	void			UtilSlotExecuteOptionsID(int optionsID);
 
 	void			SkillsHandler(void);
 	void			AddKnockback(Vector dir);

@@ -52,8 +52,8 @@ private:
 	MESSAGE_FUNC_PTR(OnTextChanged, "TextChanged", panel);
 	CPanelAnimationVarAliasType(int, m_iBgImageX, "BgImageX", "0", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iBgImageY, "BgImageY", "0", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iBgImageWide, "BgImageWidth", "312", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iBgImageTall, "BgImageHeight", "312", "proportional_int");
+	CPanelAnimationVar(int, m_iBgImageWide, "BgImageWidth", "512");
+	CPanelAnimationVar(int, m_iBgImageTall, "BgImageHeight", "512");
 	CPanelAnimationVarAliasType(int, m_BgImage, "bgimage", "vgui/panel", "textureid");
 	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedX, "StatsAttackSpeedX", "64", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iStatsAttackSpeedY, "StatsAttackSpeedY", "96", "proportional_int");
@@ -84,7 +84,6 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	SetSizeable(false);
 	SetMoveable(true); // I want it to be movable later on
 	SetVisible(true);
-	
 	
 	//Button done
 	m_pCloseButton = new Button(this, "ButtonClose", "", this, "turnoff");
@@ -243,7 +242,7 @@ public:
 static CCharacterPanelInterface g_CharacterPanel;
 ICharacterPanel* characterpanel = (ICharacterPanel*)&g_CharacterPanel;
 
-ConVar cl_showcharacterpanel("cl_showcharacterpanel", "0", FCVAR_CLIENTDLL, "Sets the state of the skills information panel <state>");
+ConVar cl_showcharacterpanel("cl_showcharacterpanel", "0", FCVAR_CLIENTDLL, "Sets the state of the character information panel <state>");
 
 void CCharacterPanel::OnTick()
 {
@@ -301,7 +300,7 @@ void CCharacterPanel::OnThink()
 
 void CCharacterPanel::OnKeyCodePressed(vgui::KeyCode code)
 {
-	if (code == KEY_K)
+	if (code == KEY_P)
 	{
 		if (cl_showcharacterpanel.GetBool() == true)
 		{
@@ -331,12 +330,6 @@ void CCharacterPanel::OnTextChanged(Panel *panel)
 			Msg("Utility Slot 1 Changed \n");
 			pUtilSlot1OptionID->SetValue(buf);
 		}
-		else
-		{
-			m_pUtilSlot1OptionIDCombo->ActivateItemByRow(0);
-			Msg("Utility Slot 1 Option NONE \n");
-			pUtilSlot1OptionID->SetValue(0);
-		}
 
 	}
 //2
@@ -348,12 +341,6 @@ void CCharacterPanel::OnTextChanged(Panel *panel)
 		{
 			Msg("Utility Slot 2 Changed \n");
 			pUtilSlot2OptionID->SetValue(buf);
-		}
-		else
-		{
-			m_pUtilSlot2OptionIDCombo->ActivateItemByRow(0);
-			Msg("Utility Slot 2 Option NONE \n");
-			pUtilSlot2OptionID->SetValue(0);
 		}
 
 	}
@@ -367,12 +354,6 @@ void CCharacterPanel::OnTextChanged(Panel *panel)
 			Msg("Utility Slot 3 Changed \n");
 			pUtilSlot3OptionID->SetValue(buf);
 		}
-		else
-		{
-			m_pUtilSlot3OptionIDCombo->ActivateItemByRow(0);
-			Msg("Utility Slot 3 Option NONE \n");
-			pUtilSlot3OptionID->SetValue(0);
-		}
 
 	}
 //4
@@ -385,13 +366,7 @@ void CCharacterPanel::OnTextChanged(Panel *panel)
 			Msg("Utility Slot 4 Changed \n");
 			pUtilSlot4OptionID->SetValue(buf);
 		}
-		else
-		{
-			m_pUtilSlot4OptionIDCombo->ActivateItemByRow(0);
-			Msg("Utility Slot 4 Option NONE \n");
-			pUtilSlot4OptionID->SetValue(0);
-		}
-
+		
 	}
 
 }
@@ -400,7 +375,7 @@ void CCharacterPanel::Paint()
 {
 	surface()->DrawSetTexture(m_BgImage);
 	surface()->DrawTexturedRect(m_iBgImageX, m_iBgImageY, m_iBgImageWide, m_iBgImageTall);
-
+	
 	surface()->DrawSetTextFont(m_hTextFont);
 
 	wchar_t aspd[64];
