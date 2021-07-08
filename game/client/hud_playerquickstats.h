@@ -7,6 +7,7 @@
 
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
+#include <vgui_controls/Label.h>
 
 //-----------------------------------------------------------------------------
 // Purpose: Shows the hull bar
@@ -27,6 +28,7 @@ public:
 
 
 	void MsgFunc_Battery(bf_read &msg);
+	void MsgFunc_AS(bf_read &msg);
 
 
 protected:
@@ -45,6 +47,7 @@ private:
 	CPanelAnimationVarAliasType(float, m_flBarChunkWidth, "BarChunkWidth", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, m_flBarChunkGap, "BarChunkGap", "0", "proportional_float");
 	CPanelAnimationVar(vgui::HFont, m_hTextFont, "TextFont", "Trebuchet18");
+	CPanelAnimationVar(vgui::HFont, m_hTextFont2, "TextFont", "Default");
 	CPanelAnimationVarAliasType(float, text_xpos, "text_xpos", "2", "proportional_float");
 	CPanelAnimationVarAliasType(float, text_ypos, "text_ypos", "2", "proportional_float");
 
@@ -86,6 +89,8 @@ private:
 
 	int		m_iBat;
 	int		m_iNewBat;
+	float		m_flAttackSpeedBuffDuration;
+	vgui::Label *m_ASPD;
 
 };
 

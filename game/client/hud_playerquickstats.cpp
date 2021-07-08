@@ -12,6 +12,7 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT(CHudPlayerQuickStats);
 DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
+DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, AS);
 
 
 # define HULL_INIT -1
@@ -25,8 +26,15 @@ CHudPlayerQuickStats::CHudPlayerQuickStats(const char * pElementName) :
 CHudElement(pElementName), BaseClass(NULL, "HUDPlayerQuickStats")
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
+	
+	m_ASPD = vgui::SETUP_PANEL(new vgui::Label(this, "HUDASPD", ""));
 	SetParent(pParent);
 
+	m_ASPD->SetPos(0, 0);
+	m_ASPD->SetSize(16, 16);
+	m_ASPD->SetContentAlignment(vgui::Label::a_center);
+	m_ASPD->SetPaintBorderEnabled(false);
+	m_ASPD->SetPaintBackgroundEnabled(false);
 }
 
 //------------------------------------------------------------------------
@@ -36,9 +44,12 @@ CHudElement(pElementName), BaseClass(NULL, "HUDPlayerQuickStats")
 void CHudPlayerQuickStats::Init()
 {
 	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
+	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, AS);
+
 	Reset();
 	m_iBat		= ARMOR_INIT;
 	m_iNewBat	= 0;
+	m_flAttackSpeedBuffDuration = 0;
 
 }
 
@@ -219,7 +230,22 @@ void CHudPlayerQuickStats::Paint()
 		xpos3 += (m_flBarChunkWidth3 + m_flBarChunkGap3);
 	}
 
+	// Draw Buff Duration
+	if (m_flAttackSpeedBuffDuration > 0)
+	{
+		V_swprintf_safe(sz, L"%.0f", m_flAttackSpeedBuffDuration);
+		surface()->DrawSetTextColor(0,255,255,255);
+		surface()->DrawSetTextPos(text_xposArmorNum, text_yposArmorNum + 20);
+		surface()->DrawPrintText(sz, wcslen(sz));
+		//m_ASPD->SetVisible(true);
+		//m_ASPD->SetText(sz);
+		m_ASPD->SetVisible(false);
 
+	}
+	else
+	{
+		surface()->DrawSetTextColor(0, 255, 255, 0);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -228,4 +254,9 @@ void CHudPlayerQuickStats::Paint()
 void CHudPlayerQuickStats::MsgFunc_Battery(bf_read &msg)
 {
 	m_iNewBat = msg.ReadShort();
+}
+
+void CHudPlayerQuickStats::MsgFunc_AS(bf_read &msg)
+{
+	m_flAttackSpeedBuffDuration = msg.ReadShort();
 }

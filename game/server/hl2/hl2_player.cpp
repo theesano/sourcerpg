@@ -48,6 +48,8 @@
 #include "tier0/icommandline.h"
 #include "grenade_frag.h"
 #include "cam_thirdperson.h"
+#include "usermessages.h"
+
 
 
 
@@ -889,14 +891,11 @@ void CHL2_Player::PreThink(void)
 	//PlayerStats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
 	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
+	
 	sk_plr_rage_current.SetValue(m_flRageCurrent);
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
 
-	if (m_flCooldownReductionRate >= gpGlobals->curtime)
-	{
-
-	}
-	else if (m_flCooldownReductionRate <= gpGlobals->curtime)
+	if (m_flCooldownReductionTimer <= gpGlobals->curtime)
 	{
 		lilyss_skills_cooldown_timereduction.SetValue(1.0f);
 	}
@@ -910,7 +909,6 @@ void CHL2_Player::PreThink(void)
 	EvadeHandler();
 
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
-
 	//Set thirdperson turning state. 
 	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
 	if (HasWeapons())
@@ -4311,6 +4309,16 @@ void CHL2_Player::UpdateClientData( void )
 		// Clear off non-time-based damage indicators
 		int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
 		m_bitsDamageType &= iTimeBasedDamage;
+	}
+	//Send Stats info to client
+	if (m_flAttackSpeedBonusTimer - gpGlobals->curtime >= 0)
+	{
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+		UserMessageBegin(user, "AS");
+			WRITE_SHORT((float)m_flAttackSpeedBonusTimer - gpGlobals->curtime);
+		MessageEnd();
+		
 	}
 
 	// Update Flashlight

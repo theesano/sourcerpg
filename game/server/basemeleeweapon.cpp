@@ -242,7 +242,8 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
 
-	m_flSkillsCDReductionRate = 1/pPlayer->GetPlayerCooldownReductionRate();
+	m_flCooldown = 1/pPlayer->GetPlayerCooldownReductionRate();
+
 	
 	/*CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);*/
 
@@ -1028,7 +1029,7 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 		//Sync the time with flFreezingMovementTime in in_main.cpp
 
-	m_nSkCoolDownTime = gpGlobals->curtime + (sk_plr_skills_1_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+	m_nSkCoolDownTime = gpGlobals->curtime + (sk_plr_skills_1_cooldown_time.GetFloat()*m_flCooldown);
 	m_bIsSkCoolDown = true;
 
 }
@@ -1068,7 +1069,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 					pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 30);
 				}
 
-				m_nSkCoolDownTime2 = gpGlobals->curtime + (sk_plr_skills_2_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+				m_nSkCoolDownTime2 = gpGlobals->curtime + (sk_plr_skills_2_cooldown_time.GetFloat()*m_flCooldown);
 	flSkill_RadialSlash_ActiveTime = gpGlobals->curtime + 2.0f;
 	m_bIsSkCoolDown2 = true;
 	
@@ -1214,7 +1215,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	WeaponSound(SINGLE);
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
 
-	m_nSkCoolDownTime3 = gpGlobals->curtime + (sk_plr_skills_3_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+	m_nSkCoolDownTime3 = gpGlobals->curtime + (sk_plr_skills_3_cooldown_time.GetFloat()*m_flCooldown);
 	m_bIsSkCoolDown3 = true;
 
 
@@ -1278,7 +1279,7 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 		}
 		pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 50);
 
-		m_nSkCoolDownTime4 = gpGlobals->curtime + (sk_plr_skills_4_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+		m_nSkCoolDownTime4 = gpGlobals->curtime + (sk_plr_skills_4_cooldown_time.GetFloat()*m_flCooldown);
 		m_bIsSkCoolDown4 = true;
 
 }
@@ -1321,7 +1322,7 @@ void CBaseMeleeWeapon::Skill_Trapping()
 			DispatchParticleEffect("aoehint", effectpos, vec3_angle);
 
 			//Init Cooldown
-			m_nSkCoolDownTime5 = gpGlobals->curtime + (sk_plr_skills_5_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+			m_nSkCoolDownTime5 = gpGlobals->curtime + (sk_plr_skills_5_cooldown_time.GetFloat()*m_flCooldown);
 			flSkillTrapping_ActiveTime = gpGlobals->curtime + 3.0f;
 			m_bIsSkCoolDown5 = true;
 		
@@ -1425,7 +1426,7 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 	//Init Cooldown
 	DispatchParticleEffect("tornado1", skpos, vec3_angle);
 	flTorSkillRefireTime = gpGlobals->curtime + 0.3f;
-	m_nSkCoolDownTime6 = gpGlobals->curtime + (sk_plr_skills_6_cooldown_time.GetFloat()*m_flSkillsCDReductionRate);
+	m_nSkCoolDownTime6 = gpGlobals->curtime + (sk_plr_skills_6_cooldown_time.GetFloat()*m_flCooldown);
 	flSkillActiveTime = gpGlobals->curtime + 4.0f;
 	m_SpeedModActiveTime = gpGlobals->curtime + 10.0f;
 	pPlayer->SetPlayerAttackSpeedBonus(0.5f, 10.f);

@@ -1,5 +1,5 @@
-#if !defined HUD_STAMINA_H
-#define HUD_STAMINA_H 
+#if !defined HUD_RAGEINFO_H
+#define HUD_RAGEINFO_H 
 
 #ifdef _WIN32
 #pragma once
@@ -8,6 +8,7 @@
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
 #include <vgui_controls/Panel.h>
+#include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/EditablePanel.h>
 
 
@@ -81,6 +82,7 @@ private:
 	CPanelAnimationVarAliasType(int, m_nIconTextureId3, "icon_texture3", "UI/rage/ItemStamina", "textureid");
 	CPanelAnimationVarAliasType(int, m_nIconTextureId4, "icon_texture4", "UI/rage/ItemMoveSpeed", "textureid");
 
+
 	float m_flRage;
 	float m_flRageMax;
 
@@ -89,7 +91,6 @@ private:
 	int m_iUtilSlot3OptionID;
 	int m_iUtilSlot4OptionID;
 
-	vgui::ImagePanel *m_pTestImagePanel;
 
 };
 

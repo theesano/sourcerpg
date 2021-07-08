@@ -7,8 +7,6 @@
 #include "vgui/ISurface.h"
 #include "c_basehlplayer.h"
 #include <vgui_controls/AnimationController.h>
-#include <vgui_controls/ImagePanel.h>
-#include <vgui_controls/EditablePanel.h>
 
 
 
@@ -28,7 +26,7 @@ CHudRageInfo::CHudRageInfo(const char * pElementName) :
 CHudElement(pElementName), BaseClass(NULL, "HUDRageInfo")
 {
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
-	m_pTestImagePanel = new ImagePanel(this, "TestIcon1");
+
 	SetParent(pParent);
 
 }
@@ -40,7 +38,6 @@ CHudElement(pElementName), BaseClass(NULL, "HUDRageInfo")
 void CHudRageInfo::Init()
 {
 	Reset();
-	
 
 }
 
@@ -51,8 +48,6 @@ void CHudRageInfo::Init()
 void CHudRageInfo::Reset(void)
 {
 	m_flRage = HULL_INIT;
-
-
 	//SetBgColor(Color(0, 0, 0, 0));
 }
 

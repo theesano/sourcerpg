@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hud_macros.h"
 #include "ICharacterPanel.h"
 using namespace vgui;
 #include <vgui/IVGui.h>
@@ -6,6 +7,7 @@ using namespace vgui;
 #include <vgui_controls/Label.h>
 #include "vgui/ISurface.h"
 //#include <vgui_controls/ImagePanel.h>
+#include <vgui/IScheme.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ComboBox.h>
 
@@ -35,17 +37,8 @@ private:
 	Label *m_StatsBaseDamage;
 	Label *m_StatsCooldownReduction;
 	Label *m_StatsMoveSpeed;
-	Label *m_pUtilSlotLabel;
 	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
 	Button *m_pCloseButton;
-	Button *m_pAspdUpButton;
-	Button *m_pAspdDownButton;
-	Button *m_pHardModeButton;
-	Button *m_pNormalModeButton;
-	ComboBox *m_pUtilSlot1OptionIDCombo;
-	ComboBox *m_pUtilSlot2OptionIDCombo;
-	ComboBox *m_pUtilSlot3OptionIDCombo;
-	ComboBox *m_pUtilSlot4OptionIDCombo;
 	Panel *m_TestPanel;
 	
 
@@ -123,90 +116,6 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	m_StatsMoveSpeed->SetPos(64, 100);
 	m_StatsMoveSpeed->SetFont(m_hTextFont);
 	m_StatsMoveSpeed->SetWide(144);
-
-	m_pUtilSlotLabel = new Label(this, "UtilSlotGeneral", "uslot");
-	m_pUtilSlotLabel->SetPos(64, 180);
-	m_pUtilSlotLabel->SetFont(m_hTextFont);
-	m_pUtilSlotLabel->SetWide(96);
-
-	m_pAspdUpButton = new Button(this, "ButtonIncreaseASPD", "", this);
-	m_pAspdUpButton->SetPos(225,75);
-	m_pAspdUpButton->SetText("Increase");
-
-	m_pAspdDownButton = new Button(this, "ButtonDecreaseASPD", "", this);
-	m_pAspdDownButton->SetPos(225, 100);
-	m_pAspdDownButton->SetText("Decrease");
-
-	m_pNormalModeButton = new Button(this, "ButtonNormalMode", "", this);
-	m_pNormalModeButton->SetPos(225, 130);
-	m_pNormalModeButton->SetText("Normal Difficulty");
-	m_pNormalModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
-	m_pNormalModeButton->SetReleasedSound("ui/buttonclick.wav");
-	m_pNormalModeButton->SetWide(112);
-
-	m_pHardModeButton = new Button(this, "ButtonHardMode", "", this);
-	m_pHardModeButton->SetPos(225, 155);
-	m_pHardModeButton->SetText("Very Hard Difficulty");
-	m_pHardModeButton->SetDepressedSound("common/bugreporter_succeeded.wav");
-	m_pHardModeButton->SetReleasedSound("ui/buttonclick.wav");
-	m_pHardModeButton->SetWide(150);
-
-
-//Utility slot
-//1
-	m_pUtilSlot1OptionIDCombo = new ComboBox(this, "UtilSlot1OptionIDCombo", 5, false);
-	m_pUtilSlot1OptionIDCombo->SetPos(150, 190);
-	m_pUtilSlot1OptionIDCombo->SetSize(116, 18);
-
-	int defaultItem = m_pUtilSlot1OptionIDCombo->AddItem("None", NULL);
-
-	m_pUtilSlot1OptionIDCombo->AddItem("1", NULL);
-	m_pUtilSlot1OptionIDCombo->AddItem("2", NULL);
-	m_pUtilSlot1OptionIDCombo->AddItem("3", NULL);
-	m_pUtilSlot1OptionIDCombo->AddItem("4", NULL);
-
-	m_pUtilSlot1OptionIDCombo->ActivateItem(defaultItem);
-//2
-	m_pUtilSlot2OptionIDCombo = new ComboBox(this, "UtilSlot2OptionIDCombo", 5, false);
-	m_pUtilSlot2OptionIDCombo->SetPos(150, 220);
-	m_pUtilSlot2OptionIDCombo->SetSize(116, 18);
-
-	int defaultItemSlot2 = m_pUtilSlot2OptionIDCombo->AddItem("None", NULL);
-
-	m_pUtilSlot2OptionIDCombo->AddItem("1", NULL);
-	m_pUtilSlot2OptionIDCombo->AddItem("2", NULL);
-	m_pUtilSlot2OptionIDCombo->AddItem("3", NULL);
-	m_pUtilSlot2OptionIDCombo->AddItem("4", NULL);
-
-	m_pUtilSlot2OptionIDCombo->ActivateItem(defaultItemSlot2);
-//3
-	m_pUtilSlot3OptionIDCombo = new ComboBox(this, "UtilSlot3OptionIDCombo", 5, false);
-	m_pUtilSlot3OptionIDCombo->SetPos(150, 250);
-	m_pUtilSlot3OptionIDCombo->SetSize(116, 18);
-
-	int defaultItemSlot3 = m_pUtilSlot3OptionIDCombo->AddItem("None", NULL);
-
-	m_pUtilSlot3OptionIDCombo->AddItem("1", NULL);
-	m_pUtilSlot3OptionIDCombo->AddItem("2", NULL);
-	m_pUtilSlot3OptionIDCombo->AddItem("3", NULL);
-	m_pUtilSlot3OptionIDCombo->AddItem("4", NULL);
-
-	m_pUtilSlot3OptionIDCombo->ActivateItem(defaultItemSlot3);
-
-//4
-	m_pUtilSlot4OptionIDCombo = new ComboBox(this, "UtilSlot4OptionIDCombo", 5, false);
-	m_pUtilSlot4OptionIDCombo->SetPos(150, 280);
-	m_pUtilSlot4OptionIDCombo->SetSize(116, 18);
-
-	int defaultItemSlot4 = m_pUtilSlot4OptionIDCombo->AddItem("None", NULL);
-
-	m_pUtilSlot4OptionIDCombo->AddItem("1", NULL);
-	m_pUtilSlot4OptionIDCombo->AddItem("2", NULL);
-	m_pUtilSlot4OptionIDCombo->AddItem("3", NULL);
-	m_pUtilSlot4OptionIDCombo->AddItem("4", NULL);
-
-	m_pUtilSlot4OptionIDCombo->ActivateItem(defaultItemSlot4);
-
 }
 
 //Class: CCharacterPanelInterface Class. Used for construction.
@@ -255,17 +164,6 @@ void CCharacterPanel::OnTick()
 	ConVar *pGetPlayerMovementSpeed = cvar->FindVar("hl2_normspeed");
 	m_flPlayerMovementSpeed = pGetPlayerMovementSpeed->GetFloat();
 
-
-	if (m_pAspdUpButton->IsDepressed())
-	{
-		pGetPlayerAttackSpeedMod->SetValue(m_flGetPlayerAttackSpeedMod + 0.1f);
-	}
-
-	if (m_pAspdDownButton->IsDepressed())
-	{
-		pGetPlayerAttackSpeedMod->SetValue(m_flGetPlayerAttackSpeedMod - 0.1f);
-	}
-
 	BaseClass::OnTick();
 	SetVisible(cl_showcharacterpanel.GetBool()); 
 
@@ -277,17 +175,6 @@ void CCharacterPanel::OnThink()
 
 	ConVar *pGetNPCHpKnockback = cvar->FindVar("sk_npcknockbackathealth");
 
-	if (m_pNormalModeButton->IsDepressed())
-	{
-		pGetMetropoliceStats->SetValue("0");
-		pGetNPCHpKnockback->SetValue("100");
-	}
-
-	if (m_pHardModeButton->IsDepressed())
-	{
-		pGetMetropoliceStats->SetValue("1");
-		pGetNPCHpKnockback->SetValue("50");
-	}
 	//Change to adjust player damage
 	ConVar *pGetPlayerBaseDamage = cvar->FindVar("lilyss_player_basedamage");
 	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();
@@ -315,59 +202,6 @@ void CCharacterPanel::OnKeyCodePressed(vgui::KeyCode code)
 
 void CCharacterPanel::OnTextChanged(Panel *panel)
 {
-	ConVar *pUtilSlot1OptionID = cvar->FindVar("sk_plr_utilslot1_option_id");
-	ConVar *pUtilSlot2OptionID = cvar->FindVar("sk_plr_utilslot2_option_id");
-	ConVar *pUtilSlot3OptionID = cvar->FindVar("sk_plr_utilslot3_option_id");
-	ConVar *pUtilSlot4OptionID = cvar->FindVar("sk_plr_utilslot4_option_id");
-//combobox control
-//1
-	if (panel == m_pUtilSlot1OptionIDCombo)
-	{
-		char buf[40];
-		m_pUtilSlot1OptionIDCombo->GetText(buf, 40);
-		if (stricmp(buf, "None") != 0)
-		{
-			Msg("Utility Slot 1 Changed \n");
-			pUtilSlot1OptionID->SetValue(buf);
-		}
-
-	}
-//2
-	if (panel == m_pUtilSlot2OptionIDCombo)
-	{
-		char buf[40];
-		m_pUtilSlot2OptionIDCombo->GetText(buf, 40);
-		if (stricmp(buf, "None") != 0)
-		{
-			Msg("Utility Slot 2 Changed \n");
-			pUtilSlot2OptionID->SetValue(buf);
-		}
-
-	}
-//3
-	if (panel == m_pUtilSlot3OptionIDCombo)
-	{
-		char buf[40];
-		m_pUtilSlot3OptionIDCombo->GetText(buf, 40);
-		if (stricmp(buf, "None") != 0)
-		{
-			Msg("Utility Slot 3 Changed \n");
-			pUtilSlot3OptionID->SetValue(buf);
-		}
-
-	}
-//4
-	if (panel == m_pUtilSlot4OptionIDCombo)
-	{
-		char buf[40];
-		m_pUtilSlot4OptionIDCombo->GetText(buf, 40);
-		if (stricmp(buf, "None") != 0)
-		{
-			Msg("Utility Slot 4 Changed \n");
-			pUtilSlot4OptionID->SetValue(buf);
-		}
-		
-	}
 
 }
 
@@ -396,7 +230,6 @@ void CCharacterPanel::Paint()
 	m_StatsMoveSpeed->SetText(mvmtspd);
 
 
-	m_pUtilSlotLabel->SetText("Utility Slot");
 
 }
 

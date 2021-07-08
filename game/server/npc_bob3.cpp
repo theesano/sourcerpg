@@ -40,7 +40,7 @@ ConVar	sk_bob3_melee_dmg("sk_bob3_melee_dmg", "5");
 #define	BOB3_AE_BITE			11
 #define	BOB3_AE_BITE_START		12
 
-#define	ICH_SWIM_SPEED_WALK		150
+#define	ICH_SWIM_SPEED_WALK		250
 #define	ICH_SWIM_SPEED_RUN		500
 
 #define	ICH_MIN_TURN_SPEED		16.0f

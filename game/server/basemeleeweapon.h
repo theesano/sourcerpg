@@ -66,7 +66,7 @@ public:
 
 	float			m_flSkillAttributeRange;
 
-	float			m_flSkillsCDReductionRate;
+	float			m_flCooldown;
 
 	int				m_iEnemyHealth;
 
