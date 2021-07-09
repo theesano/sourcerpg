@@ -2002,7 +2002,7 @@ void CBasePlayer::UpdateUnderwaterState( void )
 		}
 		return;
 	}
-
+	
 	if ( IsPlayerUnderwater() )
 	{
 		SetPlayerUnderwater( false );

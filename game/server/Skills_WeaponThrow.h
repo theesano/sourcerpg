@@ -22,7 +22,7 @@
 class CSpriteTrail;
 
 //-----------------------------------------------------------------------------
-// Looks for enemies, bounces a max # of times before it breaks
+// Looks for enemies, and breaks
 //-----------------------------------------------------------------------------
 class CWeaponThrowingSkills : public CBaseAnimating
 {
@@ -34,7 +34,6 @@ public:
 	virtual void Precache();
 	virtual void Spawn();
 	virtual void UpdateOnRemove();
-	void StopLoopingSounds();
 
 	virtual void VPhysicsCollision(int index, gamevcollisionevent_t *pEvent);
 
@@ -59,13 +58,11 @@ public:
 	enum
 	{
 		STATE_NOT_THROWN = 0,
-		STATE_HOLDING,
 		STATE_THROWN,
 		STATE_LAUNCHED, //by a combine_ball launcher
 	};
 
 	void SetState(int state);
-	bool IsInField() const;
 
 	void StartWhizSoundThink(void);
 
@@ -86,13 +83,6 @@ public:
 
 	unsigned char GetState() const { return m_nState; }
 
-	int  NumBounces(void) const { return m_nBounceCount; }
-
-	void SetMaxBounces(int iBounces)
-	{
-		m_nMaxBounces = iBounces;
-	}
-
 	void SetEmitState(bool bEmit)
 	{
 		m_bEmit = bEmit;
@@ -110,9 +100,6 @@ private:
 
 	void SetPlayerLaunched(CBasePlayer *pOwner);
 
-	float GetBallHoldDissolveTime();
-	float GetBallHoldSoundRampTime();
-
 	// Pow!
 	void DoExplosion();
 
@@ -122,14 +109,9 @@ private:
 	void SetBallAsLaunched(void);
 
 	void CollisionEventToTrace(int index, gamevcollisionevent_t *pEvent, trace_t &tr);
-	bool DissolveEntity(CBaseEntity *pEntity);
 	void OnHitEntity(CBaseEntity *pHitEntity, float flSpeed, int index, gamevcollisionevent_t *pEvent);
 	void DoImpactEffect(const Vector &preVelocity, int index, gamevcollisionevent_t *pEvent);
 
-	bool IsAttractiveTarget(CBaseEntity *pEntity);
-
-	// Deflects the ball toward enemies in case of a collision 
-	void DeflectTowardEnemy(float flSpeed, int index, gamevcollisionevent_t *pEvent);
 
 	// Is this something we can potentially dissolve? 
 	bool IsHittableEntity(CBaseEntity *pHitEntity);
@@ -137,27 +119,14 @@ private:
 	// Sucky. 
 	void WhizSoundThink();
 	void DieThink();
-	void DissolveThink();
-	void DissolveRampSoundThink();
 	void AnimThink(void);
 
 	void FadeOut(float flDuration);
 
 
-	bool OutOfBounces(void) const
-	{
-		return (m_nState == STATE_LAUNCHED && m_nMaxBounces != 0 && m_nBounceCount >= m_nMaxBounces);
-	}
 
 private:
 
-	int		m_nBounceCount;
-	int		m_nMaxBounces;
-	bool	m_bBounceDie;
-
-	float	m_flLastBounceTime;
-
-	bool	m_bFiredGrabbedOutput;
 	bool	m_bStruckEntity;		// Has hit an entity already (control accuracy)
 	bool	m_bWeaponLaunched;		// Means this was fired from the AR2
 	bool	m_bForward;				// Movement direction in ball spawner
@@ -166,9 +135,6 @@ private:
 	bool	m_bCaptureInProgress;
 
 	float	m_flSpeed;
-
-	CSpriteTrail *m_pGlowTrail;
-	CSoundPatch *m_pHoldingSound;
 
 	float	m_flNextDamageTime;
 	float	m_flLastCaptureTime;
@@ -184,11 +150,6 @@ private:
 
 
 // Creates a throw
-CBaseEntity *CreateWpnThrowSkill(const Vector &origin, const Vector &velocity, float radius, float mass, float lifetime, CBaseEntity *pOwner);
-
-// Query function to find out if a physics object is a combine ball (used for collision checks)
-//bool UTIL_IsCombineBall(CBaseEntity *pEntity);
-//bool UTIL_IsCombineBallDefinite(CBaseEntity *pEntity);
-bool UTIL_IsAR2WeaponThrow(CBaseEntity *pEntity);
+CBaseEntity *CreateThrowable(const Vector &origin, const Vector &velocity, float radius, float mass, float lifetime, CBaseEntity *pOwner);
 
 #endif // SKILL_WEAPON_THROW_H

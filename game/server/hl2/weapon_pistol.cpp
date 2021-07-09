@@ -208,7 +208,7 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 
 			WeaponSound( SINGLE_NPC );
 			//pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
-			CreateWpnThrowSkill(vecShootOrigin, vecShootDir* 800, 10, 150, 1.5, npc);
+			CreateThrowable(vecShootOrigin, vecShootDir* 800, 10, 150, 1.5, npc);
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}

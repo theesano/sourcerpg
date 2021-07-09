@@ -994,7 +994,9 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	if ( pOwner->IsPlayer() )
 	{
-		SetModel( GetViewModel() );
+		//SetModel( GetViewModel() );
+		SetModel(GetWorldModel());
+
 	}
 	else
 	{

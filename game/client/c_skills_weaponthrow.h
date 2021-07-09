@@ -27,7 +27,6 @@ public:
 protected:
 
 	void	DrawMotionBlur(void);
-	void	DrawFlicker(void);
 	virtual bool	InitMaterials(void);
 
 	Vector	m_vecLastOrigin;
@@ -36,7 +35,6 @@ protected:
 	bool	m_bHeld;
 	bool	m_bLaunched;
 
-	IMaterial	*m_pFlickerMaterial;
 	IMaterial	*m_pBodyMaterial;
 	IMaterial	*m_pBlurMaterial;
 };

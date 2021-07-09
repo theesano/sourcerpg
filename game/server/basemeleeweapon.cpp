@@ -138,9 +138,12 @@ void CBaseMeleeWeapon::Precache(void)
 	PrecacheParticleSystem("aoehint");
 	PrecacheParticleSystem("aoehint2");
 	PrecacheParticleSystem("aoehint22");
+	PrecacheParticleSystem("aoehint4");
 	PrecacheParticleSystem("striderbuster_shotdown_core_flash");
 	PrecacheParticleSystem("choreo_skyflower_nexus");
 	PrecacheParticleSystem("tornado1");
+	PrecacheParticleSystem("hit_impact");
+	PrecacheModel("models/weapons/melee/alt/guideshape.mdl");
 
 }
 
@@ -747,11 +750,38 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(2.0f);
 
-	int iScytheBlade = LookupAttachment("attach_blade");
+	
+//	DevMsg("%i \n", iScytheBlade);
 
-	Vector particlepos = GetAbsOrigin() + Vector(0,0,32);
+	// Debug
+	//CStudioHdr *pModel = GetModelPtr();
+	//if (pModel)
+	//{
+	//	Msg(
+	//		"Debug for entity: %i\n" \
+	//		"Model: %s\n" \
+	//		"Attachments: %i\n",
+	//		entindex(),
+	//		STRING(GetModelName()),
+	//		pModel->GetNumAttachments()
+	//		);
+	//}
+	//else
+	//	Warning("%s model pointer is faulty!\n", STRING(GetModelName()));
+	
+	int iScytheBlade;
+
+	CBaseAnimating *pAnimating = this->GetBaseAnimating();
+	if (pAnimating)
+	{
+		iScytheBlade = pAnimating->LookupAttachment("blade");
+	}
+	//DispatchParticleEffect("aoehint2", PATTACH_POINT_FOLLOW, this, iScytheBlade, true);
+	DispatchParticleEffect("aoehint2", PATTACH_ABSORIGIN_FOLLOW, this, iScytheBlade, true);
+
+
+	//Vector particlepos = GetAbsOrigin() + Vector(0,0,32);
 	//DispatchParticleEffect("aoehint2", GetWeaponAimDirection(), vec3_angle);
-	DispatchParticleEffect("aoehint2", PATTACH_ABSORIGIN_FOLLOW,this,iScytheBlade,true);
 
 	m_iPrimaryAttacks++;
 
@@ -1064,7 +1094,7 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 					RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner); //Attack
 					WeaponSound(SPECIAL3);
 					pOwner->SetAnimation(PLAYER_SKILL_USE);
-					DispatchParticleEffect("aoehint", GetAbsOrigin(), vec3_angle);
+					DispatchParticleEffect("aoehint4", GetAbsOrigin(), vec3_angle);
 									
 					pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 30);
 				}
@@ -1199,7 +1229,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	// Fire the bullets
 	Vector vecSrc = pOwner->Weapon_ShootPosition();
 	vecSrc.z -= 22;
-	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //culprit for why the launched projectile keeps pointing down
 	Vector impactPoint = vecSrc + (vecAiming * MAX_TRACE_LENGTH);
 
 	// Fire the bullets
@@ -1208,7 +1238,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	// Fire!
 	m_nExecutionTime = gpGlobals->curtime + 1.0f;
 	AddSkillMovementImpulse(2.0f);
-	CreateWpnThrowSkill(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
+	CreateThrowable(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
 	UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
 
 	pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 25);
@@ -1559,8 +1589,6 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					int NPCHealth = ppAIs[i]->GetHealth();
 					if (options == 1)
 					{
-						ppAIs[i]->SetRenderMode(kRenderTransColor);
-						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
 
 						if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
 						{	
@@ -1584,17 +1612,19 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 					{
 						if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
 							ppAIs[i]->SetCondition(COND_NPC_UNFREEZE);
-
-						ppAIs[i]->SetRenderMode(kRenderNormal);
 					}
 					else if (options == 5)
 					{
 						if (ppAIs[i]->IsAlive())
-						WeaponSound(MELEE_HIT);
+						{
+							Vector ParticleVec = ppAIs[i]->GetAbsOrigin();
+							ParticleVec.z += 48;
+							DispatchParticleEffect("hit_impact", ParticleVec, ppAIs[i]->GetAbsAngles());
+							WeaponSound(MELEE_HIT);
+						}
 						
 					}
-					
-						
+											
 				}
 				else
 				{
@@ -1605,11 +1635,13 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 				{
 					if (options == 4)
 					{
-						//m_iEnemyHealth = ppAIs[i]->GetHealth();
-						ppAIs[i]->SetCondition(COND_NPC_FREEZE);
-						ppAIs[i]->SetRenderMode(kRenderTransColor);
-						ppAIs[i]->SetRenderColor(128, 128, 128, 128);
-						ppAIs[i]->ApplyAbsVelocityImpulse(Vector(0, 0, 212));
+						if (ppAIs[i]->IsAlive())
+						{
+							//m_iEnemyHealth = ppAIs[i]->GetHealth();
+							ppAIs[i]->ApplyAbsVelocityImpulse(Vector(0, 0, 212));
+
+						}
+
 					}
 				}
 
