@@ -776,9 +776,9 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	{
 		iScytheBlade = pAnimating->LookupAttachment("blade");
 	}
+	
 	//DispatchParticleEffect("aoehint2", PATTACH_POINT_FOLLOW, this, iScytheBlade, true);
 	DispatchParticleEffect("aoehint2", PATTACH_ABSORIGIN_FOLLOW, this, iScytheBlade, true);
-
 
 	//Vector particlepos = GetAbsOrigin() + Vector(0,0,32);
 	//DispatchParticleEffect("aoehint2", GetWeaponAimDirection(), vec3_angle);
@@ -1229,7 +1229,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	// Fire the bullets
 	Vector vecSrc = pOwner->Weapon_ShootPosition();
 	vecSrc.z -= 22;
-	Vector vecAiming = pOwner->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT); //culprit for why the launched projectile keeps pointing down
+	Vector vecAiming = pOwner->GetAutoaimVector(0); //culprit for why the launched projectile keeps pointing down
 	Vector impactPoint = vecSrc + (vecAiming * MAX_TRACE_LENGTH);
 
 	// Fire the bullets
@@ -1239,6 +1239,7 @@ void CBaseMeleeWeapon::Skill_GrenadeEX(void)
 	m_nExecutionTime = gpGlobals->curtime + 1.0f;
 	AddSkillMovementImpulse(2.0f);
 	CreateThrowable(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
+	//CreateThrowable(vecSrc, vecVelocity, 10, 150, 1.5, pOwner);
 	UTIL_ScreenShake(GetAbsOrigin(), 3.0f, 130.0, 0.7, 256.0f, SHAKE_START);
 
 	pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 25);

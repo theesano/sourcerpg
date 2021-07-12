@@ -1610,6 +1610,7 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 		Weapon_Drop( m_hActiveWeapon );
 	}
 	
+
 	// if flagged to drop a health kit
 	if (HasSpawnFlags(SF_NPC_DROP_HEALTHKIT))
 	{
@@ -2048,6 +2049,8 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 		// Don't drop weapons when the super physgun is happening.
 		UTIL_Remove( pWeapon );
 	}
+//lilyssC - do not drop for now
+	UTIL_Remove(pWeapon);
 
 }
 

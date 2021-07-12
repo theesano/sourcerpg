@@ -40,7 +40,6 @@ public:
 	virtual bool OverridePropdata();
 	virtual bool CreateVPhysics();
 
-
 	virtual void ExplodeThink(void);
 
 	void SetRadius(float flRadius);
@@ -151,5 +150,6 @@ private:
 
 // Creates a throw
 CBaseEntity *CreateThrowable(const Vector &origin, const Vector &velocity, float radius, float mass, float lifetime, CBaseEntity *pOwner);
+CBaseEntity *CreateThrowableBullet(const Vector &origin, const Vector &velocity, const QAngle &angAngles, float radius, float mass, float lifetime, CBaseEntity *pOwner);
 
 #endif // SKILL_WEAPON_THROW_H

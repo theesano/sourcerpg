@@ -203,12 +203,11 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 			ASSERT( npc != NULL );
 
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-
 			CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 
 			WeaponSound( SINGLE_NPC );
 			//pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
-			CreateThrowable(vecShootOrigin, vecShootDir* 800, 10, 150, 1.5, npc);
+			CreateThrowableBullet(vecShootOrigin, vecShootDir * 800, pOperator->GetAbsAngles(), 10, 150, 1.5, npc);
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}

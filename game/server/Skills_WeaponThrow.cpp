@@ -22,8 +22,13 @@
 
 #define	MAX_WPNTHROW_RADIUS	256
 
+#define NPC_THROWABLE_MODEL "models/weapons/guideshape_bullet.mdl"
+
+ConVar	sk_plr_dmg_wpnthrow("sk_plr_dmg_wpnthrow", "10", FCVAR_REPLICATED);
 ConVar	sk_npc_dmg_wpnthrow("sk_npc_dmg_wpnthrow", "15", FCVAR_REPLICATED);
+
 ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/weapons/melee/alt/guideshape.mdl");
+
 
 //-----------------------------------------------------------------------------
 // Context think
@@ -63,6 +68,36 @@ CBaseEntity *CreateThrowable(const Vector &origin, const Vector &velocity, float
 	PhysSetGameFlags(pSkWpnThrow->VPhysicsGetObject(), FVPHYSICS_WAS_THROWN);
 
 	pSkWpnThrow->StartWhizSoundThink();
+
+	pSkWpnThrow->SetMass(mass);
+	pSkWpnThrow->StartLifetime(lifetime);
+	pSkWpnThrow->SetWeaponLaunched(true);
+
+	return pSkWpnThrow;
+}
+
+CBaseEntity *CreateThrowableBullet(const Vector &origin, const Vector &velocity, const QAngle &angAngles, float radius, float mass, float lifetime, CBaseEntity *pOwner)
+{
+	CWeaponThrowingSkills *pSkWpnThrow = static_cast<CWeaponThrowingSkills*>(CreateEntityByName("skills_weaponthrow"));
+	pSkWpnThrow->SetRadius(radius);
+	pSkWpnThrow->SetAbsAngles(angAngles);
+
+	pSkWpnThrow->SetAbsOrigin(origin);
+	pSkWpnThrow->SetOwnerEntity(pOwner);
+	pSkWpnThrow->SetOriginalOwner(pOwner);
+
+	pSkWpnThrow->SetAbsVelocity(velocity);
+	pSkWpnThrow->Spawn();
+
+	pSkWpnThrow->SetState(CWeaponThrowingSkills::STATE_THROWN);
+	pSkWpnThrow->SetSpeed(velocity.Length());
+
+	//! CHANGE
+	pSkWpnThrow->EmitSound("Weapon_Melee.SPECIAL1");
+
+	PhysSetGameFlags(pSkWpnThrow->VPhysicsGetObject(), FVPHYSICS_WAS_THROWN);
+
+	//pSkWpnThrow->StartWhizSoundThink();
 
 	pSkWpnThrow->SetMass(mass);
 	pSkWpnThrow->StartLifetime(lifetime);
@@ -271,8 +306,6 @@ bool CWeaponThrowingSkills::CreateVPhysics()
 	pPhysicsObject->SetDamping(&flDamping, &flAngDamping);
 	pPhysicsObject->SetInertia(Vector(1e30, 1e30, 1e30));
 
-
-
 	if (WasFiredByNPC())
 	{
 		//PhysSetGameFlags(pPhysicsObject, FVPHYSICS_NO_NPC_IMPACT_DMG);
@@ -292,17 +325,22 @@ void CWeaponThrowingSkills::Spawn(void)
 
 	BaseClass::Spawn();
 
-	SetModel(lilyss_skill2_throwmodel.GetString());
+	CBaseEntity *pOwner = GetOwnerEntity();
+	
+	if (GetOwnerEntity()->IsNPC())
+		SetModel(NPC_THROWABLE_MODEL);
+	else
+		SetModel(lilyss_skill2_throwmodel.GetString());
 
-	//if (ShouldHitPlayer())
-	//{
-	//	// This allows the combine ball to hit the player.
-	//	SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL_NPC);
-	//}
-	//else
-	//{
-	//	SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL);
-	//}
+	if (ShouldHitPlayer())
+	{
+		// This allows the combine ball to hit the player.
+		SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL_NPC);
+	}
+	else
+	{
+		SetCollisionGroup(HL2COLLISION_GROUP_COMBINE_BALL);
+	}
 
 	CreateVPhysics();
 
@@ -324,6 +362,7 @@ void CWeaponThrowingSkills::Spawn(void)
 	m_bWeaponLaunched = false;
 
 	m_flNextDamageTime = gpGlobals->curtime;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -563,6 +602,7 @@ void CWeaponThrowingSkills::SetBallAsLaunched(void)
 	// Give the ball a duration
 	StartLifetime(WPNTHROW_LIFETIME);
 
+
 	m_bHeld = false;
 	m_bLaunched = true;
 	SetState(STATE_THROWN);
@@ -774,7 +814,6 @@ void CWeaponThrowingSkills::VPhysicsCollision(int index, gamevcollisionevent_t *
 	//float flSpeed = VectorNormalize(preVelocity);
 	float flSpeed = 0;
 
-	
 		//const surfacedata_t *pHit = physprops->GetSurfaceData(pEvent->surfaceProps[!index]);
 
 		//if (pHit->game.material != CHAR_TEX_FLESH || !hl2_episodic.GetBool())
@@ -793,13 +832,25 @@ void CWeaponThrowingSkills::VPhysicsCollision(int index, gamevcollisionevent_t *
 			// disable dissolve damage so we don't kill off the player when he's the one we hit
 			
 		//}
-			StartSkillsStat();
-			PhysClearGameFlags(VPhysicsGetObject(), FVPHYSICS_DMG_DISSOLVE);
-			PhysSetGameFlags(VPhysicsGetObject(), FVPHYSICS_CONSTRAINT_STATIC);
-			VPhysicsGetObject()->EnableMotion(false);
-			PhysCallbackSetVelocity(pEvent->pObjects[index], vec3_origin);
-			return;
+			//if (GetOwnerEntity()->IsNPC())
+			//{
+			//	
+			//	PhysSetGameFlags(VPhysicsGetObject(), FVPHYSICS_CONSTRAINT_STATIC);
+			//	VPhysicsGetObject()->EnableMotion(false);
+			//	PhysCallbackSetVelocity(pEvent->pObjects[index], vec3_origin);
+			//	return;
 
+			//}
+			//else
+			//{
+				StartSkillsStat();
+				PhysClearGameFlags(VPhysicsGetObject(), FVPHYSICS_DMG_DISSOLVE);
+				PhysSetGameFlags(VPhysicsGetObject(), FVPHYSICS_CONSTRAINT_STATIC);
+				VPhysicsGetObject()->EnableMotion(false);
+				PhysCallbackSetVelocity(pEvent->pObjects[index], vec3_origin);
+				return;
+
+			//}
 }
 
 
@@ -823,6 +874,15 @@ void CWeaponThrowingSkills::StartSkillsStat(void)
 	dir.z = 0;
 	VectorNormalize(dir);
 	m_flSkillsRange = 128.0f;
+
+//Only Damage once if you're an NPC
+	if (GetOwnerEntity()->IsNPC())
+	{
+		CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_plr_dmg_wpnthrow.GetFloat(), DMG_SLASH);
+		RadiusDamage_EX(info, GetAbsOrigin(), 64, CLASS_NONE, NULL, true);
+		UTIL_Remove(this);
+	}
+
 	// Start our animation cycle. Use the random to avoid everything thinking the same frame
 	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + random->RandomFloat(0.0f, 0.1f), s_pSkillsStatsThinkContext);
 }
@@ -841,7 +901,8 @@ void CWeaponThrowingSkills::StopSkillsStat(void)
 //-----------------------------------------------------------------------------
 void CWeaponThrowingSkills::SkillsStatThink(void)
 {
-	
+	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
 	string_t iszNPCName = AllocPooledString("npc_metropolice");
@@ -867,18 +928,20 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 
 			if (WpnThrowdist.x <= m_flSkillsRange && WpnThrowdist.y <= m_flSkillsRange)
 			{
-				ppAIs[i]->SetRenderMode(kRenderTransColor);
-				ppAIs[i]->SetRenderColor(128, 128, 128, 128);
 				ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
 				
 			}
 		}
 	}
-	CTakeDamageInfo infosk1(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_npc_dmg_wpnthrow.GetFloat(), DMG_SLASH);
-	RadiusDamage(infosk1, GetAbsOrigin(), m_flSkillsRange, CLASS_NONE, UTIL_GetLocalPlayer());
-	DispatchParticleEffect("aoehint4", GetAbsOrigin(), vec3_angle);
 
+	CTakeDamageInfo infosk1(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), pPlayer->GetPlayerBaseDamage() + sk_plr_dmg_wpnthrow.GetFloat(), DMG_SLASH);
 
-	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + 0.1f, s_pSkillsStatsThinkContext);
+	RadiusDamage_EX(infosk1, GetAbsOrigin(), m_flSkillsRange, CLASS_NONE, UTIL_GetLocalPlayer(), true);
+	
+	if (!GetOwnerEntity()->IsNPC())
+		DispatchParticleEffect("aoehint4", GetAbsOrigin(), vec3_angle);
+
+	SetContextThink(&CWeaponThrowingSkills::SkillsStatThink, gpGlobals->curtime + 0.2f, s_pSkillsStatsThinkContext);
 
 }
+	
