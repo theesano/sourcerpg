@@ -147,14 +147,17 @@ public:
 	void SetFlashlightEnabled( bool bState );
 
 	//Player Stats
-	float GetPlayerBaseDamage();
-	float GetPlayerAttackSpeed();
+	float	GetPlayerBaseDamage();
+	float	GetPlayerAttackSpeed();
+	float	GetPlayerCritDamage();
 	int		GetPlayerMP();
 	void	SetPlayerMP(int amount);
-	void SetPlayerAttackSpeedBonus(float bonus, float duration);
-	void SetPlayerCooldownReductionRateBonus(float bonus, float duration);
-	void HandleAttackSpeedChanges(void);
-	float GetPlayerCooldownReductionRate();
+	void	SetPlayerAttackSpeedBonus(float bonus, float duration);
+	void	SetPlayerCooldownReductionRateBonus(float bonus, float duration);
+	void	HandleAttackSpeedChanges(void);
+	float	GetPlayerCooldownReductionRate();
+	int		GetPlayerCritRate();
+	
 
 	int				m_iPlayerMP;
 	int				m_iPlayerMPMax;
@@ -163,8 +166,11 @@ public:
 	float			m_flRageCurrent;
 	float			m_flRageMax;
 	float			m_flMovementSpeedtimer;
-	bool			ApplyRagePower();
 
+	float			m_iPlayerCritRate;
+	float			m_flCritDamage;
+	bool			ApplyRagePower();
+	bool			IsCritical();
 	void			HandlePlayerMP(void);
 
 	void			Rage_GiveMP();

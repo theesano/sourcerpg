@@ -716,11 +716,14 @@ void valid(float& a) {
 
 bool bIsFreezingMovement;
 float flFreezingMovementTime;
-
+//For Weapon SP_Evade Skill , prevent the player from moving the camera for 1 second while executing the skill.
 void CInput::MovementFreezeThink(void)
 {
 	if (KeyState(&in_attack2))
 	{
+		if (flFreezingMovementTime >= gpGlobals->curtime)
+			return;
+
 		bIsFreezingMovement = true;
 		flFreezingMovementTime = gpGlobals->curtime + 1.0f;
 	}

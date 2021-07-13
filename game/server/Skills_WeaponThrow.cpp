@@ -13,6 +13,7 @@
 #include "hl2_player.h"
 #include "physics_collisionevent.h"
 #include "gamestats.h"
+#include "basemeleeweapon.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -24,7 +25,6 @@
 
 #define NPC_THROWABLE_MODEL "models/weapons/guideshape_bullet.mdl"
 
-ConVar	sk_plr_dmg_wpnthrow("sk_plr_dmg_wpnthrow", "10", FCVAR_REPLICATED);
 ConVar	sk_npc_dmg_wpnthrow("sk_npc_dmg_wpnthrow", "15", FCVAR_REPLICATED);
 
 ConVar  lilyss_skill2_throwmodel("lilyss_skill2_throwmodel", "models/weapons/melee/alt/guideshape.mdl");
@@ -878,7 +878,7 @@ void CWeaponThrowingSkills::StartSkillsStat(void)
 //Only Damage once if you're an NPC
 	if (GetOwnerEntity()->IsNPC())
 	{
-		CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_plr_dmg_wpnthrow.GetFloat(), DMG_SLASH);
+		CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), sk_npc_dmg_wpnthrow.GetFloat(), DMG_SLASH);
 		RadiusDamage_EX(info, GetAbsOrigin(), 64, CLASS_NONE, NULL, true);
 		UTIL_Remove(this);
 	}
@@ -902,6 +902,7 @@ void CWeaponThrowingSkills::StopSkillsStat(void)
 void CWeaponThrowingSkills::SkillsStatThink(void)
 {
 	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_GetLocalPlayer());
+	CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon*>(pPlayer->GetActiveWeapon());
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
@@ -934,10 +935,19 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 		}
 	}
 
-	CTakeDamageInfo infosk1(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), pPlayer->GetPlayerBaseDamage() + sk_plr_dmg_wpnthrow.GetFloat(), DMG_SLASH);
+	Activity nHitActivity = ACT_VM_HITCENTER;
 
-	RadiusDamage_EX(infosk1, GetAbsOrigin(), m_flSkillsRange, CLASS_NONE, UTIL_GetLocalPlayer(), true);
-	
+	CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), pPlayer->GetPlayerBaseDamage(), DMG_SLASH);
+	if (pPlayer->IsCritical() == true)
+		info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerCritDamage()); //critical
+	else
+	{
+		info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerBaseDamage());
+	}
+
+	info.ScaleDamage(0.8f);
+
+	RadiusDamage_EX(info, GetAbsOrigin(), m_flSkillsRange, CLASS_NONE, UTIL_GetLocalPlayer(), true);
 	if (!GetOwnerEntity()->IsNPC())
 		DispatchParticleEffect("aoehint4", GetAbsOrigin(), vec3_angle);
 

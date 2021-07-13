@@ -1156,8 +1156,8 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = info.GetDamage();
-
-	// Armor. 
+	
+	// Armor. TODO: Draw damage reduction rate to CharacterPanel
 	if (m_ArmorValue && !(info.GetDamageType() & (DMG_FALL | DMG_DROWN | DMG_POISON | DMG_RADIATION)) )// armor doesn't protect against fall or drown damage!
 	{
 		float flNew = info.GetDamage() * flRatio;

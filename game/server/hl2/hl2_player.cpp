@@ -51,9 +51,6 @@
 #include "usermessages.h"
 
 
-
-
-
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
 #endif
@@ -105,7 +102,13 @@ ConVar lilyss_player_model("lilyss_player_model", "models/player/lilyproto.mdl")
 
 ConVar lilyss_player_basedamage("lilyss_player_basedamage", "5",FCVAR_REPLICATED);
 
+ConVar lilyss_player_critdamage("lilyss_player_critdamage", "7");
+
+ConVar lilyss_player_crit_per("lilyss_player_crit_per", "20");
+
 ConVar lilyss_skills_cooldown_timereduction("lilyss_skills_cooldown_timereduction", "1");
+//Implement this
+ConVar lilyss_defense_rate("lilyss_defense_rate", "0");
 
 ConVar sk_plr_current_mp("sk_plr_current_mp", "0");
 ConVar sk_plr_max_mp("sk_plr_max_mp", "100");
@@ -366,8 +369,10 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flTimeAllStaminaDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 	DEFINE_FIELD(m_flBaseDamage,FIELD_FLOAT),
+	DEFINE_FIELD(m_flCritDamage, FIELD_FLOAT),
 	DEFINE_FIELD(m_flAttackSpeed,FIELD_FLOAT),
 	DEFINE_FIELD(m_flCooldownReductionRate,FIELD_FLOAT),
+	DEFINE_FIELD(m_iPlayerCritRate,FIELD_INTEGER),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -890,7 +895,10 @@ void CHL2_Player::PreThink(void)
 
 	//PlayerStats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
+	m_flCritDamage = lilyss_player_critdamage.GetFloat();
 	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
+	m_iPlayerCritRate = lilyss_player_crit_per.GetInt();
+
 	
 	sk_plr_rage_current.SetValue(m_flRageCurrent);
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
@@ -907,6 +915,7 @@ void CHL2_Player::PreThink(void)
 	HandleAttackSpeedChanges();
 
 	EvadeHandler();
+
 
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 	//Set thirdperson turning state. 
@@ -956,8 +965,8 @@ void CHL2_Player::PreThink(void)
 
 	//Debug Armor
 	//DevMsg("Current Armor %i \n",ArmorValue() );
-
-
+	
+	
 #ifdef HL2_EPISODIC
 	if( m_hLocatorTargetEntity != NULL )
 	{
@@ -1713,7 +1722,6 @@ void CHL2_Player::Spawn(void)
 	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
 	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
 
-
 	if ( !IsSuitEquipped() )
 		 StartWalking();
 	//Hack fix for movement speed rage increase!!!
@@ -1727,10 +1735,10 @@ void CHL2_Player::Spawn(void)
 
 //Player Stats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
+	m_flCritDamage = lilyss_player_critdamage.GetFloat();
 	m_flRageCurrent = 0;
 	m_flRageMax = sk_plr_rage_max.GetFloat();
 	m_flMovementSpeedtimer = 0.0f;
-
 
 	// Setup our flashlight values
 #ifdef HL2_EPISODIC
@@ -1751,6 +1759,11 @@ float CHL2_Player::GetPlayerBaseDamage()
 	return m_flBaseDamage;
 }
 
+float CHL2_Player::GetPlayerCritDamage()
+{
+	return m_flBaseDamage+m_flCritDamage;
+}
+
 float CHL2_Player::GetPlayerAttackSpeed()
 {
 	return m_flAttackSpeed;
@@ -1764,6 +1777,27 @@ float CHL2_Player::GetPlayerCooldownReductionRate()
 int CHL2_Player::GetPlayerMP()
 {
 	return m_iPlayerMP;
+}
+
+int CHL2_Player::GetPlayerCritRate()
+{
+	return m_iPlayerCritRate;
+}
+
+bool CHL2_Player::IsCritical()
+{
+	int iPlayerCrit = GetPlayerCritRate();
+	clamp(iPlayerCrit, 0, 100);
+	int iCriticalRNG = random->RandomInt(0, 100);
+
+	if (iPlayerCrit == 0)
+		return false;
+
+	if ((iPlayerCrit > 0) && (iCriticalRNG <= iPlayerCrit))
+		return true;
+	else
+		return false;
+
 }
 
 void CHL2_Player::SetPlayerCooldownReductionRateBonus(float flBonus, float flDuration)
@@ -4867,6 +4901,7 @@ void CHL2_Player::StopRunning(void)
 	m_flAutoRunningMinTime = 0.0f;
 	
 }
+
 
 LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
 

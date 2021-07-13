@@ -242,6 +242,8 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 
 	m_flPlayerStats_BaseDamage = pPlayer->GetPlayerBaseDamage();
 	m_flPlayerStats_AttackSpeed = pPlayer->GetPlayerAttackSpeed();
+	m_flPlayerStats_CritDamage = pPlayer->GetPlayerCritDamage();
+	m_bIsCritical = pPlayer->IsCritical();
 
 	Activity nHitActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
 
@@ -715,7 +717,6 @@ void CBaseMeleeWeapon::ImpactEffect(trace_t &traceHit)
 	UTIL_ImpactTrace(&traceHit, DMG_SLASH);
 }
 
-
 //------------------------------------------------------------------------------
 // Purpose : Starts the swing of the weapon and determines the animation
 // Input   : bIsSecondary - is this a secondary attack?
@@ -725,8 +726,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 	Vector vecShootOrigin, vecShootDir;
 
 	float speedmod = 1 / m_flPlayerStats_AttackSpeed;
-	// Try a ray
-	trace_t traceHit;
 	
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (!pOwner)
@@ -735,18 +734,24 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 	float AoeDamageRadius = sk_plr_melee_normal_range.GetFloat();
 
-	UTIL_TraceLine(pOwner->Weapon_ShootPosition(), GetWeaponAimDirection(), MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit);
-
 	Activity nHitActivity = ACT_MELEE_ATTACK1;
-	// Damage info for 
-	CTakeDamageInfo dmginfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
+	
+	// Damage info
+	CTakeDamageInfo info(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
-		dmginfo.SetDamage(GetDamageForActivity(nHitActivity)*2);
+		info.SetDamage(GetDamageForActivity(nHitActivity)*2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		dmginfo.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	{		
+		if (m_bIsCritical)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
 
 	//Makes weapon produce AoE damage
-	RadiusDamage_EX(dmginfo, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner,true);
+	RadiusDamage_EX(info, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner,true);
 	//Move player forward for each swing.
 	AddSkillMovementImpulse(2.0f);
 
@@ -996,7 +1001,6 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 
 
 }
-
 //Skill1: Spinning Demon.
 void CBaseMeleeWeapon::Skill_Evade(void)
 {
@@ -1025,8 +1029,6 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	info.SetDamageForce(forward); //apply force to physics props 
 	info.ScaleDamage(2.0f);
 
-
-
 	float AoeDamageRadius = 192.0f;
 	//Only run when the cooldown time is 0
 
@@ -1049,13 +1051,13 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 		pOwner->SetAbsVelocity(aFwd*nStepVelocity);
 	}
 
-
 	UTIL_ScreenShake(GetAbsOrigin(), 2.0f, 100.0, 0.7, 256.0f, SHAKE_START);
 
 	RadiusDamage(info, UTIL_GetLocalPlayer()->GetAbsOrigin(), AoeDamageRadius, CLASS_NONE, pOwner);
 		
 	EmitSound("Weapon_Melee.SPEVADE");
 	pOwner->SetAnimation(PLAYER_EVADE); 
+
 
 		//Sync the time with flFreezingMovementTime in in_main.cpp
 
@@ -1081,7 +1083,14 @@ void CBaseMeleeWeapon::Skill_RadialSlash(void)
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
 		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	{
+		if (pPlayer->IsCritical() == true)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
 
 				//Initialize the variable for moving the player on each attack
 	AddSkillMovementImpulse(1.0f);
@@ -1125,8 +1134,15 @@ void CBaseMeleeWeapon::Skill_RadialSlash_LogicEx(void)
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
 		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
-	
+	{
+		if (m_bIsCritical)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
+
 	info.SetDamagePosition(traceHit.startpos);
 	info.SetDamageForce(forward * 10);
 	info.ScaleDamage(0.8f);
@@ -1269,7 +1285,14 @@ void CBaseMeleeWeapon::Skill_HealSlash(void)
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
 		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	{
+		if (pPlayer->IsCritical() == true)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
 
 	info.SetDamagePosition(traceHit.startpos);
 	info.SetDamageForce(forward);
@@ -1332,7 +1355,14 @@ void CBaseMeleeWeapon::Skill_Trapping()
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
 		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	{
+		if (pPlayer->IsCritical() == true)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
 
 		Vector fwd;
 		AngleVectors(pOwner->GetAbsAngles(), &fwd);
@@ -1448,7 +1478,7 @@ void CBaseMeleeWeapon::Skill_Tornado(void)
 	WeaponSound(SPECIAL2);
 	pOwner->SetAnimation(PLAYER_SKILL_USE);
 	m_flSkillAttributeRange = skillrange;
-	m_nExecutionTime = gpGlobals->curtime + 1.0f;
+	m_nExecutionTime = gpGlobals->curtime + 1.4f;
 	pPlayer->SetPlayerMP(pPlayer->GetPlayerMP() - 50);
 
 	skpos = pOwner->GetAbsOrigin();
@@ -1485,7 +1515,14 @@ void CBaseMeleeWeapon::Skill_Tornado_LogicEx(void)
 	if (m_SpeedModActiveTime >= gpGlobals->curtime)
 		info.SetDamage(GetDamageForActivity(nHitActivity) * 2);
 	else if (m_SpeedModActiveTime <= gpGlobals->curtime)
-		info.SetDamage(RandomFloat(GetDamageForActivity(nHitActivity), GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage));
+	{
+		if (m_bIsCritical)
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_CritDamage); //critical
+		else
+		{
+			info.SetDamage(GetDamageForActivity(nHitActivity) + m_flPlayerStats_BaseDamage);
+		}
+	}
 
 	info.SetDamagePosition(traceHit.startpos);
 	info.SetDamageForce(forward);
@@ -1676,5 +1713,5 @@ bool CBaseMeleeWeapon::ShouldCollide(int collisionGroup, int contentsMask) const
 		if (collisionGroup == COLLISION_GROUP_PLAYER || collisionGroup == COLLISION_GROUP_NPC)
 			return false;
 
-	return BaseClass::ShouldCollide(collisionGroup, contentsMask);
+	return true;
 }

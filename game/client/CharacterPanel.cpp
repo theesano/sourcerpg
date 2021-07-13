@@ -33,8 +33,10 @@ protected:
 
 private:
 	//Other used VGUI control Elements:
-	Label *m_StatsInfo;
 	Label *m_StatsBaseDamage;
+	Label *m_StatsCritDamage;
+	Label *m_StatsCritPer;
+	Label *m_StatsAttackSpeed;
 	Label *m_StatsCooldownReduction;
 	Label *m_StatsMoveSpeed;
 	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
@@ -58,6 +60,8 @@ private:
 	float m_flWeaponDamage;
 	float m_flPlayerCooldownReductionRate;
 	float m_flPlayerMovementSpeed;
+	float m_flPlayerCritDamage;
+	int m_iPlayerCritPer;
 };
 
 //Constructor: Initialize the Panel
@@ -96,26 +100,38 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	
 	//imagePanel->SetImage(scheme()->GetImage("panel", false));
 
-
 	m_StatsBaseDamage = new Label(this, "BaseDamage", "bdmg");
 	m_StatsBaseDamage->SetPos(64,64);
 	m_StatsBaseDamage->SetFont(m_hTextFont);
 	m_StatsBaseDamage->SetWide(128);
 
-	m_StatsInfo = new Label(this, "AttackSpeedDisp", "aspd");
-	m_StatsInfo->SetPos(64, 76);
-	m_StatsInfo->SetFont(m_hTextFont);
-	m_StatsInfo->SetWide(128);
+	m_StatsCritDamage = new Label(this, "CritDamage", "critdmg");
+	m_StatsCritDamage->SetPos(64, 76);
+	m_StatsCritDamage->SetFont(m_hTextFont);
+	m_StatsCritDamage->SetWide(144);
 
-	m_StatsCooldownReduction = new Label(this, "CooldownReductionDisp", "aspd");
-	m_StatsCooldownReduction->SetPos(64, 88);
+	m_StatsCritPer = new Label(this, "CritRate", "critrate");
+	m_StatsCritPer->SetPos(64, 88);
+	m_StatsCritPer->SetFont(m_hTextFont);
+	m_StatsCritPer->SetWide(144);
+
+	m_StatsAttackSpeed = new Label(this, "AttackSpeedDisp", "aspd");
+	m_StatsAttackSpeed->SetPos(64, 100);
+	m_StatsAttackSpeed->SetFont(m_hTextFont);
+	m_StatsAttackSpeed->SetWide(128);
+
+	m_StatsMoveSpeed = new Label(this, "MovementSpeedDisp", "move");
+	m_StatsMoveSpeed->SetPos(64, 112);
+	m_StatsMoveSpeed->SetFont(m_hTextFont);
+	m_StatsMoveSpeed->SetWide(144);
+
+	m_StatsCooldownReduction = new Label(this, "CooldownReductionDisp", "cd");
+	m_StatsCooldownReduction->SetPos(64, 124);
 	m_StatsCooldownReduction->SetFont(m_hTextFont);
 	m_StatsCooldownReduction->SetWide(169);
 
-	m_StatsMoveSpeed = new Label(this, "MovementSpeedDisp", "aspd");
-	m_StatsMoveSpeed->SetPos(64, 100);
-	m_StatsMoveSpeed->SetFont(m_hTextFont);
-	m_StatsMoveSpeed->SetWide(144);
+
+
 }
 
 //Class: CCharacterPanelInterface Class. Used for construction.
@@ -163,6 +179,12 @@ void CCharacterPanel::OnTick()
 
 	ConVar *pGetPlayerMovementSpeed = cvar->FindVar("hl2_normspeed");
 	m_flPlayerMovementSpeed = pGetPlayerMovementSpeed->GetFloat();
+
+	ConVar *pGetPlayerCritDamage = cvar->FindVar("lilyss_player_critdamage");
+	m_flPlayerCritDamage = pGetPlayerCritDamage->GetFloat();
+
+	ConVar *pGetPlayerCritPer = cvar->FindVar("lilyss_player_crit_per");
+	m_iPlayerCritPer = pGetPlayerCritPer->GetInt();
 
 	BaseClass::OnTick();
 	SetVisible(cl_showcharacterpanel.GetBool()); 
@@ -212,21 +234,28 @@ void CCharacterPanel::Paint()
 	
 	surface()->DrawSetTextFont(m_hTextFont);
 
-	wchar_t aspd[64];
-	V_swprintf_safe(aspd,L"Attack Speed: %.0f", m_flGetPlayerAttackSpeedMod*100);
-	m_StatsInfo->SetText(aspd);
-
 	wchar_t bdmg[64];
 	V_swprintf_safe(bdmg, L"Damage: %.0f + %.0f", m_flPlayerBaseDamage,m_flWeaponDamage);
 	m_StatsBaseDamage->SetText(bdmg);
 
+	wchar_t critdmg[64];
+	V_swprintf_safe(critdmg, L"Critical Damage: %.0f + %.0f", m_flPlayerCritDamage + m_flPlayerBaseDamage, m_flWeaponDamage);
+	m_StatsCritDamage->SetText(critdmg);
+
+	wchar_t critrate[64];
+	V_swprintf_safe(critrate, L"Critical Rate: %i %%", m_iPlayerCritPer);
+	m_StatsCritPer->SetText(critrate);
+
+	wchar_t aspd[64];
+	V_swprintf_safe(aspd, L"Attack Speed: %.0f %%", m_flGetPlayerAttackSpeedMod * 100);
+	m_StatsAttackSpeed->SetText(aspd);
 
 	wchar_t cdr[64];
-	V_swprintf_safe(cdr, L"Cooldown Reduction: %.0f", m_flPlayerCooldownReductionRate*100);
+	V_swprintf_safe(cdr, L"Cooldown Reduction: %.0f %%", m_flPlayerCooldownReductionRate*100);
 	m_StatsCooldownReduction->SetText(cdr);
 
 	wchar_t mvmtspd[64];
-	V_swprintf_safe(mvmtspd, L"Movement Speed: %.0f", (m_flPlayerMovementSpeed/280)*100);
+	V_swprintf_safe(mvmtspd, L"Movement Speed: %.0f %%", (m_flPlayerMovementSpeed/280)*100);
 	m_StatsMoveSpeed->SetText(mvmtspd);
 
 

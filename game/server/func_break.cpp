@@ -821,6 +821,12 @@ int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 
 	CTakeDamageInfo subInfo = info;
 
+	//show damage number
+	char tempstr[512];
+	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
+	EntityText(5, tempstr, 1);
+
+
 	// If attacker can't do at least the min required damage to us, don't take any damage from them
 	if ( m_takedamage == DAMAGE_NO || info.GetDamage() < m_iMinHealthDmg )
 		return 0;

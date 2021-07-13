@@ -79,6 +79,8 @@ private:
 
 	float			m_flPlayerStats_BaseDamage;
 	float			m_flPlayerStats_AttackSpeed;
+	float			m_flPlayerStats_CritDamage;
+	float			m_bIsCritical;
 
 	float			m_SpeedModActiveTime;
 	float			m_nExecutionTime;
