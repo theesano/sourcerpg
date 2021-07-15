@@ -1068,6 +1068,7 @@ void CGameMovement::CheckParameters( void )
 
 	}
 
+
 	DecayPunchAngle();
 
 	// Take angles from command.

@@ -193,10 +193,6 @@ void CCharacterPanel::OnTick()
 
 void CCharacterPanel::OnThink()
 {
-	ConVar *pGetMetropoliceStats = cvar->FindVar("metropolice_move_and_melee");
-
-	ConVar *pGetNPCHpKnockback = cvar->FindVar("sk_npcknockbackathealth");
-
 	//Change to adjust player damage
 	ConVar *pGetPlayerBaseDamage = cvar->FindVar("lilyss_player_basedamage");
 	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();

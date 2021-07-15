@@ -746,6 +746,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 	{
 		viewangles[YAW] -= speed*cl_yawspeed.GetFloat() * KeyState (&in_right);
 		viewangles[YAW] += speed*cl_yawspeed.GetFloat() * KeyState (&in_left);
+		
 	}
 
 	// thirdperson platformer mode

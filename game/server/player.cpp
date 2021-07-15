@@ -1053,6 +1053,13 @@ bool CBasePlayer::ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &input
 
 	return true;
 }
+void CBasePlayer::SetPlayerInvincibility(bool value)
+{
+	if (value == true)
+		m_bIsPlayerInvincible = true;
+	else
+		m_bIsPlayerInvincible = false;
+}
 
 int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
@@ -1085,6 +1092,9 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if ( GetFlags() & FL_GODMODE )
 		return 0;
+
+	//if (IsPlayerInvincible());
+	//	return 0;
 
 	//if (IsFlyingUsingGrappleHook())
 		//return 0;
@@ -1904,6 +1914,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	// Already using the desired animation?
 	if (GetSequence() == animDesired)
 		return;
+
 
 	Msg( "Set animation to %d\n", animDesired );
 	// Reset to first frame of desired animation
@@ -9008,7 +9019,7 @@ void CBasePlayer::HandleAnimEvent( animevent_t *pEvent )
 			// Convert to ragdoll immediately
 			CreateRagdollEntity();
 			BecomeRagdollOnClient( vec3_origin );
- 
+
 			// Force the player to start death thinking
 			SetThink(&CBasePlayer::PlayerDeathThink);
 			SetNextThink( gpGlobals->curtime + 0.1f );

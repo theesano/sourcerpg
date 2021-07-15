@@ -199,6 +199,8 @@ static impactdamagetable_t gCappedPlayerImpactDamageTable =
 
 };
 
+
+
 // Flashlight utility
 bool g_bCacheLegacyFlashlightStatus = true;
 bool g_bUseLegacyFlashlight;
@@ -761,7 +763,7 @@ void CHL2_Player::EvadeHandler(void)
 			if (GetFlags() & FL_FROZEN_ACT || GetFlags() & FL_GODMODE)
 			{	//strip invincibility from the player and let them move again. 
 				RemoveFlag(FL_FROZEN_ACT);
-				RemoveFlag(FL_GODMODE);
+				RemoveFlag(FL_GODMODE);				
 			}
 		}
 	}
@@ -916,7 +918,7 @@ void CHL2_Player::PreThink(void)
 
 	EvadeHandler();
 
-
+	
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 	//Set thirdperson turning state. 
 	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
@@ -925,10 +927,14 @@ void CHL2_Player::PreThink(void)
 	else
 		pThirdpersonTurnMode->SetValue(0);
 
+	float flTestTimer1;
+	
 	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
 	if (pIsPlayerAttacking->GetInt() == 1)
 	{
-		UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
+			UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
+			flTestTimer1 = gpGlobals->curtime + 0.2;
+		//SetMoveType(MOVETYPE_NONE);
 		//HACK! : This is a temporary patch job for the evade bug, ala whenever a skill that requires the player to stand still for a certain amount of time , using evade wouldn't give them the speed boost.
 		SetMaxSpeed(600); //This cause bug that grants you up to 600 unit/s if you hold down shift while pressing movement keys and attack, this is because even if you set the player velocity to 0 , it is not 0, you still actually move a bit.
 		if (m_afButtonPressed & IN_SPEED)
@@ -951,17 +957,27 @@ void CHL2_Player::PreThink(void)
 	}
 	else
 	{
-		UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
+		//if (flTestTimer1 - gpGlobals->curtime > 0.1f)
+
+
+		//SetMoveType(MOVETYPE_WALK);
 		//HACK! Evade bug
 		if ((gpGlobals->curtime >= flReturnSpeedAfterEvaded) && (gpGlobals->curtime <= flReturnSpeedAfterEvaded + 0.1f))
+		{
 			StartWalking();
+		}
 		//HACK! Evade bug, attacked but does not evade 
 		if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
-		{ 
+		{
+			if (GetFlags() & FL_FROZEN_ACT)
+				UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
+
 			//Attention needed
 				StartAutoRunning();
 		}
 	}
+
+	HandleDebuffKnockback();
 
 	//Debug Armor
 	//DevMsg("Current Armor %i \n",ArmorValue() );
@@ -1469,6 +1485,45 @@ void CHL2_Player::UtilSlotExecuteOptionsID(int optionsID)
 		Msg("Not Assigned \n");
 	}
 }
+
+void CHL2_Player::HandleDebuffKnockback()
+{
+	if (m_flDebuffTimer > gpGlobals->curtime)
+	{
+		AddFlag(FL_FROZEN_ACT);
+		m_bIsDebuff = true;
+	}
+	else if ((m_flDebuffTimer - gpGlobals->curtime <= 0) && (m_flDebuffTimer - gpGlobals->curtime > -0.2f))
+	{
+		if (GetFlags() & FL_FROZEN_ACT)
+			RemoveFlag(FL_FROZEN_ACT);
+	}
+		
+	
+}
+
+void CHL2_Player::SetDebuff(DebuffState debuff)
+{
+	if (debuff == DEBUFF_STATE_NONE)
+	{
+		return;
+	}
+	else if (debuff == DEBUFF_STATE_KNOCKBACK)
+	{
+		m_flDebuffTimer = gpGlobals->curtime + 0.3f;
+		SetAnimation(PLAYER_FLINCH);
+	}
+	else if (debuff == DEBUFF_STATE_KNOCKDOWN)
+	{
+
+	}
+}
+
+void CHL2_Player::FreezePlayer()
+{
+	
+}
+
 
 
 void CHL2_Player::Rage_GiveArmor()
@@ -2402,6 +2457,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 	else if (playerAnim == PLAYER_DIE)
 	{
+		idealActivity = ACT_DIESIMPLE;
+
 		if (m_lifeState == LIFE_ALIVE)
 		{
 			return;
@@ -2525,10 +2582,6 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 		}
 	}
-	/*else if (playerAnim == PLAYER_RELOAD)
-	{
-		idealActivity = ACT_MELEE_ATTACK1;
-	}*/
 	else if (playerAnim == PLAYER_EVADE)
 	{
 		idealActivity = ACT_EVADE;
@@ -2539,7 +2592,11 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
 				idealActivity = ACT_MELEE_ATTACK5;
 		}
-	}	
+	}
+	else if (playerAnim == PLAYER_FLINCH)
+	{
+		idealActivity = ACT_SMALL_FLINCH;
+	}
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
 		//idealActivity = ACT_MELEE_SKILL_CSLASH;
@@ -2686,6 +2743,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		
 		//idealActivity = TranslateTeamActivity( idealActivity );
 	}
+	
 
 	if (!(prevFlag & FL_ONGROUND) && (GetFlags() & FL_ONGROUND) && GetStickDist() == 0.0f) {
 		idealActivity = ACT_LAND;
@@ -2767,6 +2825,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
+
+	if (idealActivity == ACT_SMALL_FLINCH)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
+		return;
+	}
+
 
 	if (idealActivity == ACT_HL2MP_GESTURE_RANGE_ATTACK)
 	{
@@ -3490,7 +3557,6 @@ int CHL2_Player::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			SuspendUse( 0.5f );
 		}
 	}
-
 
 	// Call the base class implementation
 	return BaseClass::OnTakeDamage_Alive( info );

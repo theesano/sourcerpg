@@ -34,6 +34,14 @@ enum HL2PlayerPhysFlag_e
 	PFLAG_ONBARNACLE	= ( 1<<6 )		// player is hangning from the barnalce
 };
 
+enum DebuffState
+{
+	DEBUFF_STATE_NONE,
+	DEBUFF_STATE_KNOCKBACK,
+	DEBUFF_STATE_KNOCKDOWN,
+};
+
+
 class IPhysicsPlayerController;
 class CLogicPlayerProxy;
 class CPlayerStats;
@@ -132,6 +140,8 @@ public:
 	// from CBasePlayer
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
+	void				FreezePlayer();
+
 	// Stamina Interface
 	void Stamina_Update( void );
 	bool Stamina_Drain( float flPower ); // consume some stamina.
@@ -157,7 +167,10 @@ public:
 	void	HandleAttackSpeedChanges(void);
 	float	GetPlayerCooldownReductionRate();
 	int		GetPlayerCritRate();
-	
+
+	float	m_flDebuffTimer;
+	bool	m_bIsDebuff;
+	void	HandleDebuffKnockback();
 
 	int				m_iPlayerMP;
 	int				m_iPlayerMPMax;
@@ -180,6 +193,7 @@ public:
 
 	void			HandleRage(void);
 	void			UtilSlotExecuteOptionsID(int optionsID);
+	void			SetDebuff(DebuffState debuff);
 
 
 	// Apply a battery

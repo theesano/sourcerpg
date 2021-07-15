@@ -677,6 +677,8 @@ public:
 	float	MuzzleFlashTime() const { return m_flFlashTime; }
 	float	PlayerDrownTime() const	{ return m_AirFinished; }
 
+	bool	IsPlayerInvincible() const {return m_bIsPlayerInvincible;}
+
 	int		GetObserverMode() const	{ return m_iObserverMode; }
 	CBaseEntity *GetObserverTarget() const	{ return m_hObserverTarget; }
 
@@ -696,6 +698,8 @@ public:
 
 	void	SetArmorValue( int value );
 	void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
+
+	void	SetPlayerInvincibility(bool value);
 
 	void	SetConnected( PlayerConnectedState iConnected ) { m_iConnected = iConnected; }
 	virtual void EquipSuit( bool bPlayEffects = true );
@@ -1050,6 +1054,8 @@ private:
 
 	// player locking
 	int						m_iPlayerLocked;
+
+	CNetworkVar(bool, m_bIsPlayerInvincible);
 		
 protected:
 	// the player's personal view model

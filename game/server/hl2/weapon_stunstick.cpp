@@ -10,6 +10,7 @@
 #include "npc_metropolice.h"
 #include "weapon_stunstick.h"
 #include "IEffects.h"
+#include "hl2_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -220,6 +221,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 				WeaponSound( MELEE_HIT );
 
 				CBasePlayer *pPlayer = ToBasePlayer( pHurt );
+				CHL2_Player *pPlayer2 = dynamic_cast<CHL2_Player *>(pPlayer);
 
 				CNPC_MetroPolice *pCop = dynamic_cast<CNPC_MetroPolice *>(pOperator);
 				bool bFlashed = false;
@@ -249,44 +251,45 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 					}
 				}
 				
-				// Punch angles
-				//if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE) )
-				//{
-				//	float yawKick = random->RandomFloat( -48, -24 );
+				 //Punch angles
+				if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE) )
+				{
+					//float yawKick = random->RandomFloat( -48, -24 );
 
-				//	//Kick the player angles
-				//	pPlayer->ViewPunch( QAngle( -16, yawKick, 2 ) );
+					//Kick the player angles
+					//pPlayer->ViewPunch( QAngle( -16, yawKick, 2 ) );
 
-				//	Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
+					Vector	dir = pHurt->GetAbsOrigin() - GetAbsOrigin();
 
-				//	// If the player's on my head, don't knock him up
-				//	if ( pPlayer->GetGroundEntity() == pOperator )
-				//	{
-				//		dir = vecDirection;
-				//		dir.z = 0;
-				//	}
+					// If the player's on my head, don't knock him up
+					if ( pPlayer->GetGroundEntity() == pOperator )
+					{
+						dir = vecDirection;
+						dir.z = 0;
+					}
 
-				//	//VectorNormalize(dir);
+					VectorNormalize(dir);
 
-				//	//dir *= 128.0f;
+					dir *= 256.0f;
 
-				//	//If not on ground, then don't make them fly!
-				//	if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
-				//		 dir.z = 0.0f;
+					//If not on ground, then don't make them fly!
+					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
+						 dir.z = 0.0f;
 
-				//	//Push the target back
-				//	//pHurt->ApplyAbsVelocityImpulse( dir );
-
-				//	if ( !bFlashed )
-				//	{
-				//		//color32 red = {128,0,0,128};
-				//		//color32 red = { 256, 256, 256, 128 };
-				//		//UTIL_ScreenFade( pPlayer, red, 0.5f, 0.1f, FFADE_IN );
-				//	}
-				//	
-				//	// Force the player to drop anyting they were holding
-				//	pPlayer->ForceDropOfCarriedPhysObjects();
-				//}
+					//Push the target back
+					pHurt->ApplyAbsVelocityImpulse( dir );
+					pPlayer2->SetDebuff(DEBUFF_STATE_KNOCKBACK);
+				
+					//if ( !bFlashed )
+					//{
+						//color32 red = {128,0,0,128};
+						//color32 red = { 256, 256, 256, 128 };
+						//UTIL_ScreenFade( pPlayer, red, 0.5f, 0.1f, FFADE_IN );
+					//}
+					
+					// Force the player to drop anyting they were holding
+					//pPlayer->ForceDropOfCarriedPhysObjects();
+				}
 				
 				// do effect?
 			}
