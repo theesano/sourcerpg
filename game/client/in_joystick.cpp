@@ -772,9 +772,15 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 		m_flPreviousJoystickPitch *= -1.0f;
 	}
 
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+
 	// drive yaw, pitch and move like a screen relative platformer game
 	if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
-	{
+	{ 
+		//Do not allow the player to turn during debuff period
+		if (pLocalPlayer->m_bIsPlayerFrozenDebuff)
+			return;
+
 		if ( m_flPreviousJoystickForward || m_flPreviousJoystickSide )
 		{
 			// apply turn control [ YAW ]
@@ -814,7 +820,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	float   aspeed = frametime * gHUD.GetFOVSensitivityAdjust();
 
 	// apply forward and side control
-	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	//C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 	
 	int iResponseCurve = 0;
 	if ( pLocalPlayer && pLocalPlayer->IsInAVehicle() )

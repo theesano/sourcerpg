@@ -285,6 +285,8 @@ END_RECV_TABLE()
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
 
+		RecvPropBool	(RECVINFO(m_bIsPlayerFrozenDebuff)),
+
 
 		RecvPropInt		(RECVINFO(m_iObserverMode), 0, RecvProxy_ObserverMode ),
 		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
@@ -362,6 +364,8 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_nNextThinkTick, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_lifeState, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nWaterLevel, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
+	
+	DEFINE_FIELD(m_bIsPlayerFrozenDebuff,FIELD_BOOLEAN),
 	
 	DEFINE_PRED_FIELD_TOL( m_vecBaseVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.05 ),
 
@@ -786,7 +790,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 	// This has to occur here as opposed to OnDataChanged so that EHandles to the player created
 	//  on this same frame are not stomped because prediction thinks there
 	//  isn't a local player yet!!!
-
+	
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
 		// Make sure s_pLocalPlayer is correct
@@ -2050,6 +2054,7 @@ void C_BasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 
 void C_BasePlayer::UpdateClientData( void )
 {
+
 	// Update all the items
 	for ( int i = 0; i < WeaponCount(); i++ )
 	{
@@ -2120,6 +2125,7 @@ void C_BasePlayer::PostThink( void )
 
 		StudioFrameAdvance();
 	}
+
 
 	// Even if dead simulate entities
 	SimulatePlayerSimulatedEntities();

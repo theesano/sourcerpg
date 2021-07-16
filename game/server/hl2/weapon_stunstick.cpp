@@ -268,17 +268,30 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 						dir.z = 0;
 					}
 
+					
 					VectorNormalize(dir);
-
-					dir *= 256.0f;
-
+					int RNGDebuffChoice = random->RandomInt(0, 1);
+					
 					//If not on ground, then don't make them fly!
 					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )
 						 dir.z = 0.0f;
 
 					//Push the target back
-					pHurt->ApplyAbsVelocityImpulse( dir );
-					pPlayer2->SetDebuff(DEBUFF_STATE_KNOCKBACK);
+					if (!(pPlayer->GetFlags() & FL_FROZEN_ACT))
+					{
+						if (RNGDebuffChoice == 0)
+						{
+							dir *= 256.0f;
+							pHurt->ApplyAbsVelocityImpulse(dir);
+							pPlayer2->SetDebuff(DEBUFF_STATE_KNOCKBACK);
+						}
+						else if (RNGDebuffChoice == 1)
+						{
+							dir *= 512.0f;
+							pHurt->ApplyAbsVelocityImpulse(dir);
+							pPlayer2->SetDebuff(DEBUFF_STATE_KNOCKDOWN);
+						}
+					}
 				
 					//if ( !bFlashed )
 					//{

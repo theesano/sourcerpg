@@ -170,7 +170,9 @@ public:
 
 	float	m_flDebuffTimer;
 	bool	m_bIsDebuff;
-	void	HandleDebuffKnockback();
+	void	HandleFrozenDebuff();
+	bool	m_bIsDebuffKnockdown;
+	bool	IsKnockdownDebuff() const { return m_bIsDebuffKnockdown; }
 
 	int				m_iPlayerMP;
 	int				m_iPlayerMPMax;

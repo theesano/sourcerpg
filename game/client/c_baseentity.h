@@ -1335,6 +1335,7 @@ public:
 	// Team Handling
 	int								m_iTeamNum;
 
+	bool							m_bIsPlayerFrozenDebuff;
 #if !defined( NO_ENTITY_PREDICTION )
 	// Certain entities (projectiles) can be created on the client
 	CPredictableId					m_PredictableID;

@@ -677,8 +677,6 @@ public:
 	float	MuzzleFlashTime() const { return m_flFlashTime; }
 	float	PlayerDrownTime() const	{ return m_AirFinished; }
 
-	bool	IsPlayerInvincible() const {return m_bIsPlayerInvincible;}
-
 	int		GetObserverMode() const	{ return m_iObserverMode; }
 	CBaseEntity *GetObserverTarget() const	{ return m_hObserverTarget; }
 
@@ -698,9 +696,12 @@ public:
 
 	void	SetArmorValue( int value );
 	void	IncrementArmorValue( int nCount, int nMaxValue = -1 );
-
+	
+	bool	IsPlayerInvincible() const { return m_bIsPlayerInvincible; }
 	void	SetPlayerInvincibility(bool value);
 
+	bool	IsPlayerFrozenDebuff() const { return m_bIsPlayerFrozenDebuff; }
+	void	SetPlayerFrozenDebuffState(bool value);
 	void	SetConnected( PlayerConnectedState iConnected ) { m_iConnected = iConnected; }
 	virtual void EquipSuit( bool bPlayEffects = true );
 	virtual void RemoveSuit( void );
@@ -1056,7 +1057,8 @@ private:
 	int						m_iPlayerLocked;
 
 	CNetworkVar(bool, m_bIsPlayerInvincible);
-		
+	CNetworkVar(bool, m_bIsPlayerFrozenDebuff);
+
 protected:
 	// the player's personal view model
 	typedef CHandle<CBaseViewModel> CBaseViewModelHandle;

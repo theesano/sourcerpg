@@ -1061,6 +1061,14 @@ void CBasePlayer::SetPlayerInvincibility(bool value)
 		m_bIsPlayerInvincible = false;
 }
 
+void CBasePlayer::SetPlayerFrozenDebuffState(bool value)
+{
+	if (value == true)
+		m_bIsPlayerFrozenDebuff = true;
+	else
+		m_bIsPlayerFrozenDebuff = false;
+}
+
 int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	// have suit diagnose the problem - ie: report damage type
@@ -1093,8 +1101,9 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetFlags() & FL_GODMODE )
 		return 0;
 
-	//if (IsPlayerInvincible());
-	//	return 0;
+	if (IsPlayerInvincible())
+		return 0;
+
 
 	//if (IsFlyingUsingGrappleHook())
 		//return 0;
@@ -3696,6 +3705,15 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 				ucmd->buttons |= IN_DUCK;
 			}
 		}
+	}
+
+	if (IsPlayerFrozenDebuff())
+	{
+		ucmd->forwardmove = 0;
+		ucmd->sidemove = 0;
+		ucmd->upmove = 0;
+		ucmd->buttons = 0;
+		ucmd->impulse = 0;
 	}
 
 	//if (GetFlags() & FL_FROZEN_ACT)
@@ -8074,6 +8092,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
 		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
+		SendPropBool	(SENDINFO(m_bIsPlayerFrozenDebuff)),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 

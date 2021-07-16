@@ -540,7 +540,7 @@ void CHL2_Player::CheckSuitZoom( void )
 
 void CHL2_Player::HandleSpeedChanges( void )
 {
-	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
+	//int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
 	//if (m_nButtons & IN_SPEED && !m_bEvadeDelayedUse)
 	if (m_afButtonPressed & IN_SPEED)
@@ -747,7 +747,8 @@ void CHL2_Player::EvadeHandler(void)
 	if (m_bIsEvade)
 	{ //make the player invincible and stop moving for a short period of time. 
 		AddFlag(FL_FROZEN_ACT);
-		AddFlag(FL_GODMODE);
+
+		SetPlayerInvincibility(true);
 
 		if (gpGlobals->curtime >= m_flEvadeHandlerTime)
 		{
@@ -760,10 +761,10 @@ void CHL2_Player::EvadeHandler(void)
 				m_bWasRunning = false;
 			}
 
-			if (GetFlags() & FL_FROZEN_ACT || GetFlags() & FL_GODMODE)
+			if (GetFlags() & FL_FROZEN_ACT || IsPlayerInvincible())
 			{	//strip invincibility from the player and let them move again. 
 				RemoveFlag(FL_FROZEN_ACT);
-				RemoveFlag(FL_GODMODE);				
+				SetPlayerInvincibility(false);
 			}
 		}
 	}
@@ -958,6 +959,8 @@ void CHL2_Player::PreThink(void)
 	else
 	{
 		//if (flTestTimer1 - gpGlobals->curtime > 0.1f)
+		if (GetFlags() & FL_FROZEN_ACT)
+			UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
 
 
 		//SetMoveType(MOVETYPE_WALK);
@@ -969,15 +972,12 @@ void CHL2_Player::PreThink(void)
 		//HACK! Evade bug, attacked but does not evade 
 		if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
 		{
-			if (GetFlags() & FL_FROZEN_ACT)
-				UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
-
 			//Attention needed
 				StartAutoRunning();
 		}
 	}
 
-	HandleDebuffKnockback();
+	HandleFrozenDebuff();
 
 	//Debug Armor
 	//DevMsg("Current Armor %i \n",ArmorValue() );
@@ -1485,37 +1485,46 @@ void CHL2_Player::UtilSlotExecuteOptionsID(int optionsID)
 		Msg("Not Assigned \n");
 	}
 }
-
-void CHL2_Player::HandleDebuffKnockback()
+float flPlayDownedAnimTimer;
+void CHL2_Player::HandleFrozenDebuff()
 {
-	if (m_flDebuffTimer > gpGlobals->curtime)
+
+	if (gpGlobals->curtime >= m_flDebuffTimer && IsPlayerFrozenDebuff())
 	{
-		AddFlag(FL_FROZEN_ACT);
-		m_bIsDebuff = true;
-	}
-	else if ((m_flDebuffTimer - gpGlobals->curtime <= 0) && (m_flDebuffTimer - gpGlobals->curtime > -0.2f))
-	{
-		if (GetFlags() & FL_FROZEN_ACT)
-			RemoveFlag(FL_FROZEN_ACT);
-	}
+		SetPlayerFrozenDebuffState(false);
 		
-	
+		if (IsKnockdownDebuff())
+			m_bIsDebuffKnockdown = false;
+
+	}
+
+
 }
 
 void CHL2_Player::SetDebuff(DebuffState debuff)
 {
 	if (debuff == DEBUFF_STATE_NONE)
 	{
+		m_flDebuffTimer = 0;
+		SetPlayerFrozenDebuffState(false);
 		return;
 	}
 	else if (debuff == DEBUFF_STATE_KNOCKBACK)
 	{
-		m_flDebuffTimer = gpGlobals->curtime + 0.3f;
-		SetAnimation(PLAYER_FLINCH);
+		if (!IsKnockdownDebuff())
+		{
+			m_flDebuffTimer = gpGlobals->curtime + 0.3f;
+			SetPlayerFrozenDebuffState(true);
+			SetAnimation(PLAYER_FLINCH);
+		}
 	}
 	else if (debuff == DEBUFF_STATE_KNOCKDOWN)
 	{
-
+		m_bIsDebuffKnockdown = true;
+		m_flDebuffTimer = gpGlobals->curtime + 2.0f;
+		SetPlayerFrozenDebuffState(true);
+		SetAnimation(PLAYER_FLINCH);
+		//flPlayDownedAnimTimer = gpGlobals->curtime + SequenceDuration();
 	}
 }
 
@@ -2419,7 +2428,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	float speed;
 	speed = GetAbsVelocity().Length2D();
-	float flPlayRunToIdleAnim = 0.0f; //Not implemented
+	//float flPlayRunToIdleAnim = 0.0f; //Not implemented
 
 	ConVar *pAttackInterval = cvar->FindVar("sk_plr_attackinterval");
 	float attackanimspeedmod = 1 / m_flAttackSpeed;
@@ -2594,8 +2603,15 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 	}
 	else if (playerAnim == PLAYER_FLINCH)
+	{		
+		if (!IsKnockdownDebuff())
+			idealActivity = ACT_SMALL_FLINCH;
+		else
+			idealActivity = ACT_BIG_FLINCH;
+	}
+	else if (playerAnim == PLAYER_DOWN)
 	{
-		idealActivity = ACT_SMALL_FLINCH;
+		idealActivity = ACT_IDLE_HURT;
 	}
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
@@ -2685,12 +2701,19 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					{
 						if (HasWeapons())
 						{
-							if (m_bIsRunning)
+							if (!IsKnockdownDebuff())
 							{
-								idealActivity = ACT_HL2MP_RUN;
+								if (m_bIsRunning)
+								{
+									idealActivity = ACT_HL2MP_RUN;
+								}
+								else
+									idealActivity = ACT_WALK; //This is NOT the actual walk animation.
 							}
 							else
-								idealActivity = ACT_WALK; //This is NOT the actual walk animation.
+							{
+								idealActivity = ACT_IDLE_HURT;
+							}
 						}
 						else //NO WEAPON STATE
 						{
@@ -2725,15 +2748,31 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					{
 
 						if (HasWeapons())
-							idealActivity = ACT_HL2MP_IDLE;
+						{
+							if (!IsKnockdownDebuff())
+							{
+								idealActivity = ACT_HL2MP_IDLE;
+							}
+							else
+							{
+								idealActivity = ACT_IDLE_HURT;
+							}
+						}
 						else
 						{
 							if (GetAbsVelocity().z < 0 && (GetFlags() & FL_ONGROUND))
 							{
 								idealActivity = ACT_LAND;
 							}
-							idealActivity = ACT_IDLE;
 
+							if (!IsKnockdownDebuff())
+							{
+								idealActivity = ACT_IDLE;
+							}
+							else
+							{
+								idealActivity = ACT_IDLE_HURT;
+							}
 						}
 					}
 
@@ -2827,6 +2866,14 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	if (idealActivity == ACT_SMALL_FLINCH)
+	{
+		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
+		return;
+	}
+
+	if (idealActivity == ACT_BIG_FLINCH)
 	{
 		RestartGesture(Weapon_TranslateActivity(idealActivity));
 		SetLayerPlaybackRate(0, m_flAttackSpeed);

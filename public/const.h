@@ -131,10 +131,11 @@
 #define FL_OBJECT				(1<<25) // Terrible name. This is an object that NPCs should see. Missiles, for example.
 #define FL_KILLME				(1<<26)	// This entity is marked for death -- will be freed by game DLL
 #define FL_ONFIRE				(1<<27)	// You know...
-#define FL_DISSOLVING			(1<<38) // We're dissolving!
+#define FL_DISSOLVING			(1<<28) // We're dissolving!
 #define FL_TRANSRAGDOLL			(1<<29) // In the process of turning into a client side ragdoll.
 #define FL_UNBLOCKABLE_BY_PLAYER (1<<30) // pusher that can't be blocked by the player
 #define FL_FROZEN_ACT			(1<<31) //stop player from moving, weapon
+
 #else
 #define	FL_ONGROUND				(1<<0)	// At rest / on the ground
 #define FL_DUCKING				(1<<1)	// Player flag -- Player is fully crouched

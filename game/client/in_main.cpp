@@ -768,6 +768,10 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				{
 					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
 						return;
+					else if (pPlayer->m_bIsPlayerFrozenDebuff)
+					{	//Don't allow players to turn during debuff period 					
+						return;
+					}
 					else
 					{
 						flTargetViewangle = RAD2DEG(atan2(side, forward));
@@ -801,6 +805,10 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 						return;
 					else if (bIsFreezingMovement)
 					{
+						return;
+					}
+					else if (pPlayer->m_bIsPlayerFrozenDebuff)
+					{	//Don't allow players to turn during debuff period 					
 						return;
 					}
 					else
@@ -992,9 +1000,14 @@ ComputeForwardMove
 */
 void CInput::ComputeForwardMove( CUserCmd *cmd )
 {
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+
 	// thirdperson platformer movement
 	if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
 	{
+		if (pLocalPlayer->m_bIsPlayerFrozenDebuff) 
+			return; //Do nothing when debuffed
+		
 		// movement is always forward in this mode
 		float movement = KeyState(&in_forward)
 			|| KeyState(&in_moveright)
