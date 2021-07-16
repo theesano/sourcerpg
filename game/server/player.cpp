@@ -5005,6 +5005,9 @@ void CBasePlayer::Spawn( void )
 	m_AirFinished	= gpGlobals->curtime + AIRTIME;
 	m_nDrownDmgRate	= DROWNING_DAMAGE_INITIAL;
 	
+	m_bIsPlayerInvincible = false; //Clear Gameplay Invincibility
+	m_bIsPlayerFrozenDebuff = false; //Clear all Debuffs
+	
  // only preserve the shadow flag
 	int effects = GetEffects() & EF_NOSHADOW;
 	SetEffects( effects );
