@@ -444,6 +444,11 @@ public:
 	float			m_flConstraintRadius;
 	float			m_flConstraintWidth;
 	float			m_flConstraintSpeedFactor;
+	
+	//Player Stats
+	float			m_flPlayerDefenseRate;
+	float			GetPlayerDefenseRate(void) { return m_flPlayerDefenseRate; }
+
 
 protected:
 

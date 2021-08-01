@@ -10,6 +10,7 @@ using namespace vgui;
 #include <vgui/IScheme.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ComboBox.h>
+#include "c_baseplayer.h"
 
 //CCharacterPanel class:
 class CCharacterPanel : public vgui::Frame
@@ -39,6 +40,7 @@ private:
 	Label *m_StatsAttackSpeed;
 	Label *m_StatsCooldownReduction;
 	Label *m_StatsMoveSpeed;
+	Label *m_StatsDefense;
 	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
 	Button *m_pCloseButton;
 	Panel *m_TestPanel;
@@ -62,6 +64,8 @@ private:
 	float m_flPlayerMovementSpeed;
 	float m_flPlayerCritDamage;
 	int m_iPlayerCritPer;
+
+	float m_flDefenseRate;
 };
 
 //Constructor: Initialize the Panel
@@ -130,6 +134,10 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	m_StatsCooldownReduction->SetFont(m_hTextFont);
 	m_StatsCooldownReduction->SetWide(169);
 
+	m_StatsDefense = new Label(this, "DefenseDisp", "Defense: 0%/20%");
+	m_StatsDefense->SetPos(64, 136);
+	m_StatsDefense->SetFont(m_hTextFont);
+	m_StatsDefense->SetWide(169);
 
 
 }
@@ -193,6 +201,9 @@ void CCharacterPanel::OnTick()
 
 void CCharacterPanel::OnThink()
 {
+	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
+	m_flDefenseRate = local->GetPlayerDefenseRate();
+	
 	//Change to adjust player damage
 	ConVar *pGetPlayerBaseDamage = cvar->FindVar("lilyss_player_basedamage");
 	m_flPlayerBaseDamage = pGetPlayerBaseDamage->GetFloat();
@@ -247,14 +258,16 @@ void CCharacterPanel::Paint()
 	m_StatsAttackSpeed->SetText(aspd);
 
 	wchar_t cdr[64];
-	V_swprintf_safe(cdr, L"Cooldown Reduction: %.0f %%", m_flPlayerCooldownReductionRate*100);
+	V_swprintf_safe(cdr, L"Cooldown Reduction: %.0f %%", (m_flPlayerCooldownReductionRate*100)-100);
 	m_StatsCooldownReduction->SetText(cdr);
 
 	wchar_t mvmtspd[64];
 	V_swprintf_safe(mvmtspd, L"Movement Speed: %.0f %%", (m_flPlayerMovementSpeed/280)*100);
 	m_StatsMoveSpeed->SetText(mvmtspd);
 
-
+	wchar_t def[64];
+	V_swprintf_safe(def, L"Defense: 0%%/%.1f %%",(m_flDefenseRate*100)-100);
+	m_StatsDefense->SetText(def);
 
 }
 

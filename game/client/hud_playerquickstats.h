@@ -87,9 +87,10 @@ private:
 
 	int m_flPlayerArmor;
 
+	float		m_flAttackSpeedBuffDuration;
+
 	int		m_iBat;
 	int		m_iNewBat;
-	float		m_flAttackSpeedBuffDuration;
 	vgui::Label *m_ASPD;
 
 };

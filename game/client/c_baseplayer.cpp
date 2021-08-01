@@ -286,6 +286,8 @@ END_RECV_TABLE()
 		RecvPropInt		(RECVINFO(m_fFlags)),
 
 		RecvPropBool	(RECVINFO(m_bIsPlayerFrozenDebuff)),
+		RecvPropFloat	(RECVINFO(m_flPlayerDefenseRate)),
+		
 
 
 		RecvPropInt		(RECVINFO(m_iObserverMode), 0, RecvProxy_ObserverMode ),
@@ -366,6 +368,7 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_nWaterLevel, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 	
 	DEFINE_FIELD(m_bIsPlayerFrozenDebuff,FIELD_BOOLEAN),
+	DEFINE_FIELD(m_flPlayerDefenseRate,FIELD_FLOAT),
 	
 	DEFINE_PRED_FIELD_TOL( m_vecBaseVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.05 ),
 
@@ -833,6 +836,8 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 
 	BaseClass::PostDataUpdate( updateType );
 			 
+	//DevMsg("Def Client %.2f \n", m_flPlayerDefenseRate);
+
 	// Only care about this for local player
 	if ( IsLocalPlayer() )
 	{
@@ -2096,6 +2101,7 @@ void C_BasePlayer::PostThink( void )
 
 	if ( IsAlive())
 	{
+
 		// Need to do this on the client to avoid prediction errors
 		if ( GetFlags() & FL_DUCKING )
 		{

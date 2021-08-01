@@ -40,21 +40,22 @@ CHudElement(pElementName), BaseClass(NULL, "HUDMenuHint")
 	m_IconLabel4 = vgui::SETUP_PANEL(new vgui::Label(this, "HUDLabel4", "P"));
 
 	m_GameMenuIcon->SetPos(0, 0);
-	m_GameMenuIcon->SetSize(scheme()->GetProportionalScaledValue(64), scheme()->GetProportionalScaledValue(64));
+	m_GameMenuIcon->SetSize(48,48);
 	m_GameMenuIcon->SetImage("OptionsIco");
+	m_GameMenuIcon->SetShouldScaleImage(true);
 
 	m_pTestImagePanel2->SetPos(0, 64);
-	m_pTestImagePanel2->SetSize(64 , 64 );
+	m_pTestImagePanel2->SetSize(48, 48);
 	m_pTestImagePanel2->SetImage("SkillsIco");
 	m_pTestImagePanel2->SetShouldScaleImage(true);
 
 	m_pTestImagePanel3->SetPos(0, 128);
-	m_pTestImagePanel3->SetSize(64, 64);
+	m_pTestImagePanel3->SetSize(48, 48);
 	m_pTestImagePanel3->SetImage("InventoryIco");
 	m_pTestImagePanel3->SetShouldScaleImage(true);
 
 	m_pTestImagePanel4->SetPos(0, 192);
-	m_pTestImagePanel4->SetSize(64, 64);
+	m_pTestImagePanel4->SetSize(48, 48);
 	m_pTestImagePanel4->SetImage("CharacterPanelIco");
 	m_pTestImagePanel4->SetShouldScaleImage(true);
 

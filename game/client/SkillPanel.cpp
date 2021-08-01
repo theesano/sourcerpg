@@ -34,6 +34,8 @@ private:
 	Button *m_pCloseButton;
 	ImagePanel *bgImagePanel = new ImagePanel(this, "icon_tornado");
 	Label *m_pUtilSlotLabel;
+	Label *m_pActiveSkillsLabel;
+	Label *m_pPassiveSkillsLabel;
 	ComboBox *m_pUtilSlot1OptionIDCombo;
 	ComboBox *m_pUtilSlot2OptionIDCombo;
 	ComboBox *m_pUtilSlot3OptionIDCombo;
@@ -74,7 +76,7 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
 	
 	bgImagePanel->SetImage(scheme()->GetImage("icon_tornado", false));
-	bgImagePanel->SetPos(32, 48);
+	bgImagePanel->SetPos(32, 240);
 	bgImagePanel->SetSize(48, 48);
 	bgImagePanel->SetShouldScaleImage(true);
 
@@ -85,14 +87,25 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	m_pCloseButton->SetReleasedSound("ui/buttonclick.wav");
 
 	m_pUtilSlotLabel = new Label(this, "UtilSlotGeneral", "uslot");
-	m_pUtilSlotLabel->SetPos(64, 180);
+	m_pUtilSlotLabel->SetPos(375, 32);
 	m_pUtilSlotLabel->SetFont(m_hTextFont);
 	m_pUtilSlotLabel->SetWide(96);
+
+	m_pActiveSkillsLabel = new Label(this, "ActiveSkillGeneral", "Active Skills");
+	m_pActiveSkillsLabel->SetPos(32, 32);
+	m_pActiveSkillsLabel->SetFont(m_hTextFont);
+	m_pActiveSkillsLabel->SetWide(128);
+
+	m_pPassiveSkillsLabel = new Label(this, "PassiveSkillGeneral", "Passive Skills");
+	m_pPassiveSkillsLabel->SetPos(32, 300);
+	m_pPassiveSkillsLabel->SetFont(m_hTextFont);
+	m_pPassiveSkillsLabel->SetWide(128);
+
 
 //Utility slot
 //1
 	m_pUtilSlot1OptionIDCombo = new ComboBox(this, "UtilSlot1OptionIDCombo", 5, false);
-	m_pUtilSlot1OptionIDCombo->SetPos(150, 190);
+	m_pUtilSlot1OptionIDCombo->SetPos(375, 96);
 	m_pUtilSlot1OptionIDCombo->SetSize(116, 18);
 
 	int defaultItem = m_pUtilSlot1OptionIDCombo->AddItem("None", NULL);
@@ -105,7 +118,7 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	m_pUtilSlot1OptionIDCombo->ActivateItem(defaultItem);
 //2
 	m_pUtilSlot2OptionIDCombo = new ComboBox(this, "UtilSlot2OptionIDCombo", 5, false);
-	m_pUtilSlot2OptionIDCombo->SetPos(150, 220);
+	m_pUtilSlot2OptionIDCombo->SetPos(375, 126);
 	m_pUtilSlot2OptionIDCombo->SetSize(116, 18);
 
 	int defaultItemSlot2 = m_pUtilSlot2OptionIDCombo->AddItem("None", NULL);
@@ -118,7 +131,7 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	m_pUtilSlot2OptionIDCombo->ActivateItem(defaultItemSlot2);
 //3
 	m_pUtilSlot3OptionIDCombo = new ComboBox(this, "UtilSlot3OptionIDCombo", 5, false);
-	m_pUtilSlot3OptionIDCombo->SetPos(150, 250);
+	m_pUtilSlot3OptionIDCombo->SetPos(375, 156);
 	m_pUtilSlot3OptionIDCombo->SetSize(116, 18);
 
 	int defaultItemSlot3 = m_pUtilSlot3OptionIDCombo->AddItem("None", NULL);
@@ -132,7 +145,7 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 
 //4
 	m_pUtilSlot4OptionIDCombo = new ComboBox(this, "UtilSlot4OptionIDCombo", 5, false);
-	m_pUtilSlot4OptionIDCombo->SetPos(150, 280);
+	m_pUtilSlot4OptionIDCombo->SetPos(375, 186);
 	m_pUtilSlot4OptionIDCombo->SetSize(116, 18);
 
 	int defaultItemSlot4 = m_pUtilSlot4OptionIDCombo->AddItem("None", NULL);

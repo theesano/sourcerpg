@@ -2495,7 +2495,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					m_bIsAttack2 = true;
 					m_bIsAttack3 = false;
 					m_bIsAttack4 = false;
-					m_bIsAttack5 = false;
+					//m_bIsAttack5 = false;
 					m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + animtime.GetFloat();
 					//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK1));
 
@@ -2507,7 +2507,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					m_bIsAttack2 = false;
 					m_bIsAttack3 = true;
 					m_bIsAttack4 = false;
-					m_bIsAttack5 = false;
+					//m_bIsAttack5 = false;
 					m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + animtime.GetFloat();
 					//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK2));
 
@@ -2519,7 +2519,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 					m_bIsAttack2 = false;
 					m_bIsAttack3 = false;
 					m_bIsAttack4 = true;
-					m_bIsAttack5 = false;
+					//m_bIsAttack5 = false;
 					m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + animtime.GetFloat();
 					//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK3));
 
@@ -2527,26 +2527,26 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 				else if (m_bIsAttack4 == true)
 				{
 					idealActivity = ACT_MELEE_ATTACK4;
-					m_bIsAttack1 = false;
+					m_bIsAttack1 = true; // false for attack step 5
 					m_bIsAttack2 = false;
 					m_bIsAttack3 = false;
 					m_bIsAttack4 = false;
-					m_bIsAttack5 = true;
+					//m_bIsAttack5 = true;
 					m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + (animtime.GetFloat() + 0.4f);
 					//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK4));
 				}
-				else if (m_bIsAttack5 == true)
-				{
-					idealActivity = ACT_MELEE_ATTACK5;
-					m_bIsAttack1 = true;
-					m_bIsAttack2 = false;
-					m_bIsAttack3 = false;
-					m_bIsAttack4 = false;
-					m_bIsAttack5 = false;
-					m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + (animtime.GetFloat() + 0.4f);
-					//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK5));
+				//else if (m_bIsAttack5 == true)
+				//{
+				//	idealActivity = ACT_MELEE_ATTACK5;
+				//	m_bIsAttack1 = true;
+				//	m_bIsAttack2 = false;
+				//	m_bIsAttack3 = false;
+				//	m_bIsAttack4 = false;
+				//	m_bIsAttack5 = false;
+				//	m_flAtkAnimationChangingTime = gpGlobals->curtime + (pAttackInterval->GetFloat()*attackanimspeedmod) + (animtime.GetFloat() + 0.4f);
+				//	//DevMsg("Gesture Layer %.2f \n", FindGestureLayer(ACT_MELEE_ATTACK5));
 
-				}
+				//}
 			}
 			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
 			{
@@ -2619,7 +2619,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		
 		if (m_afButtonPressed & IN_SLOT1)
 		{
-			idealActivity = ACT_MELEE_ATTACK5;
+			idealActivity = ACT_MELEE_ATTACK4;
 		}
 		else if (m_afButtonPressed & IN_SLOT2)
 		{
@@ -2627,7 +2627,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 		else if (m_afButtonPressed & IN_SLOT3)
 		{
-			idealActivity = ACT_MELEE_ATTACK2;
+			idealActivity = ACT_MELEE_ATTACK1;
 		}
 		else if (m_afButtonPressed & IN_SLOT4)
 		{
@@ -3172,12 +3172,12 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		CPASAttenuationFilter filter( this, "ItemBattery.Touch" );
 		EmitSound( filter, entindex(), "ItemBattery.Touch" );
 
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
+		//CSingleUserRecipientFilter user( this );
+		//user.MakeReliable();
 
-		UserMessageBegin( user, "ItemPickup" );
-			WRITE_STRING( "item_battery" );
-		MessageEnd();
+		//UserMessageBegin( user, "ItemPickup" );
+		//	WRITE_STRING( "item_battery" );
+		//MessageEnd();
 
 		
 		// Suit reports new power level
@@ -3187,7 +3187,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		if (pct > 0)
 			pct--;
 	
-		Q_snprintf( szcharge,sizeof(szcharge),"!HEV_%1dP", pct );
+		//Q_snprintf( szcharge,sizeof(szcharge),"!HEV_%1dP", pct );
 		
 		//UTIL_EmitSoundSuit(edict(), szcharge);
 		//SetSuitUpdate(szcharge, FALSE, SUIT_NEXT_IN_30SEC);

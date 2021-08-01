@@ -270,7 +270,7 @@ void CWeaponStunStick::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 
 					
 					VectorNormalize(dir);
-					int RNGDebuffChoice = random->RandomInt(0, 1);
+					int RNGDebuffChoice = random->RandomInt(0, 9);
 					
 					//If not on ground, then don't make them fly!
 					if ( !(pPlayer->GetFlags() & FL_ONGROUND ) )

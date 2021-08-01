@@ -108,11 +108,15 @@ private:
 	void			Skill_Grenade(void);
 	void			Skill_GrenadeEX(void);
 	void			Skill_HealSlash(void);
+	void			Skill_HealSlash_LogicEx(void);
 	void			Skill_Trapping(void);
 	void			Skill_Trapping_LogicEx(void);
 	void			Skill_Tornado(void);
 	void			Skill_Tornado_LogicEx(void);
 	void			SkillStatNotification(void);
+
+	bool			m_bIsHealSlashAttacking;
+	float			m_flHealSlashDelayTimer;
 
 	virtual void			SkillStatNotification_HUD(int messageoption);
 

@@ -385,6 +385,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_nImpulse, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
+	DEFINE_FIELD(m_flPlayerDefenseRate,FIELD_FLOAT),
 
 	DEFINE_FIELD( m_flFlashTime, FIELD_TIME ),
 	DEFINE_FIELD( m_nDrownDmgRate, FIELD_INTEGER ),
@@ -1008,6 +1009,7 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 	{
 		EmitSound( "Flesh.BulletImpact" );
 	}
+
 }
 
 /*
@@ -1021,9 +1023,10 @@ void CBasePlayer::DamageEffect(float flDamage, int fDamageType)
 #define OLD_ARMOR_RATIO	 0.2	// Armor Takes 80% of the damage
 #define OLD_ARMOR_BONUS  0.5	// Each Point of Armor is work 1/x points of health
 
-// New values
-#define ARMOR_RATIO	0.2
-#define ARMOR_BONUS	1.0
+// New values  
+#define ARMOR_RATIO	1.2 //New : Absorb 20% of the damage  //original 0.2 
+#define ARMOR_BONUS	1.0 // do not change
+
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -1123,13 +1126,13 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if( old_armor.GetBool() )
 	{
-		flBonus = OLD_ARMOR_BONUS;
+		flBonus = OLD_ARMOR_BONUS; 
 		flRatio = OLD_ARMOR_RATIO;
 	}
 	else
 	{
 		flBonus = ARMOR_BONUS;
-		flRatio = ARMOR_RATIO;
+		flRatio = 1/ARMOR_RATIO; //converting /standarizing for player's ease to comprehend.
 	}
 
 	if ( ( info.GetDamageType() & DMG_BLAST ) && g_pGameRules->IsMultiplayer() )
@@ -3401,7 +3404,7 @@ void CBasePlayer::PhysicsSimulate( void )
 			pi->m_nNumCmds = commandsToRun;
 		}
 	}
-
+	
 	// Restore the true server clock
 	// FIXME:  Should this occur after simulation of children so
 	//  that they are in the timespace of the player?
@@ -4983,10 +4986,12 @@ void CBasePlayer::Spawn( void )
 	
 	SetSimulatedEveryTick( true );
 	SetAnimatedEveryTick( true );
-
+	//might change to 100% for gameplay 
 	m_ArmorValue		= SpawnArmorValue();
 	SetBlocksLOS( false );
 	m_iMaxHealth		= m_iHealth;
+
+	m_flPlayerDefenseRate = ARMOR_RATIO;
 
 	// Clear all flags except for FL_FULLEDICT
 	if ( GetFlags() & FL_FAKECLIENT )
@@ -6846,6 +6851,8 @@ void CBasePlayer::UpdateClientData( void )
 {
 	CSingleUserRecipientFilter user( this );
 	user.MakeReliable();
+	
+	m_flPlayerDefenseRate = ARMOR_RATIO;
 
 	if (m_fInitHUD)
 	{
@@ -6855,6 +6862,8 @@ void CBasePlayer::UpdateClientData( void )
 		UserMessageBegin( user, "ResetHUD" );
 			WRITE_BYTE( 0 );
 		MessageEnd();
+
+		
 
 		if ( !m_fGameHUDInitialized )
 		{
@@ -6921,6 +6930,7 @@ void CBasePlayer::UpdateClientData( void )
 		}
 	}
 #endif 
+
 
 	CheckTrainUpdate();
 
@@ -8096,6 +8106,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
 		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
 		SendPropBool	(SENDINFO(m_bIsPlayerFrozenDebuff)),
+		SendPropFloat	(SENDINFO(m_flPlayerDefenseRate),3),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 

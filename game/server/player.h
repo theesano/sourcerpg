@@ -1058,6 +1058,7 @@ private:
 
 	CNetworkVar(bool, m_bIsPlayerInvincible);
 	CNetworkVar(bool, m_bIsPlayerFrozenDebuff);
+	CNetworkVar(float, m_flPlayerDefenseRate);
 
 protected:
 	// the player's personal view model

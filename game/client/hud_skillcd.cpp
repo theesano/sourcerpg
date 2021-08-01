@@ -70,6 +70,7 @@ void CHudSkillCooldown::OnThink(void)
 
 	if (!local)
 		return;
+
 	ConVar *pGetPlayerMP = cvar->FindVar("sk_plr_current_mp");
 	m_iGetPlayerMP = pGetPlayerMP->GetInt();
 
@@ -90,51 +91,63 @@ void CHudSkillCooldown::OnThink(void)
 
 	//Skill 2 cooldown has been defined using a different method below in Paint()
 
-	if (m_flHudSk3Timer > 0)
+	if (local->GetActiveWeapon() != NULL)
+	{
+
+		if (m_flHudSk3Timer > 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
+		else if (m_iGetPlayerMP < 25)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2NoMP");
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2");
+
+		}
+
+		if (m_flHudSk4Timer > 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
+		else if (m_iGetPlayerMP < 50)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3NoMP");
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3");
+
+		}
+
+		if (m_flHudSk5Timer > 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
+		else if (m_iGetPlayerMP < 30)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4NoMP");
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4");
+
+		}
+
+		if (m_flHudSk6Timer > 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
+		else if (m_iGetPlayerMP < 50)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5NoMP");
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5");
+
+		}
+	}
+	else
+	{
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
-	else if (m_iGetPlayerMP < 25)
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2NoMP");
-	}
-	else
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2");
-
-	}
-
-	if (m_flHudSk4Timer > 0)
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
-	else if (m_iGetPlayerMP < 50)
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3NoMP");
-	}
-	else
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3");
-
-	}
-	
-	if (m_flHudSk5Timer > 0)
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
-	else if (m_iGetPlayerMP < 30)
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4NoMP");
-	}
-	else
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4");
-
-	}
-
-	if (m_flHudSk6Timer > 0)
-	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
-	else if (m_iGetPlayerMP < 50)
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5NoMP");
-	}
-	else
-	{
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5");
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
 
 	}
 
@@ -148,23 +161,33 @@ void CHudSkillCooldown::OnThink(void)
 
 void CHudSkillCooldown::Paint()
 {
+	C_BasePlayer * local = C_BasePlayer::GetLocalPlayer();
 
 	SetPaintBorderEnabled(false);
 
-	if (m_flHudSk2Timer > 0)
+	if (local->GetActiveWeapon() != NULL)
 	{
-		surface()->DrawSetTexture(m_nIconTextureId_2);
-		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
-	}
-	else if (m_iGetPlayerMP < 30)
-	{
-		surface()->DrawSetTexture(m_nIconTextureId_3);
-		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+		if (m_flHudSk2Timer > 0)
+		{
+			surface()->DrawSetTexture(m_nIconTextureId_2);
+			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+		}
+		else if (m_iGetPlayerMP < 30)
+		{
+			surface()->DrawSetTexture(m_nIconTextureId_3);
+			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+		}
+		else
+		{
+			surface()->DrawSetTexture(m_nIconTextureId);
+			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+		}
 	}
 	else
 	{
-		surface()->DrawSetTexture(m_nIconTextureId);
+		surface()->DrawSetTexture(m_nIconTextureId_2);
 		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+
 	}
 
 	

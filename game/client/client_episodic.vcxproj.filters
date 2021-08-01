@@ -1921,6 +1921,9 @@
     <ClInclude Include="hud_menuhint.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hud_monsterhp.h">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mp3player.cpp">
@@ -3471,6 +3474,9 @@
     </ClCompile>
     <ClCompile Include="InventoryPanel.cpp" />
     <ClCompile Include="hud_menuhint.cpp">
+      <Filter>Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_monsterhp.cpp">
       <Filter>Source Files\HL2 DLL</Filter>
     </ClCompile>
   </ItemGroup>
