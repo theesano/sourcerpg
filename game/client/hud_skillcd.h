@@ -7,6 +7,9 @@
 
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
+#include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/Label.h>
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Shows the hull bar
@@ -84,7 +87,7 @@ private:
 	CPanelAnimationVarAliasType(int, m_nIconTextureId5, "icon_texture5", "UI/skills/icon_tornado", "textureid");
 	CPanelAnimationVar(Color, m_Icon5Color, "Icon5Color", "255 0 0 255");
 
-
+	int m_flHudSk1Timer;
 	int m_flHudSk2Timer;
 	int m_flHudSk3Timer;
 	int m_flHudSk4Timer;
@@ -93,7 +96,8 @@ private:
 
 	int m_iGetPlayerMP;
 
-	vgui::Label *m_pSk1cd;
+	vgui::Label *m_pPassiveSkillLabel1;
+	vgui::ImagePanel *m_pPassiveSkill1;
 
 
 };

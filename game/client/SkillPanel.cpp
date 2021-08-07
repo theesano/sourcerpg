@@ -41,6 +41,7 @@ private:
 	ComboBox *m_pUtilSlot3OptionIDCombo;
 	ComboBox *m_pUtilSlot4OptionIDCombo;
 
+
 	MESSAGE_FUNC_PTR(OnTextChanged, "TextChanged", panel);
 	CPanelAnimationVarAliasType(int, m_iBgImageX, "BgImageX", "0", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iBgImageY, "BgImageY", "0", "proportional_int");

@@ -1843,15 +1843,7 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 			idealActivity = ACT_WALK;
 		}
 	}
-	else if (playerAnim == PLAYER_EVADE)
-	{
-		idealActivity = ACT_EVADE;
 
-		if ((GetFlags() & FL_ONGROUND) && m_Activity == ACT_RUN)
-		{
-			idealActivity = ACT_EVADE;
-		}
-	}
 	
 	if (idealActivity == ACT_RANGE_ATTACK1)
 	{
@@ -3719,6 +3711,15 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->impulse = 0;
 	}
 
+	if (m_flFrozenWeaponModeTimer >= gpGlobals->curtime)
+	{
+		ucmd->forwardmove = 0;
+		ucmd->sidemove = 0;
+		ucmd->upmove = 0;
+		ucmd->buttons = 0;
+		ucmd->impulse = 0;
+	}
+
 	//if (GetFlags() & FL_FROZEN_ACT)
 	//{
 	//	if (!(m_afButtonPressed & IN_SPEED))
@@ -4566,14 +4567,15 @@ void CBasePlayer::PostThink()
 {
 	m_vecSmoothedVelocity = m_vecSmoothedVelocity * SMOOTHING_FACTOR + GetAbsVelocity() * ( 1 - SMOOTHING_FACTOR );
 
-	if (m_afButtonPressed & IN_THROWGRENADE)
+	if (m_afButtonPressed & IN_THROWGRENADE) //Not actual grenade throwing button
 	{
-		CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+		m_flFrozenWeaponModeTimer = gpGlobals->curtime + 1.2f;
 
+		CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+		//freeze player for 1.2s
 		if (pWeapon == NULL)
 		{
 			GiveNamedItem("weapon_melee");
-
 		}
 		else if (Weapon_OwnsThisType("weapon_melee"))
 		{
@@ -5012,6 +5014,8 @@ void CBasePlayer::Spawn( void )
 	
 	m_bIsPlayerInvincible = false; //Clear Gameplay Invincibility
 	m_bIsPlayerFrozenDebuff = false; //Clear all Debuffs
+
+	m_flFrozenWeaponModeTimer = 0.0f; 
 	
  // only preserve the shadow flag
 	int effects = GetEffects() & EF_NOSHADOW;
@@ -7458,6 +7462,8 @@ void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 		Weapon_Switch( pWeapon );
 	}
 }
+
+
 
 
 //=========================================================

@@ -173,6 +173,7 @@ public:
 	void	HandleFrozenDebuff();
 	bool	m_bIsDebuffKnockdown;
 	bool	IsKnockdownDebuff() const { return m_bIsDebuffKnockdown; }
+	bool	IsForcingViewAngleToCamera() const { return m_bForceViewAngleToCamera; }
 
 	int				m_iPlayerMP;
 	int				m_iPlayerMPMax;
@@ -181,6 +182,9 @@ public:
 	float			m_flRageCurrent;
 	float			m_flRageMax;
 	float			m_flMovementSpeedtimer;
+
+	CNetworkVar(bool,m_bForceViewAngleToCamera);
+	float			m_flForceViewAngleToCameraTimer;
 
 	float			m_iPlayerCritRate;
 	float			m_flCritDamage;
@@ -196,6 +200,7 @@ public:
 	void			HandleRage(void);
 	void			UtilSlotExecuteOptionsID(int optionsID);
 	void			SetDebuff(DebuffState debuff);
+	void			ForceViewAngleToCamera(float flDuration);
 
 
 	// Apply a battery
@@ -327,6 +332,7 @@ public:
 	virtual void		ExitLadder();
 	virtual surfacedata_t *GetLadderSurface( const Vector &origin );
 
+	
 	void  HandleSpeedChanges( void );
 	void  HandleThrowGrenade(void);
 	void  ThrowGrenade(void);
@@ -404,7 +410,8 @@ private:
 	
 	float m_flAtkAnimationChangingTime;
 	float m_flTimeBetweenAttack;
-
+	
+	float m_flEvadeCDTimer;
 
 	CAI_Squad *			m_pPlayerAISquad;
 	CSimpleSimTimer		m_CommanderUpdateTimer;

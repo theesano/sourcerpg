@@ -14,7 +14,7 @@
 #define BASEMELEEWEAPON_H
 
 //=========================================================
-// CBaseHLBludgeonWeapon 
+// CBaseMeleeWeapon 
 //=========================================================
 class CBaseMeleeWeapon : public CBaseHLCombatWeapon
 {
@@ -101,6 +101,17 @@ private:
 	void			AddSkillMovementImpulse(float magnitude);
 
 	void			Swing(int bIsSecondary);
+	void			InflictNormalAttackDamage(void);
+	bool			m_bIsNmAttack;
+	bool			m_bIsNmAttack4;
+	float			m_flNmAttackTimer;
+	float			m_flNmAttackTimer4;
+	float			m_flNmAttackTimer4_rp;
+
+	bool			m_bNmAttackSPEvade;
+	float			m_flNmAttackSPEvadeTimer;
+	float			m_flNmAttackSPEvadeTimer_rp;
+
 
 	void			Skill_Evade(void);
 	void			Skill_RadialSlash(void);

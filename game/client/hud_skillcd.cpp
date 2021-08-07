@@ -6,14 +6,11 @@
 #include "iclientmode.h" 
 #include "vgui_controls/controls.h"
 #include "vgui/ISurface.h"
-#include <vgui_controls/Label.h>
 #include "IGameUIFuncs.h"
 #include <vgui/IInput.h>
 #include <vgui_controls/AnimationController.h>
 #include <vgui/KeyCode.h>
 #include "inputsystem/iinputsystem.h"
-
-
 
 using namespace vgui;
 
@@ -36,8 +33,21 @@ CHudElement(pElementName), BaseClass(NULL, "HudSkillCooldown")
 	//m_nSkillImage1 = surface()->CreateNewTextureID();
 	//surface()->DrawSetTextureFile(m_nSkillImage1, "UI/skills/icon_tornado", true, true);
 
-	SetHiddenBits(HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD);
+	SetHiddenBits(HIDEHUD_PLAYERDEAD);
 
+	m_pPassiveSkill1 = vgui::SETUP_PANEL(new vgui::ImagePanel(this, "HudPassiveSkill1"));
+	m_pPassiveSkillLabel1 = vgui::SETUP_PANEL(new vgui::Label(this, "HUDPassiveSkillLabel1", "0"));
+
+	m_pPassiveSkill1->SetPos(2, 64);
+	m_pPassiveSkill1->SetSize(48, 48);
+	m_pPassiveSkill1->SetImage("icon_spevade");
+	m_pPassiveSkill1->SetShouldScaleImage(true);
+
+	m_pPassiveSkillLabel1->SetPos(2, 72);
+	m_pPassiveSkillLabel1->SetSize(48, 48);
+	m_pPassiveSkillLabel1->SetFont(m_hTextFont);
+	m_pPassiveSkillLabel1->SetPaintBorderEnabled(false);
+	m_pPassiveSkillLabel1->SetPaintBackgroundEnabled(false);
 
 }
 
@@ -74,6 +84,9 @@ void CHudSkillCooldown::OnThink(void)
 	ConVar *pGetPlayerMP = cvar->FindVar("sk_plr_current_mp");
 	m_iGetPlayerMP = pGetPlayerMP->GetInt();
 
+	ConVar *pSkill1cdtimer = cvar->FindVar("sk_plr_skills_1_cd");
+	m_flHudSk1Timer = pSkill1cdtimer->GetInt();
+
 	ConVar *pSkill2cdtimer = cvar->FindVar("sk_plr_skills_2_cd");
 	m_flHudSk2Timer = pSkill2cdtimer->GetInt();
 
@@ -93,6 +106,25 @@ void CHudSkillCooldown::OnThink(void)
 
 	if (local->GetActiveWeapon() != NULL)
 	{
+
+		if (m_flHudSk1Timer > 0)
+		{
+			wchar_t sz[64];
+			V_swprintf_safe(sz, L"%i", m_flHudSk1Timer);
+
+			m_pPassiveSkill1->SetAlpha(255);
+
+			m_pPassiveSkillLabel1->SetText(sz);
+			m_pPassiveSkillLabel1->SetAlpha(255);
+
+
+		}
+		else
+		{
+			m_pPassiveSkill1->SetAlpha(0);
+			m_pPassiveSkillLabel1->SetAlpha(0);
+
+		}
 
 		if (m_flHudSk3Timer > 0)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
@@ -148,6 +180,8 @@ void CHudSkillCooldown::OnThink(void)
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
+		m_pPassiveSkill1->SetAlpha(0);
+		m_pPassiveSkillLabel1->SetAlpha(0);
 
 	}
 

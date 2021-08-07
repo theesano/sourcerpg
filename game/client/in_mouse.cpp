@@ -30,6 +30,7 @@
 #include "cam_thirdperson.h"
 #include "inputsystem/iinputsystem.h"
 #include "c_baseplayer.h"
+#include "c_basehlplayer.h"
 
 
 #if defined( _X360 )
@@ -460,9 +461,17 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 	if (CAM_IsThirdPerson() && thirdperson_platformer.GetInt())
 	{
 		C_BasePlayer *pPlayerLocal = C_BasePlayer::GetLocalPlayer();
+		C_BaseHLPlayer *pHLPlayerLocal = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
+		
 		//Don't apply mouse rotation and key rotation during debuff period
 		if (!pPlayerLocal->m_bIsPlayerFrozenDebuff)
 		{
+			//if (pHLPlayerLocal->IsForceViewAngleToCamera())
+			//{
+			//	Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+			//	viewangles[YAW] = vTempOffset[YAW];
+			//	cam_idealyaw.SetValue(vTempOffset[YAW] - viewangles[YAW]);
+			//}
 
 			// TODO: make a proper system that bound the player's viewangle to the direction the third person camera's facing
 			if (vgui::input()->IsMouseDown(MOUSE_LEFT))

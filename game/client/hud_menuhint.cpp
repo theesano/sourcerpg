@@ -82,6 +82,7 @@ CHudElement(pElementName), BaseClass(NULL, "HUDMenuHint")
 	m_IconLabel4->SetFont(m_hTextFont);
 	m_IconLabel4->SetPaintBorderEnabled(false);
 	m_IconLabel4->SetPaintBackgroundEnabled(false);
+	
 
 
 

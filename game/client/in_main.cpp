@@ -20,6 +20,7 @@
 #include "checksum_md5.h"
 #include "hltvcamera.h"
 #include "baseentity_shared.h"
+#include "c_basehlplayer.h"
 
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
@@ -714,24 +715,6 @@ void valid(float& a) {
 	if (a >= 360.f) a -= 360.f;
 }
 
-bool bIsFreezingMovement;
-float flFreezingMovementTime;
-//For Weapon SP_Evade Skill , prevent the player from moving the camera for 1 second while executing the skill.
-void CInput::MovementFreezeThink(void)
-{
-	if (KeyState(&in_attack2))
-	{
-		if (flFreezingMovementTime >= gpGlobals->curtime)
-			return;
-
-		bIsFreezingMovement = true;
-		flFreezingMovementTime = gpGlobals->curtime + 1.0f;
-	}
-	else if (gpGlobals->curtime > flFreezingMovementTime)
-	{
-		bIsFreezingMovement = false;
-	}
-}
 
 void CInput::AdjustYaw( float speed, QAngle& viewangles )
 {
@@ -739,6 +722,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 	float flViewAngleTurningSpeed, maxTurningSpeed = thirdperson_turningspeed.GetFloat();
 	float prevViewAngle = viewangles[YAW];
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseHLPlayer *pHLPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
 	float PlayerVel = pPlayer->GetAbsVelocity().Length2D();
 	
 
@@ -803,8 +787,8 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				{
 					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
 						return;
-					else if (bIsFreezingMovement)
-					{
+					else if (pHLPlayer->IsForceViewAngleToCamera())
+					{	//do not allow players to turn
 						return;
 					}
 					else if (pPlayer->m_bIsPlayerFrozenDebuff)
@@ -918,7 +902,7 @@ void CInput::AdjustAngles ( float frametime )
 	{
 		return;
 	}
-	MovementFreezeThink();
+	
 	// Retrieve latest view direction from engine
 	engine->GetViewAngles( viewangles );
 

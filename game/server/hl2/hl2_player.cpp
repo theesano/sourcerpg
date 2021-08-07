@@ -66,7 +66,7 @@ extern ConVar weapon_showproficiency;
 extern ConVar autoaim_max_dist;
 
 extern ConVar animtime("animtime", "0.2"); // the period for selecting the next animation in the combo , if runs out the attack animation will revert back to the first animation in the chain.
-extern ConVar lilyss_player_attackspeed("lilyss_player_attackspeed", "1.0");
+extern ConVar lilyss_player_attackspeed("lilyss_player_attackspeed", "1.0"); //base attackspeed for player
 
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
@@ -375,6 +375,8 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD(m_flAttackSpeed,FIELD_FLOAT),
 	DEFINE_FIELD(m_flCooldownReductionRate,FIELD_FLOAT),
 	DEFINE_FIELD(m_iPlayerCritRate,FIELD_INTEGER),
+	
+	DEFINE_FIELD(m_bForceViewAngleToCamera,FIELD_BOOLEAN),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -397,7 +399,7 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flTimeIgnoreFallDamage, FIELD_TIME ),
 	DEFINE_FIELD( m_bIgnoreFallDamageResetAfterImpact, FIELD_BOOLEAN ),
 
-	// Suit power fields
+	// Stamina field
 	DEFINE_FIELD( m_flStaminaLoad, FIELD_FLOAT ),
 
 	DEFINE_FIELD( m_flIdleTime, FIELD_TIME ),
@@ -492,6 +494,8 @@ CStaminaDevice SuitDeviceBreather( bits_STAMINA_BREATHER, 6.7f );		// 100 units 
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
+	
+	SendPropBool(SENDINFO(m_bForceViewAngleToCamera)),
 END_SEND_TABLE()
 
 
@@ -543,9 +547,11 @@ void CHL2_Player::HandleSpeedChanges( void )
 	//int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
 	//if (m_nButtons & IN_SPEED && !m_bEvadeDelayedUse)
-	if (m_afButtonPressed & IN_SPEED)
+
+	if ((m_nButtons & IN_SPEED) && (gpGlobals->curtime >= m_flEvadeCDTimer))
 	{
-		Evade();
+		Evade();		
+		m_flEvadeCDTimer = gpGlobals->curtime + 0.3f; // Cooldown timer for Evade 
 	}
 
 	bool bIsWalking = IsWalking();
@@ -929,6 +935,18 @@ void CHL2_Player::PreThink(void)
 		pThirdpersonTurnMode->SetValue(0);
 
 	float flTestTimer1;
+
+	if (m_flForceViewAngleToCameraTimer >= gpGlobals->curtime)
+	{
+		m_bForceViewAngleToCamera = true;
+		m_HL2Local.m_bForceViewAngleToCamera = true;
+	}
+	else
+	{
+		m_bForceViewAngleToCamera = false;
+		m_HL2Local.m_bForceViewAngleToCamera = false;
+	}
+
 	
 	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
 	if (pIsPlayerAttacking->GetInt() == 1)
@@ -1782,6 +1800,9 @@ void CHL2_Player::Spawn(void)
 	//
 	//m_flMaxspeed = 320;
 
+	m_flEvadeCDTimer = 0.0f;
+	m_flForceViewAngleToCameraTimer = 0.0f;
+
 	m_iPlayerMP = 50;
 	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
 	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
@@ -1803,6 +1824,7 @@ void CHL2_Player::Spawn(void)
 	m_flRageCurrent = 0;
 	m_flRageMax = sk_plr_rage_max.GetFloat();
 	m_flMovementSpeedtimer = 0.0f;
+
 
 	// Setup our flashlight values
 #ifdef HL2_EPISODIC
@@ -1903,6 +1925,7 @@ void CHL2_Player::HandleAttackSpeedChanges()
 	else if (m_flAttackSpeedBonusTimer <= gpGlobals->curtime)
 	{
 		lilyss_player_attackspeed.SetValue(1.0f);
+		//m_flAttackSpeed + flAttackSpeedBuff + flAttackSpeedSkill + flAttackSpeedGearBonus
 	}
 
 }
@@ -2593,14 +2616,16 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	}
 	else if (playerAnim == PLAYER_EVADE)
 	{
-		idealActivity = ACT_EVADE;
-		if (m_afButtonPressed & IN_ATTACK2)
-		{
-			if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
-				idealActivity = ACT_MELEE_SPEVADE;
-			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
-				idealActivity = ACT_MELEE_ATTACK5;
-		}
+		//if (m_afButtonPressed & IN_ATTACK2)
+		//{
+		//	if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
+		//		idealActivity = ACT_MELEE_SPEVADE;
+		//	else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
+		//		idealActivity = ACT_MELEE_ATTACK5;
+		//}
+		//else
+			idealActivity = ACT_EVADE;
+
 	}
 	else if (playerAnim == PLAYER_FLINCH)
 	{		
@@ -2637,9 +2662,17 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		{
 			idealActivity = ACT_MELEE_ATTACK4;
 		}
+		else if (m_afButtonPressed & IN_ATTACK2)
+		{
+			if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
+				idealActivity = ACT_MELEE_SPEVADE;
+			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
+				idealActivity = ACT_MELEE_ATTACK5;
+			
+		}
 		else
 		{
-			idealActivity = ACT_MELEE_ATTACK2;
+			idealActivity = ACT_MELEE_SPEVADE;
 		}
 	}
 	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
@@ -2799,12 +2832,13 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (idealActivity == ACT_MELEE_ATTACK1)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
+		RestartGesture(ACT_MELEE_ATTACK1);
 		// FIXME: this seems a bit wacked
 		SetLayerPlaybackRate(0, m_flAttackSpeed);
 		Weapon_SetActivity(Weapon_TranslateActivity(ACT_MELEE_ATTACK1), 0);
 		return;
 	}
-
+	
 	if (idealActivity == ACT_MELEE_ATTACK2)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
@@ -2845,7 +2879,8 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 	if (idealActivity == ACT_MELEE_SPEVADE)
 	{
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		AddGesture(ACT_MELEE_SPEVADE);
+		RestartGesture(ACT_MELEE_SPEVADE);
 		SetLayerPlaybackRate(0, m_flAttackSpeed);
 		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
@@ -4555,6 +4590,12 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 	return BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 }
 
+//Yeah
+//Only for Mouse at the moment
+void CHL2_Player::ForceViewAngleToCamera(float flDuration)
+{
+	m_flForceViewAngleToCameraTimer = gpGlobals->curtime + flDuration;
+}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

@@ -892,6 +892,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	//show damage number
 	char tempstr[512];
 	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
+	//Q_snprintf(tempstr, sizeof(tempstr), "%i / %i", GetHealth(), GetMaxHealth());
 	EntityText(5, tempstr, 1);
 
 

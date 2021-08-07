@@ -1014,6 +1014,7 @@ private:
 	float					m_flSwimTime;		// how long player has been underwater
 	float					m_flDuckTime;		// how long we've been ducking
 	float					m_flDuckJumpTime;	
+	float					m_flFrozenWeaponModeTimer; // how long should player stay frozen when changing weapon mode;
 
 	float					m_flSuitUpdate;					// when to play next suit update
 	int						m_rgSuitPlayList[CSUITPLAYLIST];// next sentencenum to play for suit update
@@ -1031,6 +1032,7 @@ private:
 
 	int						m_iUpdateTime;		// stores the number of frame ticks before sending HUD update messages
 	int						m_iClientBattery;	// the Battery currently known by the client.  If this changes, send a new
+	
 
 	// Autoaim data
 	QAngle					m_vecAutoAim;

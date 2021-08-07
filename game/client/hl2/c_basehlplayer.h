@@ -34,9 +34,13 @@ public:
 	float				GetZoom( void );
 	bool				IsZoomed( void )	{ return m_HL2Local.m_bZooming; }
 
+	bool				IsForceViewAngleToCamera_Local(void) { return m_HL2Local.m_bForceViewAngleToCamera; }
+	bool				IsForceViewAngleToCamera() const { return m_bForceViewAngleToCamera; }
+
 	bool				IsSprinting( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_SPRINT; }
 	bool				IsFlashlightActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_FLASHLIGHT; }
 	bool				IsBreatherActive( void ) { return m_HL2Local.m_bitsActiveDevices & bits_STAMINA_BREATHER; }
+	
 
 	virtual int			DrawModel( int flags );
 	virtual	void		BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
@@ -44,6 +48,7 @@ public:
 	LadderMove_t		*GetLadderMove() { return &m_HL2Local.m_LadderMove; }
 	virtual void		ExitLadder();
 	bool				IsSprinting() const { return m_fIsSprinting; }
+
 	
 	// Input handling
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
@@ -58,6 +63,7 @@ public:
 	EHANDLE				m_hClosestNPC;
 	float				m_flSpeedModTime;
 	bool				m_fIsSprinting;
+	bool				m_bForceViewAngleToCamera;
 
 private:
 	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
