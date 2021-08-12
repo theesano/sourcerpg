@@ -74,6 +74,7 @@
 #include "npc_bullseye.h"
 #include "hl2_player.h"
 #include "weapon_physcannon.h"
+#include "basemeleeweapon.h"
 #endif
 #include "waterbullet.h"
 #include "in_buttons.h"
@@ -139,16 +140,16 @@ ConVar	ai_debug_think_ticks( "ai_debug_think_ticks", "0" );
 ConVar	ai_debug_doors( "ai_debug_doors", "0" );
 ConVar  ai_debug_enemies( "ai_debug_enemies", "0" );
 
-ConVar	ai_rebalance_thinks( "ai_rebalance_thinks", "1" );
-ConVar	ai_use_efficiency( "ai_use_efficiency", "1" );
-ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "1" );
+ConVar	ai_rebalance_thinks( "ai_rebalance_thinks", "1" ); 
+ConVar	ai_use_efficiency( "ai_use_efficiency", "1" ); 
+ConVar	ai_use_frame_think_limits( "ai_use_frame_think_limits", "0" ); //1
 ConVar	ai_default_efficient( "ai_default_efficient", ( IsX360() ) ? "1" : "0" );
 ConVar	ai_efficiency_override( "ai_efficiency_override", "0" );
 ConVar	ai_debug_efficiency( "ai_debug_efficiency", "0" );
 ConVar	ai_debug_dyninteractions( "ai_debug_dyninteractions", "0", FCVAR_NONE, "Debug the NPC dynamic interaction system." );
 ConVar	ai_frametime_limit( "ai_frametime_limit", "50", FCVAR_NONE, "frametime limit for min efficiency AIE_NORMAL (in sec's)." );
 
-ConVar	ai_use_think_optimizations( "ai_use_think_optimizations", "1" );
+ConVar	ai_use_think_optimizations( "ai_use_think_optimizations", "0" ); //1
 
 ConVar	ai_test_moveprobe_ignoresmall( "ai_test_moveprobe_ignoresmall", "0" );
 
@@ -3694,6 +3695,8 @@ bool CAI_BaseNPC::PreNPCThink()
 
 	bool bUseThinkLimits = ( !m_bInChoreo && ShouldUseFrameThinkLimits() );
 
+
+
 #ifdef _DEBUG
 	const float NPC_THINK_LIMIT = 30.0 / 1000.0;
 #else
@@ -3761,8 +3764,22 @@ void CAI_BaseNPC::PostNPCThink( void )
 
 void CAI_BaseNPC::CallNPCThink( void ) 
 { 
-	RebalanceThinks();
+//	DevMsg("NPCThinking \n");
+	if (UTIL_GetLocalPlayer()->GetActiveWeapon() != NULL)
+	{
+		CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(UTIL_GetLocalPlayer()->GetActiveWeapon());
 
+		if (pWeapon->IsSPEvading())
+		{
+			AddSolidFlags(FSOLID_NOT_SOLID);
+		}
+		else
+		{
+			RemoveSolidFlags(FSOLID_NOT_SOLID);
+		}
+	}
+
+	RebalanceThinks();
 	//---------------------------------
 
 	m_bUsingStandardThinkTime = false;
@@ -4054,6 +4071,7 @@ void CAI_BaseNPC::NPCThink( void )
 	{
 		m_flNextDecisionTime = 0;
 	}
+
 }
 
 //=========================================================

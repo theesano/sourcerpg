@@ -18,7 +18,7 @@
 	#include "c_baseplayer.h"
 	#include "engine/ivdebugoverlay.h"
 
-	ConVar cl_showanimstate( "cl_showanimstate", "-1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show the (client) animation state for the specified entity (-1 for none)." );
+	ConVar cl_showanimstate( "cl_showanimstate", "-1", FCVAR_CHEAT , "Show the (client) animation state for the specified entity (-1 for none)." );
 	ConVar showanimstate_log( "cl_showanimstate_log", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "1 to output cl_showanimstate to Msg(). 2 to store in AnimStateClient.log. 3 for both." );
 #else
 	#include "player.h"

@@ -100,7 +100,7 @@ typedef enum
 	ACT_IDLE_ANGRY,			// FIXME: being used as an combat ready idle?  alternate idle animation in which the monster is clearly agitated. (loop)
 
 	ACT_MELEE_SPEVADE,		//for special evade
-	ACT_MELEE_SKILL_CSLASH, //for cruel slash skill
+	ACT_SKILL_EVILSLASH, //for evil slash skill
 
 	ACT_IDLE_RELAXED,
 	ACT_IDLE_STIMULATED,

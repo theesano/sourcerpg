@@ -253,40 +253,40 @@ int CSinglePlayerAnimState::ConvergeAngles(float goal, float maxrate, float dt, 
 {
 	int direction = TURN_NONE;
 
-	float anglediff = goal - current;
-	float anglediffabs = fabs(anglediff);
+	//float anglediff = goal - current;
+	//float anglediffabs = fabs(anglediff);
 
-	anglediff = AngleNormalize(anglediff);
+	//anglediff = AngleNormalize(anglediff);
 
-	float scale = 1.0f;
-	if (anglediffabs <= FADE_TURN_DEGREES)
-	{
-		scale = anglediffabs / FADE_TURN_DEGREES;
-		// Always do at least a bit of the turn ( 1% )
-		scale = clamp(scale, 0.01f, 1.0f);
-	}
+	//float scale = 1.0f;
+	//if (anglediffabs <= FADE_TURN_DEGREES)
+	//{
+	//	scale = anglediffabs / FADE_TURN_DEGREES;
+	//	// Always do at least a bit of the turn ( 1% )
+	//	scale = clamp(scale, 0.01f, 1.0f);
+	//}
 
-	float maxmove = maxrate * dt * scale;
+	//float maxmove = maxrate * dt * scale;
 
-	if (fabs(anglediff) < maxmove)
-	{
-		current = goal;
-	}
-	else
-	{
-		if (anglediff > 0)
-		{
-			current += maxmove;
-			direction = TURN_LEFT;
-		}
-		else
-		{
-			current -= maxmove;
-			direction = TURN_RIGHT;
-		}
-	}
+	//if (fabs(anglediff) < maxmove)
+	//{
+	//	current = goal;
+	//}
+	//else
+	//{
+	//	if (anglediff > 0)
+	//	{
+	//		current += maxmove;
+	//		direction = TURN_LEFT;
+	//	}
+	//	else
+	//	{
+	//		current -= maxmove;
+	//		direction = TURN_RIGHT;
+	//	}
+	//}
 
-	current = AngleNormalize(current);
+	//current = AngleNormalize(current);
 
 	return direction;
 }

@@ -740,14 +740,17 @@ void CHL2_Player::EvadeHandler(void)
 	trace_t trace;
 	Vector vecEndPos = GetAbsOrigin() + (fwd * 64); // 64 is a good enough distance to check if player is running up slopes or not.
 
-	//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
-	UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX,MASK_PLAYERSOLID,this,COLLISION_GROUP_PLAYER_MOVEMENT,&trace);
-	if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
-		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	if (!(GetEFlags() & EFL_NOCLIP_ACTIVE))
+	{
+		//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
+		UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
+		if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
+			SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
 
-	//Prevent player from getting big velocity boost when spamming the Evade button 
-	if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
-		SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+		//Prevent player from getting big velocity boost when spamming the Evade button 
+		if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
+			SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+	}
 	
 
 	if (m_bIsEvade)
@@ -902,13 +905,13 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
+
 	//PlayerStats
 	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
 	m_flCritDamage = lilyss_player_critdamage.GetFloat();
 	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
 	m_iPlayerCritRate = lilyss_player_crit_per.GetInt();
 
-	
 	sk_plr_rage_current.SetValue(m_flRageCurrent);
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
 
@@ -924,7 +927,7 @@ void CHL2_Player::PreThink(void)
 	HandleAttackSpeedChanges();
 
 	EvadeHandler();
-
+	
 	
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 	//Set thirdperson turning state. 
@@ -933,8 +936,6 @@ void CHL2_Player::PreThink(void)
 		pThirdpersonTurnMode->SetValue(1);
 	else
 		pThirdpersonTurnMode->SetValue(0);
-
-	float flTestTimer1;
 
 	if (m_flForceViewAngleToCameraTimer >= gpGlobals->curtime)
 	{
@@ -946,13 +947,11 @@ void CHL2_Player::PreThink(void)
 		m_bForceViewAngleToCamera = false;
 		m_HL2Local.m_bForceViewAngleToCamera = false;
 	}
-
 	
 	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
 	if (pIsPlayerAttacking->GetInt() == 1)
 	{
 			UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
-			flTestTimer1 = gpGlobals->curtime + 0.2;
 		//SetMoveType(MOVETYPE_NONE);
 		//HACK! : This is a temporary patch job for the evade bug, ala whenever a skill that requires the player to stand still for a certain amount of time , using evade wouldn't give them the speed boost.
 		SetMaxSpeed(600); //This cause bug that grants you up to 600 unit/s if you hold down shift while pressing movement keys and attack, this is because even if you set the player velocity to 0 , it is not 0, you still actually move a bit.
@@ -2644,7 +2643,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		
 		if (m_afButtonPressed & IN_SLOT1)
 		{
-			idealActivity = ACT_MELEE_ATTACK4;
+			idealActivity = ACT_SKILL_EVILSLASH;
 		}
 		else if (m_afButtonPressed & IN_SLOT2)
 		{
@@ -2871,9 +2870,11 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		return;
 	}
 
-	if (idealActivity == ACT_MELEE_SKILL_CSLASH)
+	if (idealActivity == ACT_SKILL_EVILSLASH)
 	{
-		RestartGesture(Weapon_TranslateActivity(idealActivity));
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;
 	}
 

@@ -786,7 +786,10 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				else if (thirdperson_oldturning.GetInt() == 1)
 				{
 					if (PlayerVel > 300.0f  && !(pPlayer->GetFlags() & FL_ONGROUND)) //Block player from turning when leaping 
-						return;
+					{
+						if (!(pPlayer->GetEFlags() & EFL_NOCLIP_ACTIVE))
+							return;
+					}
 					else if (pHLPlayer->IsForceViewAngleToCamera())
 					{	//do not allow players to turn
 						return;
@@ -802,7 +805,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 				}
 
 			}
-
+			
 			if (side || forward || KeyState(&in_right) || KeyState(&in_left))
 			{
 

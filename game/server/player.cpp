@@ -1771,6 +1771,7 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 	angles.z = 0;
 	
 	SetLocalAngles( angles );
+	 
 
 	SetThink(&CBasePlayer::PlayerDeathThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
@@ -3875,6 +3876,8 @@ void CBasePlayer::HandleFuncTrain(void)
 
 void CBasePlayer::PreThink(void)
 {						
+
+
 	if ( g_fGameOver || m_iPlayerLocked )
 		return;         // intermission or finale
 
@@ -4565,6 +4568,7 @@ void CBasePlayer::ForceOrigin( const Vector &vecOrigin )
 //-----------------------------------------------------------------------------
 void CBasePlayer::PostThink()
 {
+
 	m_vecSmoothedVelocity = m_vecSmoothedVelocity * SMOOTHING_FACTOR + GetAbsVelocity() * ( 1 - SMOOTHING_FACTOR );
 
 	if (m_afButtonPressed & IN_THROWGRENADE) //Not actual grenade throwing button

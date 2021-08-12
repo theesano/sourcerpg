@@ -837,6 +837,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 	BaseClass::PostDataUpdate( updateType );
 			 
 	//DevMsg("Def Client %.2f \n", m_flPlayerDefenseRate);
+	
 
 	// Only care about this for local player
 	if ( IsLocalPlayer() )
@@ -1168,32 +1169,6 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 			pWeapon->CreateMove( flInputSampleTime, pCmd, m_vecOldViewAngles );
 		}
 	}
-
-	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
-	//if ( GetFlags() & FL_FROZEN_ACT )
-	//{
-	//	// Don't stomp the first time we get frozen
-	//	if ( m_bWasFrozen )
-	//	{
-	//		// Stomp the new viewangles with old ones
-	//		//pCmd->viewangles = m_vecOldViewAngles;
-	//		//engine->SetViewAngles( pCmd->viewangles );
-	//		engine->ClientCmd("thirdperson_platformer 0");
-	//		
-	//	}
-	//	else
-	//	{
-	//		m_bWasFrozen = true;
-	//		engine->ClientCmd("thirdperson_platformer 1");
-
-	//	}
-	//}
-	//else
-	//{
-	//	m_bWasFrozen = false;
-	//	engine->ClientCmd("thirdperson_platformer 1");
-
-	//}
 
 	m_vecOldViewAngles = pCmd->viewangles;
 	

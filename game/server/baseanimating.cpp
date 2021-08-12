@@ -2330,6 +2330,7 @@ Vector CBaseAnimating::GetGroundSpeedVelocity( void )
 	AngleVectors( vecAngles, &vecVelocity );
 
 	vecVelocity = vecVelocity * m_flGroundSpeed;
+	
 
 	return vecVelocity;
 }

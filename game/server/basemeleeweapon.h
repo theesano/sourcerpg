@@ -44,6 +44,8 @@ public:
 	virtual int		CapabilitiesGet(void);
 	virtual	int		WeaponMeleeAttack1Condition(float flDot, float flDist);
 
+	virtual bool	IsSPEvading() const{ return m_bNmAttackSPEvade; }
+
 	bool			m_bIsEnemyInAtkRange;
 
 	bool			m_bIsSkCoolDown;
@@ -57,6 +59,7 @@ public:
 
 	bool			m_bIsSkCoolDown4;
 	float			m_nSkCoolDownTime4;
+	float			m_flSkillTrapping_ActiveTime;
 
 	bool			m_bIsSkCoolDown5;
 	float			m_nSkCoolDownTime5;
@@ -69,6 +72,10 @@ public:
 	float			m_flCooldown;
 
 	int				m_iEnemyHealth;
+
+	bool			m_bNmAttackSPEvade;
+	float			m_flNmAttackSPEvadeTimer;
+	float			m_flNmAttackSPEvadeTimer_rp;
 
 
 protected:
@@ -108,10 +115,7 @@ private:
 	float			m_flNmAttackTimer4;
 	float			m_flNmAttackTimer4_rp;
 
-	bool			m_bNmAttackSPEvade;
-	float			m_flNmAttackSPEvadeTimer;
-	float			m_flNmAttackSPEvadeTimer_rp;
-
+	
 
 	void			Skill_Evade(void);
 	void			Skill_RadialSlash(void);

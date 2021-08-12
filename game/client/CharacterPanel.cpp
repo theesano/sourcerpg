@@ -10,6 +10,8 @@ using namespace vgui;
 #include <vgui/IScheme.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ComboBox.h>
+
+
 #include "c_baseplayer.h"
 
 //CCharacterPanel class:
@@ -44,6 +46,7 @@ private:
 	//ImagePanel* imagePanel = new ImagePanel(this, "myPanel");
 	Button *m_pCloseButton;
 	Panel *m_TestPanel;
+	
 	
 
 	MESSAGE_FUNC_PTR(OnTextChanged, "TextChanged", panel);
@@ -139,7 +142,7 @@ CCharacterPanel::CCharacterPanel(vgui::VPANEL parent)
 	m_StatsDefense->SetFont(m_hTextFont);
 	m_StatsDefense->SetWide(169);
 
-
+	
 }
 
 //Class: CCharacterPanelInterface Class. Used for construction.
