@@ -580,6 +580,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
 		// We're frozen; don't die.
+		SetActivity(ACT_DIESIMPLE);
 		return;
 	}
 
@@ -3769,7 +3770,7 @@ void CAI_BaseNPC::CallNPCThink( void )
 	{
 		CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(UTIL_GetLocalPlayer()->GetActiveWeapon());
 
-		if (pWeapon->IsSPEvading())
+		if (pWeapon->IsAICollisionOff())
 		{
 			AddSolidFlags(FSOLID_NOT_SOLID);
 		}

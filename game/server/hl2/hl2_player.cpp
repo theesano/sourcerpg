@@ -11,6 +11,7 @@
 #include "gamerules.h"
 #include "trains.h"
 #include "basehlcombatweapon_shared.h"
+#include "basemeleeweapon.h"
 #include "vcollide_parse.h"
 #include "in_buttons.h"
 #include "ai_interactions.h"
@@ -375,7 +376,8 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD(m_flAttackSpeed,FIELD_FLOAT),
 	DEFINE_FIELD(m_flCooldownReductionRate,FIELD_FLOAT),
 	DEFINE_FIELD(m_iPlayerCritRate,FIELD_INTEGER),
-	
+	DEFINE_FIELD(m_iPlayerMP, FIELD_INTEGER),
+
 	DEFINE_FIELD(m_bForceViewAngleToCamera,FIELD_BOOLEAN),
 
 	/*
@@ -657,6 +659,7 @@ void CHL2_Player::Evade(void)
 	if (!pPlayer)
 		return; //Always validate a pointer
 	
+	
 	//Initializing Vector
 	Vector fwd;
 	//Zero out z axis
@@ -727,8 +730,8 @@ void CHL2_Player::EvadeHandler(void)
 	CBasePlayer *pPlayer = CBaseEntity::GetPredictionPlayer();
 	if (!pPlayer)
 		return; //Always validate a pointer
-
 	//DevMsg("vel x y z %.2f %.2f %.2f \n", GetAbsVelocity().x, GetAbsVelocity().y, GetAbsVelocity().z);
+
 
 	//Initializing Vector
 	Vector fwd;
@@ -738,18 +741,46 @@ void CHL2_Player::EvadeHandler(void)
 	VectorNormalize(fwd);
 
 	trace_t trace;
+	trace_t tracedbg;
 	Vector vecEndPos = GetAbsOrigin() + (fwd * 64); // 64 is a good enough distance to check if player is running up slopes or not.
+
+	
 
 	if (!(GetEFlags() & EFL_NOCLIP_ACTIVE))
 	{
-		//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
-		UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
-		if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
-			SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+		if (!m_bIgnoreSpeedClamp)
+		{
+			//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
+			UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
 
-		//Prevent player from getting big velocity boost when spamming the Evade button 
-		if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
-			SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+			if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 600)
+				SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+
+			//Prevent player from getting big velocity boost when spamming the Evade button 
+			if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 600)
+				SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
+			
+		}
+		else
+		{
+			//Checks whether player is running up a slope or not , if they do , clamp their speed to prevent sliding upward.
+			UTIL_TraceHull(GetAbsOrigin(), vecEndPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
+			if (trace.DidHitWorld() && GetAbsVelocity().Length2D() > 1024)
+			{
+				fwd.z += 0.25;
+				SetAbsVelocity(fwd * 1024);
+			}
+
+			//Prevent player from getting big velocity boost when spamming the Evade button 
+			if (GetAbsVelocity().z < -100 && GetAbsVelocity().Length2D() > 1024)
+			{
+				fwd.z += 0.25;
+				SetAbsVelocity(fwd * 1024);
+			}
+		}
+
+		
+			
 	}
 	
 
@@ -927,8 +958,13 @@ void CHL2_Player::PreThink(void)
 	HandleAttackSpeedChanges();
 
 	EvadeHandler();
-	
-	
+
+	//disable player evade speed clamping to make the SP evade skill works on Z height
+	if (m_bIgnoreSpeedClamp && gpGlobals->curtime >= m_flIgnoreSpeedClampTimer)
+	{
+		m_bIgnoreSpeedClamp = false;
+	}
+
 	//DevMsg("Velocity : %.2f \n", GetAbsVelocity().Length2D());
 	//Set thirdperson turning state. 
 	ConVar *pThirdpersonTurnMode = cvar->FindVar("thirdperson_oldturning");
@@ -1806,6 +1842,9 @@ void CHL2_Player::Spawn(void)
 	m_iPlayerMPMax = sk_plr_max_mp.GetInt();
 	m_flPlayerMPRestoreInterval = gpGlobals->curtime;
 
+	m_flIgnoreSpeedClampTimer = 0.0f;
+
+
 	if ( !IsSuitEquipped() )
 		 StartWalking();
 	//Hack fix for movement speed rage increase!!!
@@ -1932,6 +1971,13 @@ void CHL2_Player::HandleAttackSpeedChanges()
 void CHL2_Player::SetPlayerMP(int amount)
 {
 	m_iPlayerMP = amount;
+}
+
+void CHL2_Player::SetIgnoreSpeedClampDuration(float flDuration)
+{
+	m_bIgnoreSpeedClamp = true;
+	m_flIgnoreSpeedClampTimer = gpGlobals->curtime + flDuration;
+
 }
 
 
@@ -2508,7 +2554,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		else
 		{  //Select proper animations for each attack. TODO: Sync Animation time with Weapon Attack Cycle.
 			
-			if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
+			if ((GetFlags() & FL_ONGROUND))
 			{
 				if (m_bIsAttack1 == true)
 				{
@@ -2570,7 +2616,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 
 				//}
 			}
-			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
+			else if (!(GetFlags() & FL_ONGROUND))
 			{
 				if (m_bIsAttack1 == true)
 				{
@@ -2637,6 +2683,11 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	{
 		idealActivity = ACT_IDLE_HURT;
 	}
+	else if (playerAnim == PLAYER_SKILL_AERIAL)
+	{
+		
+		idealActivity = ACT_MELEE_AIR_SP2;
+	}
 	else if (playerAnim == PLAYER_SKILL_USE)
 	{
 		//idealActivity = ACT_MELEE_SKILL_CSLASH;
@@ -2655,18 +2706,22 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		}
 		else if (m_afButtonPressed & IN_SLOT4)
 		{
-			idealActivity = ACT_MELEE_ATTACK2;
+			idealActivity = ACT_SKILL_FEARTRAP;
 		}
 		else if (m_afButtonPressed & IN_SLOT5)
 		{
 			idealActivity = ACT_MELEE_ATTACK4;
 		}
+		else if (m_afButtonPressed & IN_SLOT6)
+		{
+			idealActivity = ACT_MELEE_ATTACK5;
+		}
 		else if (m_afButtonPressed & IN_ATTACK2)
 		{
-			if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
+			//if (!(GetFlags() & FL_ONGROUND))				
+				//idealActivity = ACT_MELEE_AIR_SP2;
+			//else
 				idealActivity = ACT_MELEE_SPEVADE;
-			else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
-				idealActivity = ACT_MELEE_ATTACK5;
 			
 		}
 		else
@@ -2878,10 +2933,28 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 		return;
 	}
 
+	if (idealActivity == ACT_SKILL_FEARTRAP)
+	{
+		AddGesture(Weapon_TranslateActivity(idealActivity));
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
+		return;
+	}
+
+
 	if (idealActivity == ACT_MELEE_SPEVADE)
 	{
 		AddGesture(ACT_MELEE_SPEVADE);
 		RestartGesture(ACT_MELEE_SPEVADE);
+		SetLayerPlaybackRate(0, m_flAttackSpeed);
+		SetLayerPlaybackRate(2, m_flAttackSpeed);
+		return;
+	}
+
+	if (idealActivity == ACT_MELEE_AIR_SP2)
+	{
+		AddGesture(ACT_MELEE_AIR_SP2);
+		//RestartGesture(ACT_MELEE_AIR_SP2);
 		SetLayerPlaybackRate(0, m_flAttackSpeed);
 		SetLayerPlaybackRate(2, m_flAttackSpeed);
 		return;

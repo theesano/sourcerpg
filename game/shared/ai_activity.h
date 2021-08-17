@@ -101,6 +101,8 @@ typedef enum
 
 	ACT_MELEE_SPEVADE,		//for special evade
 	ACT_SKILL_EVILSLASH, //for evil slash skill
+	ACT_SKILL_FEARTRAP,
+	ACT_MELEE_AIR_SP2,
 
 	ACT_IDLE_RELAXED,
 	ACT_IDLE_STIMULATED,

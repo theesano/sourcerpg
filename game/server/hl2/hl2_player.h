@@ -202,6 +202,9 @@ public:
 	void			SetDebuff(DebuffState debuff);
 	void			ForceViewAngleToCamera(float flDuration);
 
+	bool			m_bIgnoreSpeedClamp;
+	float			m_flIgnoreSpeedClampTimer;
+	void			SetIgnoreSpeedClampDuration(float flDuration);
 
 	// Apply a battery
 	bool ApplyBattery( float powerMultiplier = 1.0 );

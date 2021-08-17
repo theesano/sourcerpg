@@ -44,12 +44,14 @@ public:
 	virtual int		CapabilitiesGet(void);
 	virtual	int		WeaponMeleeAttack1Condition(float flDot, float flDist);
 
-	virtual bool	IsSPEvading() const{ return m_bNmAttackSPEvade; }
+	virtual bool	IsAICollisionOff() { return m_bIsAICollisionOff; }
+	//void			SetAICollisionOffTime(float flDuration);
 
 	bool			m_bIsEnemyInAtkRange;
 
-	bool			m_bIsSkCoolDown;
+	bool			m_bIsSkCoolDown;	
 	float			m_nSkCoolDownTime;
+
 
 	bool			m_bIsSkCoolDown2;
 	float			m_nSkCoolDownTime2;
@@ -67,6 +69,9 @@ public:
 	bool			m_bIsSkCoolDown6;
 	float			m_nSkCoolDownTime6;
 
+	bool			m_bIsSkCoolDown7;
+	float			m_nSkCoolDownTime7;
+
 	float			m_flSkillAttributeRange;
 
 	float			m_flCooldown;
@@ -76,6 +81,16 @@ public:
 	bool			m_bNmAttackSPEvade;
 	float			m_flNmAttackSPEvadeTimer;
 	float			m_flNmAttackSPEvadeTimer_rp;
+
+	bool			m_bAttackSPAir2;
+	float			m_flAttackSPAir2Timer;
+	float			m_flAttackSPAir2Timer_rp;
+
+	bool			m_bSkillLiftAttack;
+	float			m_flSkillLiftAttackDelayTimer;
+
+	bool			m_bIsAICollisionOff;
+	//bool			m_flAICollisionOffTime;
 
 
 protected:
@@ -111,11 +126,14 @@ private:
 	void			InflictNormalAttackDamage(void);
 	bool			m_bIsNmAttack;
 	bool			m_bIsNmAttack4;
+	bool			m_bNmAirAttack;
+	float			m_flNmAirAttackDelayTimer;
 	float			m_flNmAttackTimer;
 	float			m_flNmAttackTimer4;
 	float			m_flNmAttackTimer4_rp;
 
-	
+	bool			m_bNPCFreezeAerial; // Keep the NPCs still at their origins and remove all velocities for a short period of time
+	float			m_flNPCFreezeAerialTime;
 
 	void			Skill_Evade(void);
 	void			Skill_RadialSlash(void);
@@ -128,6 +146,8 @@ private:
 	void			Skill_Trapping_LogicEx(void);
 	void			Skill_Tornado(void);
 	void			Skill_Tornado_LogicEx(void);
+	void			Skill_Lift(void);
+	void			Skill_Lift_LogicEx(void);
 	void			SkillStatNotification(void);
 
 	bool			m_bIsHealSlashAttacking;
