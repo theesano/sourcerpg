@@ -13,6 +13,7 @@ using namespace vgui;
 DECLARE_HUDELEMENT(CHudPlayerQuickStats);
 DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
 DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, AS);
+DECLARE_HUD_MESSAGE(CHudPlayerQuickStats, RageBuffTime);
 
 
 # define HULL_INIT -1
@@ -28,6 +29,7 @@ CHudElement(pElementName), BaseClass(NULL, "HUDPlayerQuickStats")
 	vgui::Panel * pParent = g_pClientMode->GetViewport();
 	
 	m_ASPD = vgui::SETUP_PANEL(new vgui::Label(this, "HUDASPD", ""));
+	m_pRageBuffTime = vgui::SETUP_PANEL(new vgui::Label(this, "HUDRageBuffTime", ""));
 	SetParent(pParent);
 
 	m_ASPD->SetPos(0, 0);
@@ -35,6 +37,13 @@ CHudElement(pElementName), BaseClass(NULL, "HUDPlayerQuickStats")
 	m_ASPD->SetContentAlignment(vgui::Label::a_center);
 	m_ASPD->SetPaintBorderEnabled(false);
 	m_ASPD->SetPaintBackgroundEnabled(false);
+
+	m_pRageBuffTime->SetPos(16, 16);
+	m_pRageBuffTime->SetSize(16, 16);
+	m_pRageBuffTime->SetContentAlignment(vgui::Label::a_center);
+	m_pRageBuffTime->SetPaintBorderEnabled(false);
+	m_pRageBuffTime->SetPaintBackgroundEnabled(false);
+
 }
 
 //------------------------------------------------------------------------
@@ -45,11 +54,15 @@ void CHudPlayerQuickStats::Init()
 {
 	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, Battery);
 	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, AS);
+	HOOK_HUD_MESSAGE(CHudPlayerQuickStats, RageBuffTime);
+
 
 	Reset();
 	m_iBat		= ARMOR_INIT;
 	m_iNewBat	= 0;
 	m_flAttackSpeedBuffDuration = 0;
+	m_flRageBuffDuration = 0;
+
 
 }
 
@@ -246,6 +259,23 @@ void CHudPlayerQuickStats::Paint()
 	{
 		surface()->DrawSetTextColor(0, 255, 255, 0);
 	}
+
+	// Draw Buff Duration
+	if (m_flRageBuffDuration > 0)
+	{
+		V_swprintf_safe(sz, L"%.0f", m_flRageBuffDuration);
+		surface()->DrawSetTextColor(255, 0, 255, 255);
+		surface()->DrawSetTextPos(text_xposArmorNum, text_yposArmorNum + 40);
+		surface()->DrawPrintText(sz, wcslen(sz));
+		//m_ASPD->SetVisible(true);
+		//m_ASPD->SetText(sz);
+		m_pRageBuffTime->SetVisible(false);
+
+	}
+	else
+	{
+		surface()->DrawSetTextColor(0, 255, 255, 0);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -259,4 +289,9 @@ void CHudPlayerQuickStats::MsgFunc_Battery(bf_read &msg)
 void CHudPlayerQuickStats::MsgFunc_AS(bf_read &msg)
 {
 	m_flAttackSpeedBuffDuration = msg.ReadShort();
+}
+
+void CHudPlayerQuickStats::MsgFunc_RageBuffTime(bf_read &msg)
+{
+	m_flRageBuffDuration = msg.ReadShort();
 }

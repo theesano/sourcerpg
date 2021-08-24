@@ -119,7 +119,7 @@ ConVar sk_plr_rage_current("sk_plr_rage_current", "0");
 ConVar sk_plr_rage_max("sk_plr_rage_max", "100");
 ConVar sk_plr_rage_1_consumption("sk_plr_rage_1_consumption", "30");
 ConVar sk_plr_rage_2_consumption("sk_plr_rage_2_consumption", "30");
-ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "30");
+ConVar sk_plr_rage_3_consumption("sk_plr_rage_3_consumption", "100");
 ConVar sk_plr_rage_4_consumption("sk_plr_rage_4_consumption", "30");
 
 ConVar sk_plr_rage_armor_given("sk_plr_rage_heal_given", "15");
@@ -372,11 +372,13 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flTimeAllStaminaDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 	DEFINE_FIELD(m_flBaseDamage,FIELD_FLOAT),
+	DEFINE_FIELD(m_flRageDamageBuff, FIELD_FLOAT),
 	DEFINE_FIELD(m_flCritDamage, FIELD_FLOAT),
 	DEFINE_FIELD(m_flAttackSpeed,FIELD_FLOAT),
 	DEFINE_FIELD(m_flCooldownReductionRate,FIELD_FLOAT),
 	DEFINE_FIELD(m_iPlayerCritRate,FIELD_INTEGER),
 	DEFINE_FIELD(m_iPlayerMP, FIELD_INTEGER),
+	DEFINE_FIELD(m_flRageCurrent,FIELD_INTEGER),
 
 	DEFINE_FIELD(m_bForceViewAngleToCamera,FIELD_BOOLEAN),
 
@@ -519,6 +521,7 @@ void CHL2_Player::Precache( void )
 	PrecacheScriptSound("Player.Evade");
 	PrecacheScriptSound("ItemRage.Pickup");
 	PrecacheParticleSystem("aoehint22");
+	PrecacheParticleSystem("hint_movespeed");
 
 }
 
@@ -550,10 +553,14 @@ void CHL2_Player::HandleSpeedChanges( void )
 
 	//if (m_nButtons & IN_SPEED && !m_bEvadeDelayedUse)
 
-	if ((m_nButtons & IN_SPEED) && (gpGlobals->curtime >= m_flEvadeCDTimer))
+	if ((m_nButtons & IN_SPEED) && (gpGlobals->curtime >= m_flEvadeCDTimer) && (m_HL2Local.m_flStamina >= sk_evadestaminacost.GetFloat()) )
 	{
 		Evade();		
 		m_flEvadeCDTimer = gpGlobals->curtime + 0.3f; // Cooldown timer for Evade 
+	}
+	else if ((m_afButtonPressed & IN_SPEED) && (m_HL2Local.m_flStamina < sk_evadestaminacost.GetFloat()))
+	{
+		Warning("Insufficient Stamina \n");
 	}
 
 	bool bIsWalking = IsWalking();
@@ -574,7 +581,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 
 			if (m_afButtonPressed & IN_FORWARD)
 			{
-				if (m_flCanRunTimeWindowFwd > gpGlobals->curtime)
+				if ((m_flCanRunTimeWindowFwd > gpGlobals->curtime) && (!m_bIsEvade))
 					StartAutoRunning();
 			}
 	
@@ -584,7 +591,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 				m_flCanRunTimeWindowFwd = gpGlobals->curtime + 0.15f;
 			}
 
-			if (m_afButtonPressed & IN_BACK)
+			if ((m_afButtonPressed & IN_BACK) && (!m_bIsEvade))
 			{
 				if (m_flCanRunTimeWindowBk > gpGlobals->curtime)
 					StartAutoRunning();
@@ -596,7 +603,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 				m_flCanRunTimeWindowBk = gpGlobals->curtime + 0.15f;
 			}
 
-			if (m_afButtonPressed & IN_MOVELEFT)
+			if ((m_afButtonPressed & IN_MOVELEFT) && (!m_bIsEvade))
 			{
 				if (m_flCanRunTimeWindowLt > gpGlobals->curtime)
 					StartAutoRunning();
@@ -609,7 +616,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 
 			}
 		
-			if (m_afButtonPressed & IN_MOVERIGHT)
+			if ((m_afButtonPressed & IN_MOVERIGHT) && (!m_bIsEvade))
 			{
 				if (m_flCanRunTimeWindowRt > gpGlobals->curtime)
 					StartAutoRunning();
@@ -625,7 +632,7 @@ void CHL2_Player::HandleSpeedChanges( void )
 		}
 		else if (sv_runmode.GetInt() == 1)
 		{
-			if (m_afButtonPressed & IN_WALK)
+			if ((m_afButtonPressed & IN_WALK) && (!m_bIsEvade))
 				StartAutoRunning();
 
 		}
@@ -669,10 +676,10 @@ void CHL2_Player::Evade(void)
 
 	Vector EvadeEndPoint = GetAbsOrigin() + fwd *128;
 	
-	if (m_HL2Local.m_flStamina >= sk_evadestaminacost.GetFloat())
+	if (sk_evadestyle.GetInt() == 0)
 	{
-		if (sk_evadestyle.GetInt() == 0)
-		{
+		SetMaxSpeed(600); //Force player max speed at 600 to give player enough speed to dodge, if you don't player would be stuck at 150 unit/s when dodging
+
 			if (GetAbsVelocity().Length2D() > 0)
 			{
 				if (m_afButtonPressed & IN_BACK)
@@ -693,6 +700,7 @@ void CHL2_Player::Evade(void)
 			EmitSound("Player.Evade");
 			SetAnimation(PLAYER_EVADE);
 			m_bIsEvade = true;
+
 			RemoveGesture(ACT_MELEE_ATTACK1);
 			RemoveGesture(ACT_MELEE_ATTACK2);
 			RemoveGesture(ACT_MELEE_ATTACK3);
@@ -701,23 +709,20 @@ void CHL2_Player::Evade(void)
 
 
 			if (m_bIsRunning)
-				m_bWasRunning = true; 
+				StopRunning();
+			//	m_bWasRunning = true; 
 
 			m_flEvadeHandlerTime = gpGlobals->curtime + 0.3f; //Timer for applying additional evade effect.
 			
-		}
-		else if (sk_evadestyle.GetInt() == 1)
-		{	pPlayer->SetAbsOrigin(EvadeEndPoint);
+	}
+	else if (sk_evadestyle.GetInt() == 1)
+	{	
+		pPlayer->SetAbsOrigin(EvadeEndPoint);
 			TargetEvadePoint = EvadeEndPoint;
 			m_bIsEvade = true;
-		}
-		else
-			sk_evadestyle.SetValue(0);
 	}
 	else
-	{
-		Warning("Insufficient Stamina \n");
-	}
+		sk_evadestyle.SetValue(0);
 
 	if (GetAbsVelocity().Length2D() > 1000)// clamp speed
 	{
@@ -743,8 +748,6 @@ void CHL2_Player::EvadeHandler(void)
 	trace_t trace;
 	trace_t tracedbg;
 	Vector vecEndPos = GetAbsOrigin() + (fwd * 64); // 64 is a good enough distance to check if player is running up slopes or not.
-
-	
 
 	if (!(GetEFlags() & EFL_NOCLIP_ACTIVE))
 	{
@@ -787,25 +790,26 @@ void CHL2_Player::EvadeHandler(void)
 	if (m_bIsEvade)
 	{ //make the player invincible and stop moving for a short period of time. 
 		AddFlag(FL_FROZEN_ACT);
-
 		SetPlayerInvincibility(true);
 
 		if (gpGlobals->curtime >= m_flEvadeHandlerTime)
 		{
-			m_bIsEvade = false;
-			//SetAbsVelocity(vec3_origin);
+			// because start walking is triggered 0.3 seconds later , if the player tap double sprint before the period , they would run but does not have the running speed
+			StartWalking(); // return the walking state, walking speed to player after setting their MaxSpeed(600)
 
-			if (m_bWasRunning)
-			{
-				StartAutoRunning();
-				m_bWasRunning = false;
-			}
+		//	if (m_bWasRunning)
+		//	{
+		//		StartAutoRunning();
+		//		m_bWasRunning = false;
+		//	}
 
 			if (GetFlags() & FL_FROZEN_ACT || IsPlayerInvincible())
 			{	//strip invincibility from the player and let them move again. 
 				RemoveFlag(FL_FROZEN_ACT);
 				SetPlayerInvincibility(false);
 			}
+
+			m_bIsEvade = false;
 		}
 	}
 
@@ -918,8 +922,8 @@ void CHL2_Player::EvadeHandler(void)
 //
 //}
 
-float flReturnSpeed;
-float flReturnSpeedAfterEvaded;
+//float flReturnSpeed;
+//float flReturnSpeedAfterEvaded;
 
 //-----------------------------------------------------------------------------
 // Purpose: Allow pre-frame adjustments on the player
@@ -936,12 +940,34 @@ void CHL2_Player::PreThink(void)
 		NDebugOverlay::Line( GetAbsOrigin(), predPos, 0, 255, 0, 0, 0.01f );
 	}
 
+	
+	if (UTIL_GetLocalPlayer()->GetActiveWeapon() != NULL)
+	{
+		CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(UTIL_GetLocalPlayer()->GetActiveWeapon());
+		m_flWeaponDamage = pWeapon->GetDamageForActivity(ACT_MELEE_ATTACK1);
+	}
 
 	//PlayerStats
-	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
-	m_flCritDamage = lilyss_player_critdamage.GetFloat();
+	float flPureBaseDamage = 5; // would probably be changed into a global var
+	float flPreBuffDamage = m_flWeaponDamage + flPureBaseDamage;
+
+	//Rage Temporary Stats Buff
+	if (m_bRageDamageBuff)
+		m_flRageDamageBuff = flPreBuffDamage*0.2; // 20% of all damage 
+	else
+		m_flRageDamageBuff = 0;
+
+	m_flBaseDamage = flPureBaseDamage + m_flRageDamageBuff; //Base Damage is player's internal stat and is influenced by gears, under no-gear state it should be 5 
+	m_flCritDamage = m_flBaseDamage + 2;
+	
+	m_iPlayerCritRate = 20 + m_iRageCritRateBuff; //20 is player's base crit rate 
+
+	lilyss_player_basedamage.SetValue(m_flBaseDamage); // Temporary hack for writing values to vgui panel CharacterPanel
+	lilyss_player_critdamage.SetValue(m_flCritDamage);
+	lilyss_player_crit_per.SetValue(m_iPlayerCritRate);
+
 	m_flCooldownReductionRate = lilyss_skills_cooldown_timereduction.GetFloat();
-	m_iPlayerCritRate = lilyss_player_crit_per.GetInt();
+	
 
 	sk_plr_rage_current.SetValue(m_flRageCurrent);
 	sk_plr_current_mp.SetValue(m_iPlayerMP);
@@ -984,19 +1010,21 @@ void CHL2_Player::PreThink(void)
 		m_HL2Local.m_bForceViewAngleToCamera = false;
 	}
 	
-	ConVar *pIsPlayerAttacking = cvar->FindVar("pl_isattacking");
-	if (pIsPlayerAttacking->GetInt() == 1)
+	if (UTIL_GetLocalPlayer()->GetActiveWeapon() != NULL)
 	{
+		CBaseMeleeWeapon *pWeapon = dynamic_cast<CBaseMeleeWeapon *>(UTIL_GetLocalPlayer()->GetActiveWeapon());
+		if (pWeapon->IsAttacking())
+		{
 			UTIL_GetLocalPlayer()->AddFlag(FL_FROZEN_ACT);
 		//SetMoveType(MOVETYPE_NONE);
 		//HACK! : This is a temporary patch job for the evade bug, ala whenever a skill that requires the player to stand still for a certain amount of time , using evade wouldn't give them the speed boost.
-		SetMaxSpeed(600); //This cause bug that grants you up to 600 unit/s if you hold down shift while pressing movement keys and attack, this is because even if you set the player velocity to 0 , it is not 0, you still actually move a bit.
-		if (m_afButtonPressed & IN_SPEED)
-			flReturnSpeedAfterEvaded = gpGlobals->curtime + 0.3f;
+//!!!Temp	//	SetMaxSpeed(600); //This cause bug that grants you up to 600 unit/s if you hold down shift while pressing movement keys and attack, this is because even if you set the player velocity to 0 , it is not 0, you still actually move a bit.
+	//	if (m_afButtonPressed & IN_SPEED)
+	//		flReturnSpeedAfterEvaded = gpGlobals->curtime + 0.3f;
 		// Bug theory: due to the constant switching of pIsPlayerAttacking->GetInt() returning 0 and 1 , m_afBtnpressed becomes m_nButtons? and giving you that speed boost?
 	
 		//HACK! Evade bug
-		flReturnSpeed = gpGlobals->curtime + 0.3f;
+	//	flReturnSpeed = gpGlobals->curtime + 0.3f;
 
 		//Another hack: prevent players from moving at cl_forwardspeed limit when hitting IN_SPEED & movement keys & IN_ATTACK
 		if ((m_nButtons & IN_SPEED) && (m_nButtons & IN_FORWARD 
@@ -1008,26 +1036,26 @@ void CHL2_Player::PreThink(void)
 			
 		}
 
-	}
-	else
-	{
-		//if (flTestTimer1 - gpGlobals->curtime > 0.1f)
-		if (GetFlags() & FL_FROZEN_ACT)
-			UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
-
+		}
+		else
+		{
+			//if (flTestTimer1 - gpGlobals->curtime > 0.1f)
+			if (GetFlags() & FL_FROZEN_ACT)
+				UTIL_GetLocalPlayer()->RemoveFlag(FL_FROZEN_ACT);
+		}
 
 		//SetMoveType(MOVETYPE_WALK);
 		//HACK! Evade bug
-		if ((gpGlobals->curtime >= flReturnSpeedAfterEvaded) && (gpGlobals->curtime <= flReturnSpeedAfterEvaded + 0.1f))
-		{
-			StartWalking();
-		}
+	//	if ((gpGlobals->curtime >= flReturnSpeedAfterEvaded) && (gpGlobals->curtime <= flReturnSpeedAfterEvaded + 0.1f))
+	//	{
+	//		StartWalking();
+	//	}
 		//HACK! Evade bug, attacked but does not evade 
-		if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
-		{
+	//	if ((gpGlobals->curtime >= flReturnSpeed) && (gpGlobals->curtime <= flReturnSpeed + 0.1f))
+	//	{
 			//Attention needed
-				StartAutoRunning();
-		}
+	//			StartAutoRunning();
+	//	}
 	}
 
 	HandleFrozenDebuff();
@@ -1092,11 +1120,12 @@ void CHL2_Player::PreThink(void)
 
 	
 	//When leaping, clamp player's movement speed from going wild/
-	if (m_bIsRunning && !(GetFlags() & FL_ONGROUND))
-	{
-
-	}
-	
+	//if (m_bIsRunning && !(GetFlags() & FL_ONGROUND))
+	//{
+//
+	//}
+	//if ((m_bIsRunning) && (UTIL_GetLocalPlayer()->MaxSpeed() <= 150.0f))
+	//	DevMsg("Player is running but has walking speed , why?? \n ");
 
 	// This is an experiment of mine- autojumping! 
 	// only affects you if sv_autojump is nonzero.
@@ -1447,28 +1476,64 @@ void CHL2_Player::HandleRage(void)
 {
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 
+	if (m_bRageCritRateBuff)
+		m_iRageCritRateBuff = 20;
+	else
+		m_iRageCritRateBuff = 0;
+
+	if ((m_bRageInvincibility) && (m_flRageInvincibilityTime >= gpGlobals->curtime))
+		SetPlayerInvincibility(true);
+	else
+		SetPlayerInvincibility(false);
+
 	clamp(m_flRageCurrent, 0, m_flRageMax);
 
 	//Msg("Rage Power: %.2f \n", m_flRageCurrent);
 
+	hl2_walkspeed.SetValue(150 + m_flRageMoveSpeedBuff);
+	hl2_normspeed.SetValue(280 + m_flRageMoveSpeedBuff);
 
-	if (m_flMovementSpeedtimer > gpGlobals->curtime)
+	//Special Rage Skill Handler
+	if (m_flRageBuffTime > gpGlobals->curtime)
 	{
-		hl2_normspeed.SetValue(sk_plr_rage_speed_given.GetFloat());
-		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 8.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= 7.9f))
+		//hl2_normspeed.SetValue(sk_plr_rage_speed_given.GetFloat());
+		m_flRageMoveSpeedBuff = 70;
+		// Stat test
+		m_bRageDamageBuff = true;
+		m_bRageAttackSpeedBuff = true;
+		m_bRageCritRateBuff = true;
+		if ((m_flRageBuffTime - gpGlobals->curtime <= 8.0f) && (m_flRageBuffTime - gpGlobals->curtime >= 7.9f))
 		{
-			pPlayer->SetMaxSpeed(sk_plr_rage_speed_given.GetFloat());
+			if (m_bIsRunning)
+				pPlayer->SetMaxSpeed(hl2_normspeed.GetFloat());
+			else
+				pPlayer->SetMaxSpeed(hl2_walkspeed.GetFloat());
+			//pPlayer->SetMaxSpeed(hl2_walkspeed.getfloat());
+			//pPlayer->SetMaxSpeed(hl2_normspeed.getfloat());
 		}
 	}
 	else
 	{
-		hl2_normspeed.SetValue(280.0f);
-		if ((m_flMovementSpeedtimer - gpGlobals->curtime <= 0.0f) && (m_flMovementSpeedtimer - gpGlobals->curtime >= -0.1f))
+		//hl2_normspeed.SetValue(280.0f);
+		//addition1 = 0;
+		m_flRageMoveSpeedBuff = 0;
+		m_bRageDamageBuff = false;
+		m_bRageAttackSpeedBuff = false;
+		m_bRageCritRateBuff = false;
+		if ((m_flRageBuffTime - gpGlobals->curtime <= 0.0f) && (m_flRageBuffTime - gpGlobals->curtime >= -0.1f))
 		{
-			pPlayer->SetMaxSpeed(280.f);
+			//pPlayer->SetMaxSpeed(280.f);
+			if (m_bIsRunning)
+				pPlayer->SetMaxSpeed(hl2_normspeed.GetFloat());
+			else
+				pPlayer->SetMaxSpeed(hl2_walkspeed.GetFloat());
+			//pPlayer->SetMaxSpeed(hl2_walkspeed.getfloat());
+			//pPlayer->SetMaxSpeed(hl2_normspeed.getfloat());
 		}
 
 	}
+
+
 
 	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_UTILSLOT1)
 	{
@@ -1490,14 +1555,15 @@ void CHL2_Player::HandleRage(void)
 		UtilSlotExecuteOptionsID(sk_plr_utilslot4_option_id.GetInt());
 	}
 
-	if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
-	{
-		if (m_flRageCurrent >= 100)
-		{
-			Msg("RAGE ENABLED \n");
-			m_flRageCurrent -= 100;
-		}
-	}
+	//if (UTIL_GetLocalPlayer()->m_afButtonPressed & IN_RAGE)
+	//{
+	//	if (m_flRageCurrent >= 100)
+	//	{
+	//		Msg("RAGE ENABLED \n");
+	//		m_flRageCurrent -= 100;
+	//	}
+	//}
+
 	//press Q to transfer Rage points to HP
 	// How many Rage should be used
 	//press E to transfer Rage points to MP
@@ -1506,38 +1572,51 @@ void CHL2_Player::HandleRage(void)
 	//press C to Rage
 }
 
+// Use the #optionsID items in the utility slot category
 void CHL2_Player::UtilSlotExecuteOptionsID(int optionsID)
 {
-	if (optionsID == 0)
+	switch (optionsID)
 	{
-		Msg("Not Assigned \n");
-	}
-	else if (optionsID == 1)
-	{
-		Rage_GiveArmor();
-		Msg("Giving Health \n");
+
+		case 0:
+		{
+			Msg("Not Assigned \n");
+			break;
+		}
+
+		case 1:
+		{
+			Rage_GiveArmor();
+			Msg("Giving Health \n");
+			break;
+	
+		}
+		case 2:
+		{
+			Rage_GiveMP();
+			Msg("Giving MP \n");
+			break;
+		}
+
+		case 3:
+		{
+			Rage_GiveStamina();
+			Msg("Giving Stamina \n");
+			break;
+		}
+		
+		case 4:
+		{
+			//Rage_ApplyRageBuff();
+			break;
+		}
+
+			default:
+				Msg("Not Assigned \n");
 
 	}
-	else if (optionsID == 2)
-	{
-		Rage_GiveMP();
-		Msg("Giving MP \n");
-	}
-	else if (optionsID == 3)
-	{
-		Rage_GiveStamina();
-		Msg("Giving Stamina \n");
-	}
-	else if (optionsID == 4)
-	{
-		Rage_GiveMovementSpeed();
-		Msg("Increasing Movement Speed for 10s \n");
-	}
-	else
-	{
-		Msg("Not Assigned \n");
-	}
 }
+
 float flPlayDownedAnimTimer;
 void CHL2_Player::HandleFrozenDebuff()
 {
@@ -1581,13 +1660,6 @@ void CHL2_Player::SetDebuff(DebuffState debuff)
 	}
 }
 
-void CHL2_Player::FreezePlayer()
-{
-	
-}
-
-
-
 void CHL2_Player::Rage_GiveArmor()
 {
 	if (m_flRageCurrent >= sk_plr_rage_1_consumption.GetFloat())
@@ -1622,9 +1694,14 @@ void CHL2_Player::Rage_GiveStamina()
 
 }
 
-void CHL2_Player::Rage_GiveMovementSpeed()
+void CHL2_Player::Rage_ApplyRageBuff()
 {
-	if (m_flMovementSpeedtimer > gpGlobals->curtime)
+	// + 20% more damage 
+	// + 20% crit chance 
+	// + 20% faster movement speed 
+	// + 15% more attack speed
+
+	if (m_flRageBuffTime > gpGlobals->curtime)
 	{
 
 	}
@@ -1632,8 +1709,13 @@ void CHL2_Player::Rage_GiveMovementSpeed()
 	{
 		if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
 		{
-			m_flMovementSpeedtimer = gpGlobals->curtime + 8.0f;
+			m_flRageBuffTime = gpGlobals->curtime + 30.0f;
 			m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
+			
+			m_bRageInvincibility = true;
+			m_flRageInvincibilityTime = gpGlobals->curtime + 1.0f;
+
+			//DispatchParticleEffect("hint_movespeed", GetAbsOrigin(), vec3_angle);
 			DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
 		}
 	}
@@ -1847,6 +1929,7 @@ void CHL2_Player::Spawn(void)
 
 	if ( !IsSuitEquipped() )
 		 StartWalking();
+
 	//Hack fix for movement speed rage increase!!!
 	hl2_normspeed.SetValue(280);
 
@@ -1857,11 +1940,12 @@ void CHL2_Player::Spawn(void)
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 
 //Player Stats
-	m_flBaseDamage = lilyss_player_basedamage.GetFloat();
-	m_flCritDamage = lilyss_player_critdamage.GetFloat();
+	//m_flBaseDamage = 5;
+	//m_flCritDamage = m_flBaseDamage + 2;
 	m_flRageCurrent = 0;
 	m_flRageMax = sk_plr_rage_max.GetFloat();
-	m_flMovementSpeedtimer = 0.0f;
+
+	m_flRageBuffTime = 0.0f;
 
 
 	// Setup our flashlight values
@@ -1885,7 +1969,7 @@ float CHL2_Player::GetPlayerBaseDamage()
 
 float CHL2_Player::GetPlayerCritDamage()
 {
-	return m_flBaseDamage+m_flCritDamage;
+	return m_flCritDamage;
 }
 
 float CHL2_Player::GetPlayerAttackSpeed()
@@ -1940,29 +2024,38 @@ void CHL2_Player::SetPlayerCooldownReductionRateBonus(float flBonus, float flDur
 
 void CHL2_Player::SetPlayerAttackSpeedBonus(float flBonus, float flDuration)
 {
-	m_flOldAttackSpeed = m_flAttackSpeed;
-	if (m_flAttackSpeedBonusTimer >= gpGlobals->curtime)
+	//m_flOldAttackSpeed = m_flAttackSpeed;
+	if (m_flAttackSpeedBuffSkillTime >= gpGlobals->curtime)
 	{
-		m_flAttackSpeedBonusTimer = gpGlobals->curtime + flDuration;
+		m_flAttackSpeedBuffSkillTime = gpGlobals->curtime + flDuration;
 	}
 	else
 	{
-		lilyss_player_attackspeed.SetValue(lilyss_player_attackspeed.GetFloat() + flBonus);
-		m_flAttackSpeedBonusTimer = gpGlobals->curtime + flDuration;
+		//don't set the whole main variable ,  make a float variable and make the it like ( flAttackSpeed += AttackSpeedSkillBuff + AttackSpeedBuffPotion + AttackSpeedRage)
+		m_flAttackSpeedBuffSkill = flBonus;
+		m_flAttackSpeedBuffSkillTime = gpGlobals->curtime + flDuration;
 	}
 }
 
 void CHL2_Player::HandleAttackSpeedChanges() 
 {
-	m_flAttackSpeed = lilyss_player_attackspeed.GetFloat();
+	if (m_bRageAttackSpeedBuff)
+		m_flRageAttackSpeedBuff = 0.15f; // 15% attack speed bonus
+	else
+		m_flRageAttackSpeedBuff = 0.0f;
 
-	if (m_flAttackSpeedBonusTimer >= gpGlobals->curtime)
+	m_flAttackSpeed = 1 + m_flAttackSpeedBuffSkill + m_flRageAttackSpeedBuff; // 1 is the base attack speed, as in 100%
+
+	lilyss_player_attackspeed.SetValue(m_flAttackSpeed); // console variable to print to HUD/Vgui panel
+
+	if (m_flAttackSpeedBuffSkillTime >= gpGlobals->curtime)
 	{
 
 	}
-	else if (m_flAttackSpeedBonusTimer <= gpGlobals->curtime)
+	else if (m_flAttackSpeedBuffSkillTime <= gpGlobals->curtime)
 	{
-		lilyss_player_attackspeed.SetValue(1.0f);
+		// don't do this, make it so only the bonus attack speed goes down, not the base attack speed
+		m_flAttackSpeedBuffSkill = 0.0f;
 		//m_flAttackSpeed + flAttackSpeedBuff + flAttackSpeedSkill + flAttackSpeedGearBonus
 	}
 
@@ -2487,7 +2580,32 @@ void CHL2_Player::CheatImpulseCommands( int iImpulse )
 
 int prevFlag;
 
-
+void CHL2_Player::SetAnimationSkillFlag(int iFlag)
+{
+	switch (iFlag)
+	{
+		case 2:
+			m_bAnimSkillFlag2 = true;
+			break;
+		case 3:
+			m_bAnimSkillFlag3 = true;
+			break;
+		case 4:
+			m_bAnimSkillFlag4 = true;
+			break;
+		case 5:
+			m_bAnimSkillFlag5 = true;
+			break;
+		case 6:
+			m_bAnimSkillFlag6 = true;
+			break;
+		case 7:
+			m_bAnimSkillFlag7 = true;
+			break;
+		default:m_bAnimSkillFlag5 = true; // err fallback
+			
+	}
+}
 // Set the activity based on an event or current state
 void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 {
@@ -2692,29 +2810,39 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	{
 		//idealActivity = ACT_MELEE_SKILL_CSLASH;
 		
-		if (m_afButtonPressed & IN_SLOT1)
+		if (m_bAnimSkillFlag2)
 		{
 			idealActivity = ACT_SKILL_EVILSLASH;
+			m_bAnimSkillFlag2 = false;
 		}
-		else if (m_afButtonPressed & IN_SLOT2)
+		else if (m_bAnimSkillFlag3)
 		{
 			idealActivity = ACT_MELEE_ATTACK2;
+			m_bAnimSkillFlag3 = false;
 		}
-		else if (m_afButtonPressed & IN_SLOT3)
+		else if (m_bAnimSkillFlag4)
 		{
 			idealActivity = ACT_MELEE_ATTACK1;
+			m_bAnimSkillFlag4 = false;
+
 		}
-		else if (m_afButtonPressed & IN_SLOT4)
+		else if (m_bAnimSkillFlag5)
 		{
 			idealActivity = ACT_SKILL_FEARTRAP;
+			m_bAnimSkillFlag5 = false;
+
 		}
-		else if (m_afButtonPressed & IN_SLOT5)
+		else if (m_bAnimSkillFlag6)
 		{
 			idealActivity = ACT_MELEE_ATTACK4;
+			m_bAnimSkillFlag6 = false;
+
 		}
-		else if (m_afButtonPressed & IN_SLOT6)
+		else if (m_bAnimSkillFlag7)
 		{
 			idealActivity = ACT_MELEE_ATTACK5;
+			m_bAnimSkillFlag7 = false;
+
 		}
 		else if (m_afButtonPressed & IN_ATTACK2)
 		{
@@ -2723,6 +2851,10 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 			//else
 				idealActivity = ACT_MELEE_SPEVADE;
 			
+		}
+		else if (m_afButtonPressed & IN_RAGE)
+		{
+			idealActivity = ACT_SKILL_FEARTRAP;
 		}
 		else
 		{
@@ -2896,6 +3028,7 @@ void CHL2_Player::SetAnimation(PLAYER_ANIM playerAnim)
 	if (idealActivity == ACT_MELEE_ATTACK2)
 	{
 		AddGesture(Weapon_TranslateActivity(idealActivity));
+		RestartGesture(ACT_MELEE_ATTACK2);
 		SetLayerPlaybackRate(0, m_flAttackSpeed);
 		SetLayerPlaybackRate(1, m_flAttackSpeed);
 		return;
@@ -4567,14 +4700,24 @@ void CHL2_Player::UpdateClientData( void )
 		m_bitsDamageType &= iTimeBasedDamage;
 	}
 	//Send Stats info to client
-	if (m_flAttackSpeedBonusTimer - gpGlobals->curtime >= 0)
+	if (m_flAttackSpeedBuffSkillTime - gpGlobals->curtime >= 0)
 	{
 		CSingleUserRecipientFilter user(this);
 		user.MakeReliable();
 		UserMessageBegin(user, "AS");
-			WRITE_SHORT((float)m_flAttackSpeedBonusTimer - gpGlobals->curtime);
+			WRITE_SHORT((float)m_flAttackSpeedBuffSkillTime - gpGlobals->curtime);
 		MessageEnd();
 		
+	}
+
+	if (m_flRageBuffTime - gpGlobals->curtime >= 0)
+	{
+		CSingleUserRecipientFilter user(this);
+		user.MakeReliable();
+		UserMessageBegin(user, "RageBuffTime");
+		WRITE_SHORT((float)m_flRageBuffTime - gpGlobals->curtime);
+		MessageEnd();
+
 	}
 
 	// Update Flashlight

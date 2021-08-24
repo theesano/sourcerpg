@@ -120,8 +120,16 @@ public:
 	virtual void		StopLoopingSounds( void );
 	virtual void		Splash( void );
 	virtual void 		ModifyOrAppendPlayerCriteria( AI_CriteriaSet& set );
+	void				SetAnimationSkillFlag(int iFlags);
 	void				SetAnimation(PLAYER_ANIM playerAnim);
-	
+
+	bool				m_bAnimSkillFlag2;
+	bool				m_bAnimSkillFlag3;
+	bool				m_bAnimSkillFlag4;
+	bool				m_bAnimSkillFlag5;
+	bool				m_bAnimSkillFlag6;
+	bool				m_bAnimSkillFlag7;
+
 	void				DrawDebugGeometryOverlays(void);
 
 	virtual Vector		EyeDirection2D( void );
@@ -139,8 +147,6 @@ public:
 
 	// from CBasePlayer
 	virtual void		SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
-
-	void				FreezePlayer();
 
 	// Stamina Interface
 	void Stamina_Update( void );
@@ -160,6 +166,7 @@ public:
 	float	GetPlayerBaseDamage();
 	float	GetPlayerAttackSpeed();
 	float	GetPlayerCritDamage();
+	float	GetPlayerRage(){ return m_flRageCurrent; }
 	int		GetPlayerMP();
 	void	SetPlayerMP(int amount);
 	void	SetPlayerAttackSpeedBonus(float bonus, float duration);
@@ -181,7 +188,23 @@ public:
 
 	float			m_flRageCurrent;
 	float			m_flRageMax;
-	float			m_flMovementSpeedtimer;
+	float			m_flRageBuffTime;
+	float			m_flRageMoveSpeedBuff;
+	
+	bool			m_bRageDamageBuff;
+	bool			m_bRageAttackSpeedBuff;
+	bool			m_bRageCritRateBuff;	
+	float			m_flWeaponDamage;
+	float			m_flRageAttackSpeedBuff;
+	int			m_iRageCritRateBuff;
+
+	bool			m_bRageInvincibility;
+	float			m_flRageInvincibilityTime;
+
+	CNetworkVar(float, m_flBaseDamage);
+	CNetworkVar(float, m_flRageDamageBuff);
+	CNetworkVar(float, m_flAttackSpeed);
+	CNetworkVar(float, m_flCooldownReductionRate);
 
 	CNetworkVar(bool,m_bForceViewAngleToCamera);
 	float			m_flForceViewAngleToCameraTimer;
@@ -195,7 +218,7 @@ public:
 	void			Rage_GiveMP();
 	void			Rage_GiveStamina();
 	void			Rage_GiveArmor();
-	void			Rage_GiveMovementSpeed();
+	void			Rage_ApplyRageBuff();
 
 	void			HandleRage(void);
 	void			UtilSlotExecuteOptionsID(int optionsID);
@@ -369,7 +392,8 @@ public:
 	bool m_bIsAttack4;
 	bool m_bIsAttack5;
 
-	float m_flAttackSpeedBonusTimer;
+	float m_flAttackSpeedBuffSkillTime;
+	float m_flAttackSpeedBuffSkill;
 	float m_flCooldownReductionTimer;
 	float m_flOldAttackSpeed;
 	
@@ -401,9 +425,7 @@ private:
 	CNetworkVar ( float, m_fSprintReboundTime);	// 
 
 	CNetworkVar( bool, m_fIsSprinting );
-	CNetworkVar(float, m_flBaseDamage);
-	CNetworkVar(float, m_flAttackSpeed);
-	CNetworkVar(float, m_flCooldownReductionRate);
+
 	CNetworkVarForDerived( bool, m_fIsWalking );
 
 protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals

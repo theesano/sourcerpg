@@ -29,6 +29,7 @@ public:
 
 	void MsgFunc_Battery(bf_read &msg);
 	void MsgFunc_AS(bf_read &msg);
+	void MsgFunc_RageBuffTime(bf_read &msg);
 
 
 protected:
@@ -88,10 +89,12 @@ private:
 	int m_flPlayerArmor;
 
 	float		m_flAttackSpeedBuffDuration;
+	float		m_flRageBuffDuration;
 
 	int		m_iBat;
 	int		m_iNewBat;
 	vgui::Label *m_ASPD;
+	vgui::Label *m_pRageBuffTime;
 
 };
 

@@ -249,7 +249,7 @@ void CCharacterPanel::Paint()
 	m_StatsBaseDamage->SetText(bdmg);
 
 	wchar_t critdmg[64];
-	V_swprintf_safe(critdmg, L"Critical Damage: %.0f + %.0f", m_flPlayerCritDamage + m_flPlayerBaseDamage, m_flWeaponDamage);
+	V_swprintf_safe(critdmg, L"Critical Damage: %.0f + %.0f", m_flPlayerCritDamage, m_flWeaponDamage);
 	m_StatsCritDamage->SetText(critdmg);
 
 	wchar_t critrate[64];

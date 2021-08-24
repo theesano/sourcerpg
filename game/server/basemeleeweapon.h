@@ -46,6 +46,9 @@ public:
 
 	virtual bool	IsAICollisionOff() { return m_bIsAICollisionOff; }
 	//void			SetAICollisionOffTime(float flDuration);
+	virtual bool	IsAttacking() { return m_bIsAttacking; }
+
+	bool			m_bIsAttacking;
 
 	bool			m_bIsEnemyInAtkRange;
 
@@ -78,18 +81,9 @@ public:
 
 	int				m_iEnemyHealth;
 
-	bool			m_bNmAttackSPEvade;
-	float			m_flNmAttackSPEvadeTimer;
-	float			m_flNmAttackSPEvadeTimer_rp;
-
-	bool			m_bAttackSPAir2;
-	float			m_flAttackSPAir2Timer;
-	float			m_flAttackSPAir2Timer_rp;
-
-	bool			m_bSkillLiftAttack;
-	float			m_flSkillLiftAttackDelayTimer;
-
 	bool			m_bIsAICollisionOff;
+
+	void			ExecuteSkillID(int skillID);
 	//bool			m_flAICollisionOffTime;
 
 
@@ -104,7 +98,7 @@ private:
 	float			m_flPlayerStats_CritDamage;
 	float			m_bIsCritical;
 
-	float			m_SpeedModActiveTime;
+	float			m_flDamageBuffActiveTime;
 	float			m_nExecutionTime;
 	float			m_nSkillHitRefireTime;
 	float			m_flNPCFreezeTime;
@@ -125,12 +119,32 @@ private:
 	void			Swing(int bIsSecondary);
 	void			InflictNormalAttackDamage(void);
 	bool			m_bIsNmAttack;
+	bool			m_bIsNmAttack2;
 	bool			m_bIsNmAttack4;
 	bool			m_bNmAirAttack;
+
 	float			m_flNmAirAttackDelayTimer;
 	float			m_flNmAttackTimer;
+	
+	float			m_flNmAttackTimer2;
+	float			m_flNmAttackTimer2_rp;
+
 	float			m_flNmAttackTimer4;
 	float			m_flNmAttackTimer4_rp;
+
+	bool			m_bNmAttackSPEvade;
+	float			m_flNmAttackSPEvadeTimer;
+	float			m_flNmAttackSPEvadeTimer_rp;
+
+	bool			m_bAttackSPAir2;
+	float			m_flAttackSPAir2Timer;
+	float			m_flAttackSPAir2Timer_rp;
+
+	bool			m_bSkillLiftAttack;
+	float			m_flSkillLiftAttackDelayTimer;
+
+	bool			m_bSetTornadoLiftVec;
+	Vector			vTornadoNPCPos;
 
 	bool			m_bNPCFreezeAerial; // Keep the NPCs still at their origins and remove all velocities for a short period of time
 	float			m_flNPCFreezeAerialTime;
@@ -148,6 +162,9 @@ private:
 	void			Skill_Tornado_LogicEx(void);
 	void			Skill_Lift(void);
 	void			Skill_Lift_LogicEx(void);
+	void			Skill_SprintAttack(void);
+	void			Skill_SprintAttack_LogicEx(void);
+	void			Skill_RageOn(void);
 	void			SkillStatNotification(void);
 
 	bool			m_bIsHealSlashAttacking;

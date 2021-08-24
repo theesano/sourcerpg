@@ -54,6 +54,12 @@ private:
 	CPanelAnimationVar(Color, m_TextColor5, "TextColor5", "255 0 0 255");
 	CPanelAnimationVar(Color, m_TextColor, "TextColor", "255 255 255 255");
 
+	CPanelAnimationVarAliasType(float, text_xpos6, "text_xpos6", "120", "proportional_float");
+	CPanelAnimationVarAliasType(float, text_ypos6, "text_ypos6", "30", "proportional_float");
+	CPanelAnimationVar(Color, m_TextColor6, "TextColor6", "255 0 0 255");
+	
+	CPanelAnimationVarAliasType(int, m_nIconTextureId0, "icon_texture0", "UI/rage/None", "textureid");
+
 	CPanelAnimationVarAliasType(int, m_iIconX, "icon_xpos", "2", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iIconY, "icon_ypos", "2", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iIconWide, "icon_width", "28", "proportional_int");
@@ -87,14 +93,30 @@ private:
 	CPanelAnimationVarAliasType(int, m_nIconTextureId5, "icon_texture5", "UI/skills/icon_tornado", "textureid");
 	CPanelAnimationVar(Color, m_Icon5Color, "Icon5Color", "255 0 0 255");
 
+	CPanelAnimationVarAliasType(int, m_iIconX6, "icon_xpos6", "150", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iIconY6, "icon_ypos6", "2", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iIconWide6, "icon_width6", "176", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iIconTall6, "icon_height6", "28", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_nIconTextureId6, "icon_texture6", "UI/skills/icon_scythecutter", "textureid");
+	CPanelAnimationVar(Color, m_Icon6Color, "Icon6Color", "255 0 0 255");
+
+
 	int m_flHudSk1Timer;
 	int m_flHudSk2Timer;
 	int m_flHudSk3Timer;
 	int m_flHudSk4Timer;
 	int m_flHudSk5Timer;
 	int m_flHudSk6Timer;
+	int m_flHudSk7Timer;
 
 	int m_iGetPlayerMP;
+
+	int m_iQuickslot1SkillID;
+	int m_iQuickslot2SkillID;
+	int m_iQuickslot3SkillID;
+	int m_iQuickslot4SkillID;
+	int m_iQuickslot5SkillID;
+	int m_iQuickslot6SkillID;
 
 	vgui::Label *m_pPassiveSkillLabel1;
 	vgui::ImagePanel *m_pPassiveSkill1;

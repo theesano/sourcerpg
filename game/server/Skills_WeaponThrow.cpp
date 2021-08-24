@@ -929,7 +929,20 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 
 			if (WpnThrowdist.x <= m_flSkillsRange && WpnThrowdist.y <= m_flSkillsRange)
 			{
+				Vector ParticleVec = ppAIs[i]->GetAbsOrigin();
+				ParticleVec.z += 48;
+
 				ppAIs[i]->ApplyAbsVelocityImpulse(dir*flKnockbackVelocity);
+				DispatchParticleEffect("grenade_explosion_01e", ParticleVec, ppAIs[i]->GetAbsAngles());
+				//emit sound melee_hit
+				
+				if (pPlayer->GetActiveWeapon() != NULL)
+				{	
+					if(ppAIs[i]->IsAlive())
+					{
+						pWeapon->WeaponSound(MELEE_HIT);
+					}
+				}
 				
 			}
 		}

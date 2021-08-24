@@ -9,6 +9,7 @@ using namespace vgui;
 #include <vgui_controls/Button.h>
 #include <vgui_controls/ComboBox.h>
 
+
 //CSkillPanel class:
 class CSkillPanel : public vgui::Frame
 {
@@ -40,7 +41,7 @@ private:
 	ComboBox *m_pUtilSlot2OptionIDCombo;
 	ComboBox *m_pUtilSlot3OptionIDCombo;
 	ComboBox *m_pUtilSlot4OptionIDCombo;
-
+	ImagePanel *m_pReceiver = new ImagePanel(this, "icon_test");
 
 	MESSAGE_FUNC_PTR(OnTextChanged, "TextChanged", panel);
 	CPanelAnimationVarAliasType(int, m_iBgImageX, "BgImageX", "0", "proportional_int");
@@ -80,7 +81,15 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	bgImagePanel->SetPos(32, 240);
 	bgImagePanel->SetSize(48, 48);
 	bgImagePanel->SetShouldScaleImage(true);
+	bgImagePanel->SetDragEnabled(true);
+	
 
+	m_pReceiver->SetImage(scheme()->GetImage("None", false));
+	m_pReceiver->SetPos(96, 240);
+	m_pReceiver->SetSize(48, 48);
+	m_pReceiver->SetShouldScaleImage(true);
+	m_pReceiver->SetDropEnabled(true, 0.0f);
+	
 	m_pCloseButton = new Button(this, "Button", "", this, "turnoff");
 	m_pCloseButton->SetPos(476, 12);
 	m_pCloseButton->SetSize(32, 24);

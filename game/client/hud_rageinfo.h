@@ -56,6 +56,9 @@ private:
 	CPanelAnimationVarAliasType(float, text6_xpos, "text6_xpos", "8", "proportional_float");
 	CPanelAnimationVarAliasType(float, text6_ypos, "text6_ypos", "60", "proportional_float");
 
+	CPanelAnimationVarAliasType(float, text7_xpos, "text7_xpos", "8", "proportional_float");
+	CPanelAnimationVarAliasType(float, text7_ypos, "text7_ypos", "60", "proportional_float");
+
 	CPanelAnimationVarAliasType(int, m_iIconX, "icon_xpos", "2", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iIconY, "icon_ypos", "2", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iIconWide, "icon_width", "28", "proportional_int");
@@ -82,6 +85,10 @@ private:
 	CPanelAnimationVarAliasType(int, m_nIconTextureId3, "icon_texture3", "UI/rage/ItemStamina", "textureid");
 	CPanelAnimationVarAliasType(int, m_nIconTextureId4, "icon_texture4", "UI/rage/ItemMoveSpeed", "textureid");
 
+	CPanelAnimationVarAliasType(int, m_iRageBarX, "ragebar_xpos", "2", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iRageBarY, "ragebar_ypos", "2", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iRageBarWide, "ragebar_width", "28", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iRageBarTall, "ragebar_height", "28", "proportional_int");
 
 	float m_flRage;
 	float m_flRageMax;
@@ -90,7 +97,6 @@ private:
 	int m_iUtilSlot2OptionID;
 	int m_iUtilSlot3OptionID;
 	int m_iUtilSlot4OptionID;
-
 
 };
 

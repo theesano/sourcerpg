@@ -102,12 +102,29 @@ void CHudSkillCooldown::OnThink(void)
 	ConVar *pSkill6cdtimer = cvar->FindVar("sk_plr_skills_6_cd");
 	m_flHudSk6Timer = pSkill6cdtimer->GetInt();
 
+	ConVar *pSkill7cdtimer = cvar->FindVar("sk_plr_skills_7_cd");
+	m_flHudSk7Timer = pSkill7cdtimer->GetInt();
+
+	ConVar *pQuickSlot1SkillID = cvar->FindVar("sk_plr_quickslot1_skill_id");
+	ConVar *pQuickSlot2SkillID = cvar->FindVar("sk_plr_quickslot2_skill_id");
+	ConVar *pQuickSlot3SkillID = cvar->FindVar("sk_plr_quickslot3_skill_id");
+	ConVar *pQuickSlot4SkillID = cvar->FindVar("sk_plr_quickslot4_skill_id");
+	ConVar *pQuickSlot5SkillID = cvar->FindVar("sk_plr_quickslot5_skill_id");
+	ConVar *pQuickSlot6SkillID = cvar->FindVar("sk_plr_quickslot6_skill_id");
+
+	m_iQuickslot1SkillID = pQuickSlot1SkillID->GetInt();
+	m_iQuickslot2SkillID = pQuickSlot2SkillID->GetInt();
+	m_iQuickslot3SkillID = pQuickSlot3SkillID->GetInt();
+	m_iQuickslot4SkillID = pQuickSlot4SkillID->GetInt();
+	m_iQuickslot5SkillID = pQuickSlot5SkillID->GetInt();
+	m_iQuickslot6SkillID = pQuickSlot6SkillID->GetInt();
+
 	//Skill 2 cooldown has been defined using a different method below in Paint()
 
 	if (local->GetActiveWeapon() != NULL)
 	{
 
-		if (m_flHudSk1Timer > 0)
+		if (m_flHudSk1Timer >= 0)
 		{
 			wchar_t sz[64];
 			V_swprintf_safe(sz, L"%i", m_flHudSk1Timer);
@@ -125,8 +142,20 @@ void CHudSkillCooldown::OnThink(void)
 			m_pPassiveSkillLabel1->SetAlpha(0);
 
 		}
+		//Active Skills
+		if (m_flHudSk2Timer >= 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon1onCD");
+		else if (m_iGetPlayerMP < 30)
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon1NoMP");
+		}
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon1");
 
-		if (m_flHudSk3Timer > 0)
+		}
+
+		if (m_flHudSk3Timer >= 0)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
 		else if (m_iGetPlayerMP < 25)
 		{
@@ -138,7 +167,7 @@ void CHudSkillCooldown::OnThink(void)
 
 		}
 
-		if (m_flHudSk4Timer > 0)
+		if (m_flHudSk4Timer >= 0)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
 		else if (m_iGetPlayerMP < 50)
 		{
@@ -150,7 +179,7 @@ void CHudSkillCooldown::OnThink(void)
 
 		}
 
-		if (m_flHudSk5Timer > 0)
+		if (m_flHudSk5Timer >= 0)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
 		else if (m_iGetPlayerMP < 30)
 		{
@@ -162,7 +191,7 @@ void CHudSkillCooldown::OnThink(void)
 
 		}
 
-		if (m_flHudSk6Timer > 0)
+		if (m_flHudSk6Timer >= 0)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
 		else if (m_iGetPlayerMP < 50)
 		{
@@ -173,13 +202,23 @@ void CHudSkillCooldown::OnThink(void)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5");
 
 		}
+
+		if (m_flHudSk7Timer >= 0)
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon6onCD");
+		else
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon6");
+		}
 	}
 	else
 	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon1onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon2onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon3onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon4onCD");
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon5onCD");
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Icon6onCD");
+
 		m_pPassiveSkill1->SetAlpha(0);
 		m_pPassiveSkillLabel1->SetAlpha(0);
 
@@ -199,56 +238,245 @@ void CHudSkillCooldown::Paint()
 
 	SetPaintBorderEnabled(false);
 
-	if (local->GetActiveWeapon() != NULL)
+	//Draw actual textures
+	switch (m_iQuickslot1SkillID)
 	{
-		if (m_flHudSk2Timer > 0)
-		{
-			surface()->DrawSetTexture(m_nIconTextureId_2);
-			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
-		}
-		else if (m_iGetPlayerMP < 30)
-		{
-			surface()->DrawSetTexture(m_nIconTextureId_3);
-			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
-		}
-		else
-		{
-			surface()->DrawSetTexture(m_nIconTextureId);
-			surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
-		}
-	}
-	else
-	{
-		surface()->DrawSetTexture(m_nIconTextureId_2);
-		surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
 
 	}
 
-	
-	surface()->DrawSetTexture(m_nIconTextureId2);
+	surface()->DrawTexturedRect(m_iIconX, m_iIconY, m_iIconWide, m_iIconTall);
+
+	//surface()->DrawSetTexture(m_nIconTextureId2);
+	switch (m_iQuickslot2SkillID)
+	{
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
+
+	}
 	surface()->DrawTexturedRect(m_iIconX2, m_iIconY2, m_iIconWide2, m_iIconTall2);
 
-	surface()->DrawSetTexture(m_nIconTextureId3);
+	switch (m_iQuickslot3SkillID)
+	{
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
+
+	}
+	//surface()->DrawSetTexture(m_nIconTextureId3);
 	surface()->DrawTexturedRect(m_iIconX3, m_iIconY3, m_iIconWide3, m_iIconTall3);
 
-	surface()->DrawSetTexture(m_nIconTextureId4);
+	switch (m_iQuickslot4SkillID)
+	{
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
+
+	}
+	//surface()->DrawSetTexture(m_nIconTextureId4);
 	surface()->DrawTexturedRect(m_iIconX4, m_iIconY4, m_iIconWide4, m_iIconTall4);
 	
+	switch (m_iQuickslot5SkillID)
+	{
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
+
+	}
 	surface()->DrawSetColor(m_Icon5Color);
-	surface()->DrawSetTexture(m_nIconTextureId5);
+	//surface()->DrawSetTexture(m_nIconTextureId5);
 	surface()->DrawTexturedRect(m_iIconX5, m_iIconY5, m_iIconWide5, m_iIconTall5);
 
+	switch (m_iQuickslot6SkillID)
+	{
+
+	case 0:
+		surface()->DrawSetTexture(m_nIconTextureId0);
+		break;
+	case 2:
+		surface()->DrawSetTexture(m_nIconTextureId);
+		break;
+	case 3:
+		surface()->DrawSetTexture(m_nIconTextureId2);
+		break;
+	case 4:
+		surface()->DrawSetTexture(m_nIconTextureId3);
+		break;
+	case 5:
+		surface()->DrawSetTexture(m_nIconTextureId4);
+		break;
+	case 6:
+		surface()->DrawSetTexture(m_nIconTextureId5);
+		break;
+	case 7:
+		surface()->DrawSetTexture(m_nIconTextureId6);
+		break;
+	default: surface()->DrawSetTexture(m_nIconTextureId0);
+
+	}
+	//surface()->DrawSetTexture(m_nIconTextureId6);
+	surface()->DrawTexturedRect(m_iIconX6, m_iIconY6, m_iIconWide6, m_iIconTall6);
 
 	//TODO: read the keybind directly from the keyboard list.
 	wchar_t sz[64];
+	wchar_t sz3[64];
+	wchar_t sz4[64];
+	wchar_t sz5[64];
+	wchar_t sz6[64];
+	wchar_t sz7[64];
 	V_swprintf_safe(sz, L"%i",m_flHudSk2Timer);
+	V_swprintf_safe(sz3, L"%i", m_flHudSk3Timer);
+	V_swprintf_safe(sz4, L"%i", m_flHudSk4Timer);
+	V_swprintf_safe(sz5, L"%i", m_flHudSk5Timer);
+	V_swprintf_safe(sz6, L"%i", m_flHudSk6Timer);
+	V_swprintf_safe(sz7, L"%i", m_flHudSk7Timer);
+
+	//bug , skill 2 timer doesnt display correctly 
 	//Skill #2
 	surface()->DrawSetTextFont(m_hTextFont);
-	if (m_flHudSk2Timer > 0)
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot1SkillID == 2)) //???
 	{
 		surface()->DrawSetTextColor(m_TextColor1);
 		surface()->DrawSetTextPos(text_xpos, text_ypos);
 		surface()->DrawPrintText(sz, wcslen(sz));
+		
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot1SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
+
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot1SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot1SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot1SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot1SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor1);
+		surface()->DrawSetTextPos(text_xpos, text_ypos);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
 
 	}
 	else
@@ -267,12 +495,47 @@ void CHudSkillCooldown::Paint()
 	}
 
 	//Skill #3
-	V_swprintf_safe(sz, L"%i", m_flHudSk3Timer);
-	if (m_flHudSk3Timer > 0)
+	//V_swprintf_safe(sz, L"%i", m_flHudSk3Timer);
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot2SkillID == 2))
 	{
 		surface()->DrawSetTextColor(m_TextColor2);
 		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
 		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot2SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
+
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot2SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot2SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot2SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot2SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor2);
+		surface()->DrawSetTextPos(text_xpos2, text_ypos2);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
+
 	}
 	else
 	{
@@ -290,12 +553,47 @@ void CHudSkillCooldown::Paint()
 	}
 
 	//Skill #4
-	V_swprintf_safe(sz, L"%i", m_flHudSk4Timer);
-	if (m_flHudSk4Timer > 0)
+	//V_swprintf_safe(sz, L"%i", m_flHudSk4Timer);
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot3SkillID == 2))
 	{
 		surface()->DrawSetTextColor(m_TextColor3);
 		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
 		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot3SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
+
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot3SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot3SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot3SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot3SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor3);
+		surface()->DrawSetTextPos(text_xpos3, text_ypos3);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
+
 	}
 	else
 	{
@@ -312,12 +610,47 @@ void CHudSkillCooldown::Paint()
 		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 	//Skill #5
-	V_swprintf_safe(sz, L"%i", m_flHudSk5Timer);
-	if (m_flHudSk5Timer > 0)
+	//V_swprintf_safe(sz, L"%i", m_flHudSk5Timer);
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot4SkillID == 2))
 	{
 		surface()->DrawSetTextColor(m_TextColor4);
 		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
 		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot4SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
+
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot4SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot4SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot4SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot4SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor4);
+		surface()->DrawSetTextPos(text_xpos4, text_ypos4);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
+
 	}
 	else
 	{
@@ -334,12 +667,47 @@ void CHudSkillCooldown::Paint()
 		surface()->DrawPrintText(sz, wcslen(sz));
 	}
 	//Skill #6
-	V_swprintf_safe(sz, L"%i", m_flHudSk6Timer);
-	if (m_flHudSk6Timer > 0)
+	//V_swprintf_safe(sz, L"%i", m_flHudSk6Timer);
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot5SkillID == 2))
 	{
 		surface()->DrawSetTextColor(m_TextColor5);
 		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
 		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot5SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
+
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot5SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot5SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot5SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot5SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor5);
+		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
+
 	}
 	else
 	{
@@ -355,6 +723,62 @@ void CHudSkillCooldown::Paint()
 		surface()->DrawSetTextPos(text_xpos5, text_ypos5);
 		surface()->DrawPrintText(sz, wcslen(sz));
 	}
+	//Skill #7
+	//V_swprintf_safe(sz, L"%i", m_flHudSk7Timer);
+	if ((m_flHudSk2Timer >= 0) && (m_iQuickslot6SkillID == 2))
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
+	else if ((m_flHudSk3Timer >= 0) && (m_iQuickslot6SkillID == 3)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz3, wcslen(sz3));
 
+	}
+	else if ((m_flHudSk4Timer >= 0) && (m_iQuickslot6SkillID == 4)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz4, wcslen(sz4));
+
+	}
+	else if ((m_flHudSk5Timer >= 0) && (m_iQuickslot6SkillID == 5)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz5, wcslen(sz5));
+
+	}
+	else if ((m_flHudSk6Timer >= 0) && (m_iQuickslot6SkillID == 6)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz6, wcslen(sz6));
+
+	}
+	else if ((m_flHudSk7Timer >= 0) && (m_iQuickslot6SkillID == 7)) //???
+	{
+		surface()->DrawSetTextColor(m_TextColor6);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz7, wcslen(sz7));
+
+	}
+	else
+	{
+		//Initialize the buttoncode to store the binding 
+		ButtonCode_t keyname6;
+		keyname6 = gameuifuncs->GetButtonCodeForBind("quickslot6"); //search for the key belongs to that binding
+
+		//convert the key stored in the button code to string
+		const char *keyNameSlot6 = g_pInputSystem->ButtonCodeToString(keyname6);
+		V_swprintf_safe(sz, L"%s", keyNameSlot6); //convert the string to wchar_t for DrawPrintText 
+
+		surface()->DrawSetTextColor(m_TextColor);
+		surface()->DrawSetTextPos(text_xpos6, text_ypos6);
+		surface()->DrawPrintText(sz, wcslen(sz));
+	}
 	
 }

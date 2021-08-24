@@ -46,6 +46,7 @@ void RegisterUserMessages( void )
 	usermessages->Register( "AchievementEvent", -1 );
 	usermessages->Register( "UpdateJalopyRadar", -1 );
 	usermessages->Register("AS", -1);
+	usermessages->Register("RageBuffTime", -1);
 
 
 #ifndef _X360
