@@ -56,6 +56,9 @@ public:
 	int			ObjectCaps(void) { return UsableNPCObjectCaps(BaseClass::ObjectCaps()); }
 	void		PrecriminalUse(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 
+	//Internal non weapon melee attack
+	int		MeleeAttack1Conditions(float flDot, float flDist);
+
 	// These are overridden so that the cop can shove and move a non-criminal player safely
 	CBaseEntity *CheckTraceHullAttack(float flDist, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float forceScale, bool bDamageAnyNPC);
 	CBaseEntity *CheckTraceHullAttack(const Vector &vStart, const Vector &vEnd, const Vector &mins, const Vector &maxs, int iDamage, int iDmgType, float flForceScale, bool bDamageAnyNPC);
@@ -65,7 +68,7 @@ public:
 	virtual int TranslateSchedule(int scheduleType);
 	void		StartTask(const Task_t *pTask);
 	void		RunTask(const Task_t *pTask);
-	virtual Vector GetActualShootTrajectory(const Vector &shootOrigin);
+	//virtual Vector GetActualShootTrajectory(const Vector &shootOrigin);
 	virtual void FireBullets(const FireBulletsInfo_t &info);
 	virtual bool HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 	virtual void Weapon_Equip(CBaseCombatWeapon *pWeapon);
@@ -87,15 +90,9 @@ public:
 	// Set up the shot regulator based on the equipped weapon
 	virtual void OnUpdateShotRegulator();
 
-	bool	ShouldKnockOutTarget(CBaseEntity *pTarget);
-	void	KnockOutTarget(CBaseEntity *pTarget);
-	void	StunnedTarget(CBaseEntity *pTarget);
 	void	AdministerJustice(void);
 
 	bool	QueryHearSound(CSound *pSound);
-
-	void	SetBatonState(bool state);
-	bool	BatonActive(void);
 
 	virtual	bool		AllowedToIgnite(void) { return true; }
 
@@ -111,7 +108,6 @@ protected:
 
 private:
 	bool		PlayerIsCriminal(void);
-	void		ReleaseManhack(void);
 
 	virtual void	LostEnemySound(void);
 	virtual void	FoundEnemySound(void);
@@ -121,7 +117,7 @@ private:
 	virtual void	IdleSound(void);
 
 	// Burst mode!
-	void		SetBurstMode(bool bEnable);
+	//void		SetBurstMode(bool bEnable);
 
 	int			OnTakeDamage_Alive(const CTakeDamageInfo &info);
 
@@ -129,7 +125,6 @@ private:
 
 	void		BuildScheduleTestBits(void);
 
-	bool		CanDeployManhack(void);
 
 	bool		ShouldHitPlayer(const Vector &targetDir, float targetDist);
 
@@ -144,68 +139,26 @@ private:
 	WeaponProficiency_t CalcWeaponProficiency(CBaseCombatWeapon *pWeapon);
 
 	// Inputs
-	void InputEnableManhackToss(inputdata_t &inputdata);
 	void InputSetPoliceGoal(inputdata_t &inputdata);
-	void InputActivateBaton(inputdata_t &inputdata);
-	// Stitch aiming!
-	void AimBurstRandomly(int nMinCount, int nMaxCount, float flMinDelay, float flMaxDelay);
-	void AimBurstAtEnemy(float flReactionTime);
-	void AimBurstInFrontOfEnemy(float flReactionTime);
-	void AimBurstAlongSideOfEnemy(float flFollowTime);
-	void AimBurstBehindEnemy(float flFollowTime);
-	void AimBurstTightGrouping(float flShotTime);
 
 	// Anim event handlers
-	void OnAnimEventDeployManhack(animevent_t *pEvent);
 	void OnAnimEventShove(void);
-	void OnAnimEventBatonOn(void);
-	void OnAnimEventBatonOff(void);
-	void OnAnimEventStartDeployManhack(void);
-	void OnAnimEventPreDeployManhack(void);
-
-	bool HasBaton(void);
 
 	// Normal schedule selection 
 	int SelectCombatSchedule();
 	int SelectScheduleNewEnemy();
-	int SelectScheduleArrestEnemy();
 	int SelectRangeAttackSchedule();
 	int SelectScheduleNoDirectEnemy();
 	int SelectScheduleInvestigateSound();
-	int SelectShoveSchedule(void);
 
 	bool TryToEnterPistolSlot(int nSquadSlot);
 
 	// Handle flinching
 	bool IsHeavyDamage(const CTakeDamageInfo &info);
 
-	// Compute a predicted enemy position n seconds into the future
-	void PredictShootTargetPosition(float flDeltaTime, float flMinLeadDist, float flAddVelocity, Vector *pVecTarget, Vector *pVecTargetVel);
-
-	// Compute a predicted velocity n seconds into the future (given a known acceleration rate)
-	void PredictShootTargetVelocity(float flDeltaTime, Vector *pVecTargetVel);
-
 	// How many shots will I fire in a particular amount of time?
 	int CountShotsInTime(float flDeltaTime) const;
 	float GetTimeForShots(int nShotCount) const;
-
-	// Visualize stitch
-	void VisualizeStitch(const Vector &vecStart, const Vector &vecEnd);
-
-	// Visualize line of death
-	void VisualizeLineOfDeath();
-
-	// Modify the stitch length
-	float ComputeDistanceStitchModifier(float flDistanceToTarget) const;
-
-	// Adjusts the burst toward the target as it's being fired.
-	void SteerBurstTowardTarget();
-
-	// Methods to compute shot trajectory based on burst mode
-	Vector ComputeBurstLockOnTrajectory(const Vector &shootOrigin);
-	Vector ComputeBurstDeliberatelyMissTrajectory(const Vector &shootOrigin);
-	Vector ComputeBurstTrajectory(const Vector &shootOrigin);
-	Vector ComputeTightBurstTrajectory(const Vector &shootOrigin);
 
 	// Are we currently firing a burst?
 	bool IsCurrentlyFiringBurst() const;
@@ -213,83 +166,30 @@ private:
 	// Which entity are we actually trying to shoot at?
 	CBaseEntity *GetShootTarget();
 
-	// Different burst steering modes
-	void SteerBurstTowardTargetUseSpeedOnly(const Vector &vecShootAt, const Vector &vecShootAtVelocity, float flPredictTime, int nShotsTillPredict);
-	void SteerBurstTowardTargetUseVelocity(const Vector &vecShootAt, const Vector &vecShootAtVelocity, int nShotsTillPredict);
-	void SteerBurstTowardTargetUsePosition(const Vector &vecShootAt, const Vector &vecShootAtVelocity, int nShotsTillPredict);
-	void SteerBurstTowardPredictedPoint(const Vector &vecShootAt, const Vector &vecShootAtVelocity, int nShotsTillPredict);
-	void SteerBurstWithinLineOfDeath();
-
 	// Set up the shot regulator
 	int SetupBurstShotRegulator(float flReactionTime);
 
 	// Choose a random vector somewhere between the two specified vectors
 	void RandomDirectionBetweenVectors(const Vector &vecStart, const Vector &vecEnd, Vector *pResult);
 
-	// Stitch selector
-	float StitchAtWeight(float flDist, float flSpeed, float flDot, float flReactionTime, const Vector &vecTargetToGun);
-	float StitchAcrossWeight(float flDist, float flSpeed, float flDot, float flReactionTime);
-	float StitchAlongSideWeight(float flDist, float flSpeed, float flDot);
-	float StitchBehindWeight(float flDist, float flSpeed, float flDot);
-	float StitchTightWeight(float flDist, float flSpeed, const Vector &vecTargetToGun, const Vector &vecVelocity);
-	int SelectStitchSchedule();
-
 	// Can me enemy see me? 
 	bool CanEnemySeeMe();
-
-	// Combat schedule selection 
-	int SelectMoveToLedgeSchedule();
-
-	// position to shoot at
-	Vector StitchAimTarget(const Vector &posSrc, bool bNoisy);
-
-	// Should we attempt to stitch?
-	bool ShouldAttemptToStitch();
 
 	// Deliberately aims as close as possible w/o hitting
 	Vector AimCloseToTargetButMiss(CBaseEntity *pTarget, const Vector &shootOrigin);
 
 	// Compute the actual reaction time based on distance + speed modifiers
-	float AimBurstAtReactionTime(float flReactonTime, float flDistToTargetSqr, float flCurrentSpeed);
-	int AimBurstAtSetupHitCount(float flDistToTargetSqr, float flCurrentSpeed);
+	//float AimBurstAtReactionTime(float flReactonTime, float flDistToTargetSqr, float flCurrentSpeed);
+//int AimBurstAtSetupHitCount(float flDistToTargetSqr, float flCurrentSpeed);
 
-	// How many squad members are trying to arrest the player?
-	int SquadArrestCount();
-
-	// He's resisting arrest!
-	void EnemyResistingArrest();
 	void VPhysicsCollision(int index, gamevcollisionevent_t *pEvent);
 
-	// Rappel
-	virtual bool IsWaitingToRappel(void) { return m_RappelBehavior.IsWaitingToRappel(); }
-	void BeginRappel() { m_RappelBehavior.BeginRappel(); }
-
 private:
-	enum
-	{
-		BURST_NOT_ACTIVE = 0,
-		BURST_ACTIVE,
-		BURST_LOCK_ON_AFTER_HIT,
-		BURST_LOCKED_ON,
-		BURST_DELIBERATELY_MISS,
-		BURST_TIGHT_GROUPING,
-	};
-
-	enum
-	{
-		BURST_STEER_NONE = 0,
-		BURST_STEER_TOWARD_PREDICTED_POINT,
-		BURST_STEER_WITHIN_LINE_OF_DEATH,
-		BURST_STEER_ADJUST_FOR_SPEED_CHANGES,
-		BURST_STEER_EXACTLY_TOWARD_TARGET,
-	};
 
 	enum
 	{
 		COND_BOB_ON_FIRE = BaseClass::NEXT_CONDITION,
-		COND_BOB_ENEMY_RESISTING_ARREST,
 		COND_BOB_PLAYER_TOO_CLOSE,
-		COND_BOB_CHANGE_BATON_STATE,
 		COND_BOB_PHYSOBJECT_ASSAULT,
 
 	};
@@ -301,27 +201,16 @@ private:
 		SCHED_BOB_HARASS,
 		SCHED_BOB_CHASE_ENEMY,
 		SCHED_BOB_ESTABLISH_LINE_OF_FIRE,
-		SCHED_BOB_DRAW_PISTOL,
-		SCHED_BOB_DEPLOY_MANHACK,
 		SCHED_BOB_ADVANCE,
 		SCHED_BOB_CHARGE,
 		SCHED_BOB_BURNING_RUN,
 		SCHED_BOB_BURNING_STAND,
 		SCHED_BOB_SMG_NORMAL_ATTACK,
-		SCHED_BOB_SMG_BURST_ATTACK,
-		SCHED_BOB_AIM_STITCH_TIGHTLY,
-		SCHED_BOB_ESTABLISH_STITCH_LINE_OF_FIRE,
 		SCHED_BOB_INVESTIGATE_SOUND,
-		SCHED_BOB_WARN_AND_ARREST_ENEMY,
-		SCHED_BOB_ARREST_ENEMY,
-		SCHED_BOB_ENEMY_RESISTING_ARREST,
 		SCHED_BOB_WARN_TARGET,
 		SCHED_BOB_HARASS_TARGET,
 		SCHED_BOB_SUPPRESS_TARGET,
 		SCHED_BOB_RETURN_FROM_HARASS,
-		SCHED_BOB_SHOVE,
-		SCHED_BOB_ACTIVATE_BATON,
-		SCHED_BOB_DEACTIVATE_BATON,
 		SCHED_BOB_ALERT_FACE_BESTSOUND,
 		SCHED_BOB_RETURN_TO_PRECHASE,
 		SCHED_BOB_SMASH_PROP,
@@ -331,19 +220,9 @@ private:
 	{
 		TASK_BOB_HARASS = BaseClass::NEXT_TASK,
 		TASK_BOB_DIE_INSTANTLY,
-		TASK_BOB_BURST_ATTACK,
-		TASK_BOB_STOP_FIRE_BURST,
-		TASK_BOB_AIM_STITCH_AT_PLAYER,
-		TASK_BOB_AIM_STITCH_TIGHTLY,
-		TASK_BOB_RELOAD_FOR_BURST,
-		TASK_BOB_GET_PATH_TO_STITCH,
-		TASK_BOB_RESET_LEDGE_CHECK_TIME,
 		TASK_BOB_GET_PATH_TO_BESTSOUND_LOS,
 		TASK_BOB_AIM_WEAPON_AT_ENEMY,
-		TASK_BOB_ARREST_ENEMY,
-		TASK_BOB_LEAD_ARREST_ENEMY,
 		TASK_BOB_SIGNAL_FIRING_TIME,
-		TASK_BOB_ACTIVATE_BATON,
 		TASK_BOB_WAIT_FOR_SENTENCE,
 		TASK_BOB_GET_PATH_TO_PRECHASE,
 		TASK_BOB_CLEAR_PRECHASE,
@@ -353,33 +232,15 @@ private:
 private:
 
 	int				m_iPistolClips;		// How many clips the cop has in reserve
-	int				m_iManhacks;		// How many manhacks the cop has
 	bool			m_fWeaponDrawn;		// Is my weapon drawn? (ready to use)
-	bool			m_bSimpleCops;		// The easy version of the cops
 	int				m_LastShootSlot;
 	CRandSimTimer	m_TimeYieldShootSlot;
 	CSimpleSimTimer m_BatonSwingTimer;
 	CSimpleSimTimer m_NextChargeTimer;
 
 	// All related to burst firing
-	Vector			m_vecBurstTargetPos;
-	Vector			m_vecBurstDelta;
-	int				m_nBurstHits;
-	int				m_nMaxBurstHits;
-	int				m_nBurstReloadCount;
-	Vector			m_vecBurstLineOfDeathDelta;
-	Vector			m_vecBurstLineOfDeathOrigin;
-	int				m_nBurstMode;
-	int				m_nBurstSteerMode;
-	float			m_flBurstSteerDistance;
-	float			m_flBurstPredictTime;
-	Vector			m_vecBurstPredictedVelocityDir;
-	float			m_vecBurstPredictedSpeed;
-	float			m_flValidStitchTime;
-	float			m_flNextLedgeCheckTime;
 	float			m_flTaskCompletionTime;
 
-	bool			m_bShouldActivateBaton;
 	float			m_flBatonDebounceTime;	// Minimum amount of time before turning the baton off
 	float			m_flLastPhysicsFlinchTime;
 	float			m_flLastDamageFlinchTime;
@@ -399,17 +260,14 @@ private:
 	int				m_iNumPlayerHits;
 
 	// Outputs
-	COutputEvent	m_OnStunnedPlayer;
-	COutputEvent	m_OnCupCopped;
+	//COutputEvent	m_OnCupCopped;
 
-	AIHANDLE		m_hManhack;
 	CHandle<CPhysicsProp>	m_hBlockingProp;
 
 	CAI_ActBusyBehavior		m_ActBusyBehavior;
 	CAI_StandoffBehavior	m_StandoffBehavior;
 	CAI_AssaultBehavior		m_AssaultBehavior;
 	CAI_FuncTankBehavior	m_FuncTankBehavior;
-	CAI_RappelBehavior		m_RappelBehavior;
 	CAI_PolicingBehavior	m_PolicingBehavior;
 	CAI_FollowBehavior		m_FollowBehavior;
 
@@ -418,8 +276,6 @@ private:
 
 	// The last hit direction, measured as a yaw relative to our orientation
 	float			m_flLastHitYaw;
-
-	static float	gm_flTimeLastSpokePeek;
 
 public:
 	DEFINE_CUSTOM_AI;

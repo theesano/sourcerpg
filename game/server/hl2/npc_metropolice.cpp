@@ -125,12 +125,12 @@ ConVar lilyss_metropolice_model("lilyss_metropolice_model", "models/police.mdl")
 #define METROPOLICE_NUM_CLIPS			5
 #define METROPOLICE_BURST_RELOAD_COUNT	20
 //Temporary hack, replace all instances of AE_METROPOLICE1 back to AE_METROPOLICE after creating custom AE for BOB
-int AE_METROPOLICE1_BATON_ON;
-int	AE_METROPOLICE1_BATON_OFF;
-int AE_METROPOLICE1_SHOVE;
-int AE_METROPOLICE1_START_DEPLOY;
-int AE_METROPOLICE1_DRAW_PISTOL;		// was	50
-int AE_METROPOLICE1_DEPLOY_MANHACK;	// was	51
+int AE_METROPOLICE_BATON_ON;
+int	AE_METROPOLICE_BATON_OFF;
+int AE_METROPOLICE_SHOVE;
+int AE_METROPOLICE_START_DEPLOY;
+int AE_METROPOLICE_DRAW_PISTOL;		// was	50
+int AE_METROPOLICE_DEPLOY_MANHACK;	// was	51
 
 // -----------------------------------------------
 //	> Squad slots
@@ -2932,31 +2932,31 @@ void CNPC_MetroPolice::OnAnimEventBatonOff( void )
 void CNPC_MetroPolice::HandleAnimEvent( animevent_t *pEvent )
 {
 	// Shove!
-	if ( pEvent->event == AE_METROPOLICE1_SHOVE )
+	if ( pEvent->event == AE_METROPOLICE_SHOVE )
 	{
 		OnAnimEventShove();
 		return;
 	}
 
-	if ( pEvent->event == AE_METROPOLICE1_BATON_ON )
+	if ( pEvent->event == AE_METROPOLICE_BATON_ON )
 	{
 		OnAnimEventBatonOn();
 		return;
 	}
 
-	if ( pEvent->event == AE_METROPOLICE1_BATON_OFF )
+	if ( pEvent->event == AE_METROPOLICE_BATON_OFF )
 	{
 		OnAnimEventBatonOff();
 		return;
 	}
 
-	if ( pEvent->event == AE_METROPOLICE1_START_DEPLOY )
+	if ( pEvent->event == AE_METROPOLICE_START_DEPLOY )
 	{
 		OnAnimEventStartDeployManhack();
 		return;
 	}
 
-	if ( pEvent->event == AE_METROPOLICE1_DRAW_PISTOL )
+	if ( pEvent->event == AE_METROPOLICE_DRAW_PISTOL )
 	{
 		m_fWeaponDrawn = true;
 		if( GetActiveWeapon() )
@@ -2966,7 +2966,7 @@ void CNPC_MetroPolice::HandleAnimEvent( animevent_t *pEvent )
 		return;
 	}
 
-	if ( pEvent->event == AE_METROPOLICE1_DEPLOY_MANHACK )
+	if ( pEvent->event == AE_METROPOLICE_DEPLOY_MANHACK )
 	{
 		OnAnimEventDeployManhack( pEvent );
 		return;
@@ -5198,12 +5198,12 @@ AI_BEGIN_CUSTOM_NPC( npc_metropolice, CNPC_MetroPolice )
 
 	gm_flTimeLastSpokePeek = 0;
 
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_BATON_ON );
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_BATON_OFF );
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_SHOVE );
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_START_DEPLOY );
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_DRAW_PISTOL );
-	DECLARE_ANIMEVENT( AE_METROPOLICE1_DEPLOY_MANHACK );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_BATON_ON );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_BATON_OFF );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_SHOVE );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_START_DEPLOY );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_DRAW_PISTOL );
+	DECLARE_ANIMEVENT( AE_METROPOLICE_DEPLOY_MANHACK );
 
 	DECLARE_SQUADSLOT( SQUAD_SLOT_POLICE_CHARGE_ENEMY );
 	DECLARE_SQUADSLOT( SQUAD_SLOT_POLICE_HARASS );

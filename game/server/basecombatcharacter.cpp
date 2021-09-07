@@ -235,7 +235,8 @@ bool CBaseCombatCharacter::HasHumanGibs( void )
 		 myClass == CLASS_COMBINE			||
 		 myClass == CLASS_CONSCRIPT			||
 		 myClass == CLASS_METROPOLICE		||
-		 myClass == CLASS_PLAYER )	
+		 myClass == CLASS_PLAYER			||
+		 myClass == CLASS_BOB)	
 		 return true;
 
 #elif defined( HL1_DLL )

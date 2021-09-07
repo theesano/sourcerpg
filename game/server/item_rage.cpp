@@ -25,6 +25,9 @@ public:
 	void	Precache();
 	void	Think();
 	void	Remove();
+	
+	//virtual void VPhysicsCollision(int index, gamevcollisionevent_t *pEvent);
+	//virtual bool CreateVPhysics();
 
 	bool	MyTouch(CBasePlayer *pPlayer);
 
@@ -62,6 +65,7 @@ void CRagePickup::Spawn()
 	// CItem is designed for Vphys objects, so we need to undo a couple of things its spawn() does
 	Vector OriginalLocation = GetAbsOrigin();
 	BaseClass::Spawn();
+	//CreateVPhysics(); // TODO: 
 	VPhysicsDestroyObject();
 	SetAbsOrigin(OriginalLocation);
 
@@ -75,6 +79,7 @@ void CRagePickup::Spawn()
 	MdlTop.z += GetModelPtr()->hull_max().z;
 
 	SetSolid(SOLID_NONE);
+	//SetSolid(SOLID_BBOX); //TODO
 	CollisionProp()->UseTriggerBounds(true, 8); // Reign in the volume added to the trigger collision box
 	Vector OBBSize = Vector(CollisionProp()->OBBSize().Length() / 2); // need to use length as the model will be rotated at 45 degrees on clients
 	SetSize(-OBBSize, OBBSize); // Resize the bounding box
@@ -101,10 +106,58 @@ void CRagePickup::Activate()
 void CRagePickup::Precache()
 {
 	PrecacheModel(PICKUP_MODEL);
-	PrecacheScriptSound("HealthKit.Touch");
-	PrecacheScriptSound("AlyxEmp.Charge");
 
 }
+
+//-----------------------------------------------------------------------------
+// Create vphysics !!TODO
+//-----------------------------------------------------------------------------
+//bool CRagePickup::CreateVPhysics()
+//{
+//	SetSolid(SOLID_BBOX);
+//
+//	float flSize = 8.0f;
+//
+//	SetCollisionBounds(Vector(-flSize, -flSize, -flSize), Vector(flSize, flSize, flSize));
+//	objectparams_t params = g_PhysDefaultObjectParams;
+//	params.pGameData = static_cast<void *>(this);
+//	int nMaterialIndex = physprops->GetSurfaceIndex("metal_bouncy");
+//	IPhysicsObject *pPhysicsObject = physenv->CreateSphereObject(flSize, nMaterialIndex, GetAbsOrigin(), GetAbsAngles(), &params, false);
+//	if (!pPhysicsObject)
+//		return false;
+//
+//	VPhysicsSetObject(pPhysicsObject);
+//	SetMoveType(MOVETYPE_VPHYSICS);
+//	pPhysicsObject->Wake();
+//
+//	pPhysicsObject->SetMass(750.0f);
+//	pPhysicsObject->EnableGravity(true);
+//
+//	float flDamping = 0.0f;
+//	float flAngDamping = 0.5f;
+//	pPhysicsObject->SetDamping(&flDamping, &flAngDamping);
+//	pPhysicsObject->SetInertia(Vector(1e30, 1e30, 1e30));
+//
+//	return true;
+//}
+
+//!!TODO
+//void CRagePickup::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
+//{
+//	Vector OriginalLocation = GetAbsOrigin();
+//	VPhysicsDestroyObject();
+//	SetAbsOrigin(OriginalLocation);
+//
+//	UseClientSideAnimation();
+//	SetMoveType(MOVETYPE_NONE);
+//
+//	// Grab the highest point on the model before we change the bounding box
+//	MdlTop = GetAbsOrigin();
+//	MdlTop.z += GetModelPtr()->hull_max().z;
+//
+//	SetSolid(SOLID_NONE);
+//
+//}
 
 void CRagePickup::Think()
 {

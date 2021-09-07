@@ -2261,11 +2261,11 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 	
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
-	string_t iszNPCName = AllocPooledString("npc_metropolice");
+	string_t iszNPCName = AllocPooledString("npc_bob");
 	Vector playernpcdist;
 	Vector staticplayernpcdist;
 	
-
+	
 	for (int i = 0; i < nAIs; i++)
 	{
 		//TODO: use exclusion list. 
@@ -2273,7 +2273,7 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 		//if (ppAIs[i])  //affects every npcs ingame.
 
 
-		if (ppAIs[i])
+		if (ppAIs[i]->m_iClassname == iszNPCName)
 		{
 				playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
 				playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
@@ -2418,6 +2418,45 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 
 
 		}
+		else
+		{
+			playernpcdist.x = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
+			playernpcdist.y = abs(UTIL_GetLocalPlayer()->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
+
+			staticplayernpcdist.x = abs(playerPos.x - ppAIs[i]->GetAbsOrigin().x);
+			staticplayernpcdist.y = abs(playerPos.y - ppAIs[i]->GetAbsOrigin().y);
+
+			if (playernpcdist.x <= m_flSkillAttributeRange && playernpcdist.y <= m_flSkillAttributeRange)
+			{
+
+				if (ppAIs[i]->IsAlive())
+				{
+					m_bIsEnemyInAtkRange = true;// display text if they are within range
+
+				}
+
+				if (options == 5)
+				{
+					if (ppAIs[i]->IsAlive())
+					{
+						Vector ParticleVec = ppAIs[i]->GetAbsOrigin();
+						ParticleVec.z += 48;
+						//DispatchParticleEffect("hit_impact", ParticleVec, ppAIs[i]->GetAbsAngles());
+						DispatchParticleEffect("grenade_explosion_01e", ParticleVec, ppAIs[i]->GetAbsAngles());
+						WeaponSound(MELEE_HIT);
+					}
+
+				}
+
+			}
+			else
+			{
+				m_bIsEnemyInAtkRange = false;
+
+			}
+		}
+
+
 	}
 }
 //Make the player move forward

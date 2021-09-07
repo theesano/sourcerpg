@@ -1453,6 +1453,21 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 		return;
 	}
 
+	if (pEvent->event == 13)
+	{
+		Vector right, forward;
+		AngleVectors(GetLocalAngles(), &forward, &right, NULL);
+
+		right = right * 100;
+		forward = forward * 200;
+
+		QAngle qa(-15, -20, -10);
+		Vector vec = right + forward;
+		ClawAttack(GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), qa, vec, ZOMBIE_BLOOD_RIGHT_HAND);
+		return;
+
+	}
+
 	if ( pEvent->event == AE_ZOMBIE_POUND )
 	{
 		PoundSound();

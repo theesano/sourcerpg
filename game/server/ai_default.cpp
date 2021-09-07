@@ -1154,7 +1154,7 @@ AI_DEFINE_SCHEDULE
 );
 
 //=========================================================
-// > Melee_Attack1
+// > Melee_Attack1  !!!TEMP hack , don't step enemy from melee attacking while being damaged
 //=========================================================
 AI_DEFINE_SCHEDULE
 (
@@ -1169,8 +1169,8 @@ AI_DEFINE_SCHEDULE
 	"	Interrupts"
 	"		COND_NEW_ENEMY"
 	"		COND_ENEMY_DEAD"
-	"		COND_LIGHT_DAMAGE"
-	"		COND_HEAVY_DAMAGE"
+//	"		COND_LIGHT_DAMAGE"
+//	"		COND_HEAVY_DAMAGE"
 	"		COND_ENEMY_OCCLUDED"
 );
 

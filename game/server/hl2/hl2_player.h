@@ -275,6 +275,7 @@ public:
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
 
+
 	//Falling
 	bool m_bIsFallingA;
 
@@ -282,6 +283,7 @@ public:
 	void	Evade(void);
 	void	Evade_DelayedUseTime(void);
 	void	EvadeHandler(void);
+	bool	IsEvading(void) { return m_bIsEvade; }
 	bool	m_bIsEvade;
 	bool	m_bWasRunning;
 	float	m_flEvadeHandlerTime;

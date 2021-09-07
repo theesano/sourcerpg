@@ -31,6 +31,15 @@ protected:
 	virtual void OnThink();
 
 private:
+	
+	//int m_iQuickSlot1SkillID;
+	bool m_bQSCombo1SetDefault;
+	bool m_bQSCombo2SetDefault;
+	bool m_bQSCombo3SetDefault;
+	bool m_bQSCombo4SetDefault;
+	bool m_bQSCombo5SetDefault;
+	bool m_bQSCombo6SetDefault;
+
 	//Other used VGUI control Elements:
 	Button *m_pCloseButton;
 	ImagePanel *bgImagePanel = new ImagePanel(this, "icon_tornado");
@@ -41,6 +50,12 @@ private:
 	ComboBox *m_pUtilSlot2OptionIDCombo;
 	ComboBox *m_pUtilSlot3OptionIDCombo;
 	ComboBox *m_pUtilSlot4OptionIDCombo;
+	ComboBox *m_pQuickslot1Combo;
+	ComboBox *m_pQuickslot2Combo;
+	ComboBox *m_pQuickslot3Combo;
+	ComboBox *m_pQuickslot4Combo;
+	ComboBox *m_pQuickslot5Combo;
+	ComboBox *m_pQuickslot6Combo;
 	ImagePanel *m_pReceiver = new ImagePanel(this, "icon_test");
 
 	MESSAGE_FUNC_PTR(OnTextChanged, "TextChanged", panel);
@@ -76,26 +91,26 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 	LoadControlSettings("resource/UI/skillpanel.res");
 
 	vgui::ivgui()->AddTickSignal(GetVPanel(), 100);
-	
+
 	bgImagePanel->SetImage(scheme()->GetImage("icon_tornado", false));
 	bgImagePanel->SetPos(32, 240);
 	bgImagePanel->SetSize(48, 48);
 	bgImagePanel->SetShouldScaleImage(true);
 	bgImagePanel->SetDragEnabled(true);
 	
-
 	m_pReceiver->SetImage(scheme()->GetImage("None", false));
 	m_pReceiver->SetPos(96, 240);
 	m_pReceiver->SetSize(48, 48);
 	m_pReceiver->SetShouldScaleImage(true);
 	m_pReceiver->SetDropEnabled(true, 0.0f);
-	
+//Close button
 	m_pCloseButton = new Button(this, "Button", "", this, "turnoff");
 	m_pCloseButton->SetPos(476, 12);
 	m_pCloseButton->SetSize(32, 24);
 	m_pCloseButton->SetDepressedSound("common/bugreporter_succeeded.wav");
 	m_pCloseButton->SetReleasedSound("ui/buttonclick.wav");
 
+//Labels
 	m_pUtilSlotLabel = new Label(this, "UtilSlotGeneral", "uslot");
 	m_pUtilSlotLabel->SetPos(375, 32);
 	m_pUtilSlotLabel->SetFont(m_hTextFont);
@@ -167,7 +182,130 @@ CSkillPanel::CSkillPanel(vgui::VPANEL parent)
 
 	m_pUtilSlot4OptionIDCombo->ActivateItem(defaultItemSlot4);
 
+//Quickslot 
+	
+//1
+	m_pQuickslot1Combo = new ComboBox(this, "Quickslot1Combo", 7, false);
+	m_pQuickslot1Combo->SetPos(32, 64);
+	m_pQuickslot1Combo->SetSize(56, 16);
+	
+	m_pQuickslot1Combo->AddItem("None",NULL);
+	m_pQuickslot1Combo->AddItem("2", NULL);
+	m_pQuickslot1Combo->AddItem("3", NULL);
+	m_pQuickslot1Combo->AddItem("4", NULL);
+	m_pQuickslot1Combo->AddItem("5", NULL);
+	m_pQuickslot1Combo->AddItem("6", NULL);
+	m_pQuickslot1Combo->AddItem("7", NULL);
 
+
+//2
+	m_pQuickslot2Combo = new ComboBox(this, "Quickslot2Combo", 7, false);
+	m_pQuickslot2Combo->SetPos(96, 64);
+	m_pQuickslot2Combo->SetSize(56, 16);
+
+	m_pQuickslot2Combo->AddItem("None", NULL);
+	m_pQuickslot2Combo->AddItem("2", NULL);
+	m_pQuickslot2Combo->AddItem("3", NULL);
+	m_pQuickslot2Combo->AddItem("4", NULL);
+	m_pQuickslot2Combo->AddItem("5", NULL);
+	m_pQuickslot2Combo->AddItem("6", NULL);
+	m_pQuickslot2Combo->AddItem("7", NULL);
+
+//3
+
+	m_pQuickslot3Combo = new ComboBox(this, "Quickslot3Combo", 7, false);
+	m_pQuickslot3Combo->SetPos(160, 64);
+	m_pQuickslot3Combo->SetSize(56, 16);
+
+	m_pQuickslot3Combo->AddItem("None", NULL);
+	m_pQuickslot3Combo->AddItem("2", NULL);
+	m_pQuickslot3Combo->AddItem("3", NULL);
+	m_pQuickslot3Combo->AddItem("4", NULL);
+	m_pQuickslot3Combo->AddItem("5", NULL);
+	m_pQuickslot3Combo->AddItem("6", NULL);
+	m_pQuickslot3Combo->AddItem("7", NULL);
+
+	//1
+	m_pQuickslot1Combo = new ComboBox(this, "Quickslot1Combo", 7, false);
+	m_pQuickslot1Combo->SetPos(32, 64);
+	m_pQuickslot1Combo->SetSize(56, 16);
+	
+	m_pQuickslot1Combo->AddItem("None",NULL);
+	m_pQuickslot1Combo->AddItem("2", NULL);
+	m_pQuickslot1Combo->AddItem("3", NULL);
+	m_pQuickslot1Combo->AddItem("4", NULL);
+	m_pQuickslot1Combo->AddItem("5", NULL);
+	m_pQuickslot1Combo->AddItem("6", NULL);
+	m_pQuickslot1Combo->AddItem("7", NULL);
+
+
+//2
+	m_pQuickslot2Combo = new ComboBox(this, "Quickslot2Combo", 7, false);
+	m_pQuickslot2Combo->SetPos(96, 64);
+	m_pQuickslot2Combo->SetSize(56, 16);
+
+	m_pQuickslot2Combo->AddItem("None", NULL);
+	m_pQuickslot2Combo->AddItem("2", NULL);
+	m_pQuickslot2Combo->AddItem("3", NULL);
+	m_pQuickslot2Combo->AddItem("4", NULL);
+	m_pQuickslot2Combo->AddItem("5", NULL);
+	m_pQuickslot2Combo->AddItem("6", NULL);
+	m_pQuickslot2Combo->AddItem("7", NULL);
+
+//3
+
+	m_pQuickslot3Combo = new ComboBox(this, "Quickslot3Combo", 7, false);
+	m_pQuickslot3Combo->SetPos(160, 64);
+	m_pQuickslot3Combo->SetSize(56, 16);
+
+	m_pQuickslot3Combo->AddItem("None", NULL);
+	m_pQuickslot3Combo->AddItem("2", NULL);
+	m_pQuickslot3Combo->AddItem("3", NULL);
+	m_pQuickslot3Combo->AddItem("4", NULL);
+	m_pQuickslot3Combo->AddItem("5", NULL);
+	m_pQuickslot3Combo->AddItem("6", NULL);
+	m_pQuickslot3Combo->AddItem("7", NULL);
+
+//1
+	m_pQuickslot4Combo = new ComboBox(this, "Quickslot4Combo", 7, false);
+	m_pQuickslot4Combo->SetPos(224, 64);
+	m_pQuickslot4Combo->SetSize(56, 16);
+
+	m_pQuickslot4Combo->AddItem("None", NULL);
+	m_pQuickslot4Combo->AddItem("2", NULL);
+	m_pQuickslot4Combo->AddItem("3", NULL);
+	m_pQuickslot4Combo->AddItem("4", NULL);
+	m_pQuickslot4Combo->AddItem("5", NULL);
+	m_pQuickslot4Combo->AddItem("6", NULL);
+	m_pQuickslot4Combo->AddItem("7", NULL);
+
+
+//2
+	m_pQuickslot5Combo = new ComboBox(this, "Quickslot5Combo", 7, false);
+	m_pQuickslot5Combo->SetPos(288, 64);
+	m_pQuickslot5Combo->SetSize(56, 16);
+
+	m_pQuickslot5Combo->AddItem("None", NULL);
+	m_pQuickslot5Combo->AddItem("2", NULL);
+	m_pQuickslot5Combo->AddItem("3", NULL);
+	m_pQuickslot5Combo->AddItem("4", NULL);
+	m_pQuickslot5Combo->AddItem("5", NULL);
+	m_pQuickslot5Combo->AddItem("6", NULL);
+	m_pQuickslot5Combo->AddItem("7", NULL);
+
+//3
+
+	m_pQuickslot6Combo = new ComboBox(this, "Quickslot6Combo", 7, false);
+	m_pQuickslot6Combo->SetPos(352, 64);
+	m_pQuickslot6Combo->SetSize(56, 16);
+
+	m_pQuickslot6Combo->AddItem("None", NULL);
+	m_pQuickslot6Combo->AddItem("2", NULL);
+	m_pQuickslot6Combo->AddItem("3", NULL);
+	m_pQuickslot6Combo->AddItem("4", NULL);
+	m_pQuickslot6Combo->AddItem("5", NULL);
+	m_pQuickslot6Combo->AddItem("6", NULL);
+	m_pQuickslot6Combo->AddItem("7", NULL);
 }
 
 //Class: CSkillPanelInterface Class. Used for construction.
@@ -206,8 +344,7 @@ ISkillPanel* skillpanel = (ISkillPanel*)&g_SkillPanel;
 ConVar cl_showskillpanel("cl_showskillpanel", "0", FCVAR_CLIENTDLL, "Sets the state of the skills information panel <state>");
 
 void CSkillPanel::OnTick()
-{
-	
+{	
 	BaseClass::OnTick();
 	SetVisible(cl_showskillpanel.GetBool());
 
@@ -215,7 +352,229 @@ void CSkillPanel::OnTick()
 
 void CSkillPanel::OnThink()
 {
+	if ((m_bQSCombo1SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo1SetDefault = false;
 
+		ConVar *pQuickslot1SkillID = cvar->FindVar("sk_plr_quickslot1_skill_id");
+
+		switch (pQuickslot1SkillID->GetInt())
+		{
+			case 0:
+				m_pQuickslot1Combo->ActivateItem(0);
+				break;
+			case 2:
+				m_pQuickslot1Combo->ActivateItem(1);
+				break;
+			case 3:
+				m_pQuickslot1Combo->ActivateItem(2);
+				break;
+			case 4:
+				m_pQuickslot1Combo->ActivateItem(3);
+				break;
+			case 5:
+				m_pQuickslot1Combo->ActivateItem(4);
+				break;
+			case 6:
+				m_pQuickslot1Combo->ActivateItem(5);
+				break;
+			case 7:
+				m_pQuickslot1Combo->ActivateItem(6);
+				break;
+			default:	m_pQuickslot1Combo->ActivateItem(0);
+				
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+	}
+
+	if ((m_bQSCombo2SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo2SetDefault = false;
+
+		ConVar *pQuickslot2SkillID = cvar->FindVar("sk_plr_quickslot2_skill_id");
+
+		switch (pQuickslot2SkillID->GetInt())
+		{
+		case 0:
+			m_pQuickslot2Combo->ActivateItem(0);
+			break;
+		case 2:
+			m_pQuickslot2Combo->ActivateItem(1);
+			break;
+		case 3:
+			m_pQuickslot2Combo->ActivateItem(2);
+			break;
+		case 4:
+			m_pQuickslot2Combo->ActivateItem(3);
+			break;
+		case 5:
+			m_pQuickslot2Combo->ActivateItem(4);
+			break;
+		case 6:
+			m_pQuickslot2Combo->ActivateItem(5);
+			break;
+		case 7:
+			m_pQuickslot2Combo->ActivateItem(6);
+			break;
+		default:	m_pQuickslot2Combo->ActivateItem(0);
+
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+	}
+
+	if ((m_bQSCombo3SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo3SetDefault = false;
+
+		ConVar *pQuickslot3SkillID = cvar->FindVar("sk_plr_quickslot3_skill_id");
+
+		switch (pQuickslot3SkillID->GetInt())
+		{
+		case 0:
+			m_pQuickslot3Combo->ActivateItem(0);
+			break;
+		case 2:
+			m_pQuickslot3Combo->ActivateItem(1);
+			break;
+		case 3:
+			m_pQuickslot3Combo->ActivateItem(2);
+			break;
+		case 4:
+			m_pQuickslot3Combo->ActivateItem(3);
+			break;
+		case 5:
+			m_pQuickslot3Combo->ActivateItem(4);
+			break;
+		case 6:
+			m_pQuickslot3Combo->ActivateItem(5);
+			break;
+		case 7:
+			m_pQuickslot3Combo->ActivateItem(6);
+			break;
+		default:	m_pQuickslot3Combo->ActivateItem(0);
+
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+
+
+	}
+
+	if ((m_bQSCombo4SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo4SetDefault = false;
+
+		ConVar *pQuickslot4SkillID = cvar->FindVar("sk_plr_quickslot4_skill_id");
+
+		switch (pQuickslot4SkillID->GetInt())
+		{
+		case 0:
+			m_pQuickslot4Combo->ActivateItem(0);
+			break;
+		case 2:
+			m_pQuickslot4Combo->ActivateItem(1);
+			break;
+		case 3:
+			m_pQuickslot4Combo->ActivateItem(2);
+			break;
+		case 4:
+			m_pQuickslot4Combo->ActivateItem(3);
+			break;
+		case 5:
+			m_pQuickslot4Combo->ActivateItem(4);
+			break;
+		case 6:
+			m_pQuickslot4Combo->ActivateItem(5);
+			break;
+		case 7:
+			m_pQuickslot4Combo->ActivateItem(6);
+			break;
+		default:	m_pQuickslot4Combo->ActivateItem(0);
+
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+
+
+	}
+
+	if ((m_bQSCombo5SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo5SetDefault = false;
+
+		ConVar *pQuickslot5SkillID = cvar->FindVar("sk_plr_quickslot5_skill_id");
+
+		switch (pQuickslot5SkillID->GetInt())
+		{
+		case 0:
+			m_pQuickslot5Combo->ActivateItem(0);
+			break;
+		case 2:
+			m_pQuickslot5Combo->ActivateItem(1);
+			break;
+		case 3:
+			m_pQuickslot5Combo->ActivateItem(2);
+			break;
+		case 4:
+			m_pQuickslot5Combo->ActivateItem(3);
+			break;
+		case 5:
+			m_pQuickslot5Combo->ActivateItem(4);
+			break;
+		case 6:
+			m_pQuickslot5Combo->ActivateItem(5);
+			break;
+		case 7:
+			m_pQuickslot5Combo->ActivateItem(6);
+			break;
+		default:	m_pQuickslot5Combo->ActivateItem(0);
+
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+
+
+	}
+
+	if ((m_bQSCombo6SetDefault) && (engine->IsConnected()))
+	{
+		m_bQSCombo6SetDefault = false;
+
+		ConVar *pQuickslot6SkillID = cvar->FindVar("sk_plr_quickslot6_skill_id");
+
+		switch (pQuickslot6SkillID->GetInt())
+		{
+		case 0:
+			m_pQuickslot6Combo->ActivateItem(0);
+			break;
+		case 2:
+			m_pQuickslot6Combo->ActivateItem(1);
+			break;
+		case 3:
+			m_pQuickslot6Combo->ActivateItem(2);
+			break;
+		case 4:
+			m_pQuickslot6Combo->ActivateItem(3);
+			break;
+		case 5:
+			m_pQuickslot6Combo->ActivateItem(4);
+			break;
+		case 6:
+			m_pQuickslot6Combo->ActivateItem(5);
+			break;
+		case 7:
+			m_pQuickslot6Combo->ActivateItem(6);
+			break;
+		default:	m_pQuickslot6Combo->ActivateItem(0);
+
+		}
+
+		//DevMsg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+
+
+	}
 }
 
 void CSkillPanel::OnKeyCodePressed(vgui::KeyCode code)
@@ -299,6 +658,131 @@ void CSkillPanel::OnTextChanged(Panel *panel)
 		{
 			Msg("Utility Slot 4 Changed \n");
 			pUtilSlot4OptionID->SetValue(buf);
+		}
+
+	}
+
+//Quickslot 
+	ConVar *pQuickslot1SkillID = cvar->FindVar("sk_plr_quickslot1_skill_id");
+	ConVar *pQuickslot2SkillID = cvar->FindVar("sk_plr_quickslot2_skill_id");
+	ConVar *pQuickslot3SkillID = cvar->FindVar("sk_plr_quickslot3_skill_id");
+	ConVar *pQuickslot4SkillID = cvar->FindVar("sk_plr_quickslot4_skill_id");
+	ConVar *pQuickslot5SkillID = cvar->FindVar("sk_plr_quickslot5_skill_id");
+	ConVar *pQuickslot6SkillID = cvar->FindVar("sk_plr_quickslot6_skill_id");
+
+	//m_iQuickSlot1SkillID = pQuickslot1SkillID->GetInt();
+//1
+	if (engine->IsConnected())
+	{
+		if (panel == m_pQuickslot1Combo)
+		{
+			char buf[40];
+			m_pQuickslot1Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 1 Changed \n");
+				Msg("current quickslot 1 item %i \n", m_pQuickslot1Combo->GetActiveItem());
+				pQuickslot1SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot1SkillID->SetValue(0);
+			}
+
+
+		}
+
+		//2
+		if (panel == m_pQuickslot2Combo)
+		{
+			char buf[40];
+			m_pQuickslot2Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 2 Changed \n");
+				Msg("current quickslot 1 item %i \n", m_pQuickslot2Combo->GetActiveItem());
+				pQuickslot2SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot2SkillID->SetValue(0);
+			}
+
+
+		}
+		//3
+
+		if (panel == m_pQuickslot3Combo)
+		{
+			char buf[40];
+			m_pQuickslot3Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 3 Changed \n");
+				Msg("current quickslot 3 item %i \n", m_pQuickslot3Combo->GetActiveItem());
+				pQuickslot3SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot3SkillID->SetValue(0);
+			}
+
+
+		}
+
+//4
+		if (panel == m_pQuickslot4Combo)
+		{
+			char buf[40];
+			m_pQuickslot4Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 4 Changed \n");
+				Msg("current quickslot 4 item %i \n", m_pQuickslot4Combo->GetActiveItem());
+				pQuickslot4SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot4SkillID->SetValue(0);
+			}
+
+
+		}
+//5
+		if (panel == m_pQuickslot5Combo)
+		{
+			char buf[40];
+			m_pQuickslot5Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 5 Changed \n");
+				Msg("current quickslot 5 item %i \n", m_pQuickslot5Combo->GetActiveItem());
+				pQuickslot5SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot5SkillID->SetValue(0);
+			}
+
+
+		}
+//6		
+		if (panel == m_pQuickslot6Combo)
+		{
+			char buf[40];
+			m_pQuickslot6Combo->GetText(buf, 40);
+			if (stricmp(buf, "None") != 0)
+			{
+				Msg("QuickSlot 6 Changed \n");
+				Msg("current quickslot 6 item %i \n", m_pQuickslot6Combo->GetActiveItem());
+				pQuickslot6SkillID->SetValue(buf);
+			}
+			else
+			{
+				pQuickslot6SkillID->SetValue(0);
+			}
+
+
 		}
 
 	}

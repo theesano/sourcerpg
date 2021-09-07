@@ -1788,6 +1788,10 @@ public:
 	//---------------------------------
 	//  Damage
 	//---------------------------------
+	CNetworkVar(int, m_iArmor);
+	CNetworkVar(int, m_iArmorMax);
+
+	virtual int			OnTakeDamage(const CTakeDamageInfo &inputInfo);
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dying( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dead( const CTakeDamageInfo &info );

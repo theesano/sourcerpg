@@ -347,6 +347,7 @@ exit 1
     <ClInclude Include="..\..\public\ihltvdirector.h" />
     <ClInclude Include="..\..\public\vstdlib\IKeyValuesSystem.h" />
     <ClInclude Include="npcbob.h" />
+    <ClInclude Include="npc_bob2.h" />
     <ClInclude Include="npc_metropolice_backup.h" />
     <ClInclude Include="singleplayer_animstate.h" />
     <ClInclude Include="ilagcompensationmanager.h" />

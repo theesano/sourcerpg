@@ -34,7 +34,7 @@
 #include "Sprite.h"
 #include "particle_parse.h"
 #include "particle_system.h"
-
+#include "hl2_player.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1446,7 +1446,7 @@ void CNPC_AntlionGuard::Shove( void )
 	ray.Init( WorldSpaceCenter(), vecEnd, Vector(-16,-16,-16), Vector(16,16,16) );
 	enginetrace->TraceRay( ray, MASK_SHOT_HULL, &traceFilter, &tr );
 	pHurt = tr.m_pEnt;
-
+	
 	// Knock things around
 	ImpactShock( tr.endpos, 100.0f, 250.0f );
 
@@ -1467,30 +1467,33 @@ void CNPC_AntlionGuard::Shove( void )
 		// If the player, throw him around
 		if ( pHurt->IsPlayer() )
 		{
-			//Punch the view
-			pHurt->ViewPunch( QAngle(20,0,-20) );
-			
-			//Shake the screen
-			UTIL_ScreenShake( pHurt->GetAbsOrigin(), 100.0, 1.5, 1.0, 2, SHAKE_START );
-
-			//Red damage indicator
-			color32 red = {128,0,0,128};
-			UTIL_ScreenFade( pHurt, red, 1.0f, 0.1f, FFADE_IN );
-
-			Vector forward, up;
-			AngleVectors( GetLocalAngles(), &forward, NULL, &up );
-			pHurt->ApplyAbsVelocityImpulse( forward * 400 + up * 150 );
-
-			// in the episodes, the cavern guard poisons the player
-#if HL2_EPISODIC
-			// If I am a cavern guard attacking the player, and he still lives, then poison him too.
-			if ( m_bInCavern && pHurt->IsPlayer() && pHurt->IsAlive() && pHurt->m_iHealth > ANTLIONGUARD_POISON_TO)
+			CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>(pHurt);
+			if (!pHL2Player->IsEvading())
 			{
-				// That didn't finish them. Take them down to one point with poison damage. It'll heal.
-				pHurt->TakeDamage( CTakeDamageInfo( this, this, pHurt->m_iHealth - ANTLIONGUARD_POISON_TO, DMG_POISON ) );
-			}
-#endif
+				//Punch the view
+				pHurt->ViewPunch(QAngle(20, 0, -20));
 
+				//Shake the screen
+				UTIL_ScreenShake(pHurt->GetAbsOrigin(), 100.0, 1.5, 1.0, 2, SHAKE_START);
+
+				//Red damage indicator
+				color32 red = { 128, 0, 0, 128 };
+				UTIL_ScreenFade(pHurt, red, 1.0f, 0.1f, FFADE_IN);
+
+				Vector forward, up;
+				AngleVectors(GetLocalAngles(), &forward, NULL, &up);
+				pHurt->ApplyAbsVelocityImpulse(forward * 400 + up * 150);
+
+				// in the episodes, the cavern guard poisons the player
+#if HL2_EPISODIC
+				// If I am a cavern guard attacking the player, and he still lives, then poison him too.
+				if (m_bInCavern && pHurt->IsPlayer() && pHurt->IsAlive() && pHurt->m_iHealth > ANTLIONGUARD_POISON_TO)
+				{
+					// That didn't finish them. Take them down to one point with poison damage. It'll heal.
+					pHurt->TakeDamage(CTakeDamageInfo(this, this, pHurt->m_iHealth - ANTLIONGUARD_POISON_TO, DMG_POISON));
+				}
+#endif
+			}
 		}	
 		else
 		{

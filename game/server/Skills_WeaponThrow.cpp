@@ -906,14 +906,14 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
-	string_t iszNPCName = AllocPooledString("npc_metropolice");
+	string_t iszNPCName = AllocPooledString("npc_bob");
 	Vector playernpcdist;
 	Vector WpnThrowdist;
 
 	for (int i = 0; i < nAIs; i++)
 	{
 		//if (ppAIs[i]->m_iClassname == iszNPCName)
-		if (ppAIs[i])
+		if (ppAIs[i]->m_iClassname == iszNPCName)
 		{
 			CBaseEntity *pEntity = NULL;
 
@@ -946,16 +946,51 @@ void CWeaponThrowingSkills::SkillsStatThink(void)
 				
 			}
 		}
+		else
+		{
+			CBaseEntity *pEntity = NULL;
+
+			while ((pEntity = gEntList.FindEntityByClassname(pEntity, "skills_weaponthrow")) != NULL)
+			{
+				CWeaponThrowingSkills *pSkWpnThrow = dynamic_cast<CWeaponThrowingSkills *>(pEntity);
+				if (pSkWpnThrow->IsAlive())
+				{
+					WpnThrowdist.x = abs(pSkWpnThrow->GetAbsOrigin().x - ppAIs[i]->GetAbsOrigin().x);
+					WpnThrowdist.y = abs(pSkWpnThrow->GetAbsOrigin().y - ppAIs[i]->GetAbsOrigin().y);
+				}
+			}
+
+			if (WpnThrowdist.x <= m_flSkillsRange && WpnThrowdist.y <= m_flSkillsRange)
+			{
+				Vector ParticleVec = ppAIs[i]->GetAbsOrigin();
+				ParticleVec.z += 48;
+				DispatchParticleEffect("grenade_explosion_01e", ParticleVec, ppAIs[i]->GetAbsAngles());
+				//emit sound melee_hit
+
+				if (pPlayer->GetActiveWeapon() != NULL)
+				{
+					if (ppAIs[i]->IsAlive())
+					{
+						pWeapon->WeaponSound(MELEE_HIT);
+					}
+				}
+
+			}
+		}
 	}
 
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	CTakeDamageInfo info(this, GetOwnerEntity(), GetAbsVelocity(), GetAbsOrigin(), pPlayer->GetPlayerBaseDamage(), DMG_SLASH);
-	if (pPlayer->IsCritical() == true)
-		info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerCritDamage()); //critical
-	else
+	
+	if (pPlayer->IsAlive())
 	{
-		info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerBaseDamage());
+		if (pPlayer->IsCritical() == true)
+			info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerCritDamage()); //critical
+		else
+		{
+			info.SetDamage(pWeapon->GetDamageForActivity(nHitActivity) + pPlayer->GetPlayerBaseDamage());
+		}
 	}
 
 	info.ScaleDamage(0.8f);

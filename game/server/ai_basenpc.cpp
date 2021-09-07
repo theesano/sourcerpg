@@ -708,6 +708,48 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
+int CAI_BaseNPC::OnTakeDamage(const CTakeDamageInfo &inputInfo)
+{
+	int fTookDamage;
+	int iArmorAbsorbedDamage;
+
+	// have some way to report to the player the npc's health condition
+
+	CTakeDamageInfo info = inputInfo;	
+	iArmorAbsorbedDamage = info.GetDamage() * 0.5;
+	
+	if (m_iArmor > 0)
+	{
+		info.SetDamage(iArmorAbsorbedDamage);
+		m_iArmor -= info.GetDamage();
+	}
+	else
+		info.SetDamage(info.GetDamage());
+
+	fTookDamage = BaseClass::OnTakeDamage(info);
+	if (!fTookDamage)
+		return 0;
+
+	//show npc health status
+
+	char HPstr[64];
+	Q_snprintf(HPstr, sizeof(HPstr), "%i / %i", GetHealth(), GetMaxHealth());
+	EntityText(-6, HPstr, 1);
+
+	char armorstr[64];
+	Q_snprintf(armorstr, sizeof(armorstr), "Armor: %i /100", m_iArmor);
+	//Q_snprintf(tempstr, sizeof(tempstr), "%i / %i", GetHealth(), GetMaxHealth());
+	EntityText(-5, armorstr, 1);
+
+
+	return fTookDamage;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
 int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	Forget( bits_MEMORY_INCOVER );
@@ -894,9 +936,8 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	//show damage number
 	char tempstr[512];
 	Q_snprintf(tempstr, sizeof(tempstr), "%.0f", info.GetDamage());
-	//Q_snprintf(tempstr, sizeof(tempstr), "%i / %i", GetHealth(), GetMaxHealth());
-	EntityText(5, tempstr, 1);
-
+	//Q_snprintf(tempstr, sizeof(tempstr), "%i / %i", GetHealth(), GetMaxHealth());	
+	EntityText(RandomInt(-12, -8) , tempstr, 1);
 
 	// ---------------------------------------------------------------
 	//  Insert a combat sound so that nearby NPCs know I've been hit
@@ -10717,6 +10758,7 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_KEYFIELD( m_iszEnemyFilterName,		FIELD_STRING, "enemyfilter" ),
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
+	DEFINE_FIELD(m_iArmor,						FIELD_INTEGER),
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),
