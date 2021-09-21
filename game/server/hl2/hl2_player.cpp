@@ -684,12 +684,14 @@ void CHL2_Player::Evade(void)
 			{
 				if (m_afButtonPressed & IN_BACK)
 				{
-					fwd.Negate();
+					fwd.Negate();					
 					pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat()*GetAbsVelocity());
+					//pPlayer->SetAbsVelocity(fwd*sk_evadedistance.GetFloat()*GetAbsVelocity());
 				}
 				else
 				{
 					pPlayer->ApplyAbsVelocityImpulse(fwd*sk_evadedistance.GetFloat());
+					//pPlayer->SetAbsVelocity(fwd*sk_evadedistance.GetFloat());
 				}
 
 			}
@@ -1701,24 +1703,25 @@ void CHL2_Player::Rage_ApplyRageBuff()
 	// + 20% faster movement speed 
 	// + 15% more attack speed
 
-	if (m_flRageBuffTime > gpGlobals->curtime)
-	{
+	//if (m_flRageBuffTime > gpGlobals->curtime)
+	//{
 
-	}
-	else
-	{
+//	}
+//	else
+//	{
 		if (m_flRageCurrent >= sk_plr_rage_3_consumption.GetFloat())
 		{
 			m_flRageBuffTime = gpGlobals->curtime + 30.0f;
 			m_flRageCurrent -= sk_plr_rage_3_consumption.GetFloat();
 			
+			SetArmorValue(100);
 			m_bRageInvincibility = true;
 			m_flRageInvincibilityTime = gpGlobals->curtime + 1.0f;
 
 			//DispatchParticleEffect("hint_movespeed", GetAbsOrigin(), vec3_angle);
 			DispatchParticleEffect("striderbuster_shotdown_core_flash", GetAbsOrigin(), vec3_angle);
 		}
-	}
+	//}
 }
 
 extern ConVar sk_rage_item_pickup("sk_rage_item_pickup", "10");

@@ -376,6 +376,9 @@ void CBaseMeleeWeapon::SkillsHandler(void)
 	{
 		ExecuteSkillID(1);
 	}
+//TODO: Since the number of skills will likely be increased in the future, implement 3-step skill quickslot menu (aka superslot)
+//EXPLANATION : A superslot is a quickslot that allows the use of 2 skills, when one skill is exhausted, another one will change its place.
+// when both options is exhausted, the ones with less cooldown time will be displayed, and when available (no longer in cd), be usable by player.
 
 	if (pOwner->m_afButtonPressed & IN_SLOT1)
 	{
@@ -1262,8 +1265,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bNmAirAttack = true;
 			m_flNmAirAttackDelayTimer = gpGlobals->curtime + (0.3 * m_flPlayerStats_AttackSpeed);
 
-			m_nExecutionTime = gpGlobals->curtime + (0.6666f * m_flPlayerStats_AttackSpeed);
-			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* m_flPlayerStats_AttackSpeed); 	//Hard coded value, should change to SequenceDuration()
+			m_nExecutionTime = gpGlobals->curtime + ((0.6f*0.9f) * m_flPlayerStats_AttackSpeed); //Originally 0.6666
+			m_flNextPrimaryAttack = gpGlobals->curtime + ((GetFireRate()*0.9)* m_flPlayerStats_AttackSpeed);  	//Hard coded value, should change to SequenceDuration()
 
 			m_flTotalAttackTime = gpGlobals->curtime + (m_flAttackInterval* m_flPlayerStats_AttackSpeed) + m_flAnimTime;
 
@@ -1284,8 +1287,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bNmAirAttack = true;
 			m_flNmAirAttackDelayTimer = gpGlobals->curtime + (0.3 * m_flPlayerStats_AttackSpeed);
 			
-			m_nExecutionTime = gpGlobals->curtime + (0.6666f * m_flPlayerStats_AttackSpeed);
-			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* m_flPlayerStats_AttackSpeed); 	//Hard coded value, should change to SequenceDuration()
+			m_nExecutionTime = gpGlobals->curtime + ((0.6f*0.9f) * m_flPlayerStats_AttackSpeed);
+			m_flNextPrimaryAttack = gpGlobals->curtime + ((GetFireRate()*0.9)* m_flPlayerStats_AttackSpeed); 	//Hard coded value, should change to SequenceDuration()
 
 			m_flTotalAttackTime = gpGlobals->curtime + (m_flAttackInterval* m_flPlayerStats_AttackSpeed) + m_flAnimTime;
 
@@ -1305,8 +1308,8 @@ void CBaseMeleeWeapon::Swing(int bIsSecondary)
 			m_bNmAirAttack = true;
 			m_flNmAirAttackDelayTimer = gpGlobals->curtime + (0.3 * m_flPlayerStats_AttackSpeed);
 
-			m_nExecutionTime = gpGlobals->curtime + (0.6666f * m_flPlayerStats_AttackSpeed);
-			m_flNextPrimaryAttack = gpGlobals->curtime + (GetFireRate()* m_flPlayerStats_AttackSpeed); 	//Hard coded value, should change to SequenceDuration()
+			m_nExecutionTime = gpGlobals->curtime + ((0.6f*0.9f) * m_flPlayerStats_AttackSpeed);
+			m_flNextPrimaryAttack = gpGlobals->curtime + ((GetFireRate()*0.9)* m_flPlayerStats_AttackSpeed); 	//Hard coded value, should change to SequenceDuration()
 
 			m_flTotalAttackTime = gpGlobals->curtime + (m_flAttackInterval* m_flPlayerStats_AttackSpeed) + m_flAnimTime;
 
@@ -1347,7 +1350,7 @@ void CBaseMeleeWeapon::InflictNormalAttackDamage(void)
 		m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
 		if (!m_bAttackSPAir2)
 		{
-				AddKnockbackXY(2.0f, 1);
+				AddKnockbackXY(1.2f, 1);
 			//Makes weapon produce AoE damage
 			RadiusDamage_EX(info, GetWeaponAimDirection(), AoeDamageRadius, CLASS_NONE, pOwner, true);
 		}
@@ -1394,6 +1397,7 @@ void CBaseMeleeWeapon::InflictNormalAttackDamage(void)
 		AddKnockbackXY(2.0f, 1);
 
 		RadiusDamage_EX(info, pOwner->GetAbsOrigin(), 128.0f, CLASS_PLAYER, pOwner, true);
+		UTIL_ScreenShake(GetAbsOrigin(), 2.0f, 100.0, 0.7, 256.0f, SHAKE_START);
 
 		m_bNmAirAttack = false;
 	}
@@ -1451,6 +1455,7 @@ void CBaseMeleeWeapon::InflictNormalAttackDamage(void)
 		{
 			m_bIsNmAttack = true;
 			AddKnockbackXY(1, 6);
+			UTIL_ScreenShake(GetAbsOrigin(), 3.2f, 100.0, 0.5, 256.0f, SHAKE_START, true);
 			m_flAttackSPAir2Timer_rp = gpGlobals->curtime + (0.175f * m_flPlayerStats_AttackSpeed);
 
 		}
@@ -1537,7 +1542,9 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 
 	//Plummet 
 	Vector aFwd;
-	aFwd = dirkb;
+	//aFwd = dirkb;
+	aFwd.x = 0;
+	aFwd.y = 0;
 	aFwd.z -= 0.5;
 
 	m_bIsAICollisionOff = true;
@@ -1559,8 +1566,8 @@ void CBaseMeleeWeapon::Skill_Evade(void)
 	{
 		m_flInAirTime = 0.0f;
 		m_nExecutionTime = gpGlobals->curtime + (1.6f * m_flPlayerStats_AttackSpeed);
-		pOwner->SetAbsVelocity(aFwd*nStepVelocity);
-		pHLPlayer->ForceViewAngleToCamera(1.0f * m_flPlayerStats_AttackSpeed);
+		pOwner->SetAbsVelocity(aFwd*256);
+		pHLPlayer->ForceViewAngleToCamera(0.7f * m_flPlayerStats_AttackSpeed); //orig 1.0f
 		pHLPlayer->SetAnimation(PLAYER_SKILL_AERIAL);
 
 		int iScytheBlade;
@@ -2193,14 +2200,18 @@ void CBaseMeleeWeapon::Skill_Lift_LogicEx(void)
 
 		RadiusDamage_EX(info, pOwner->GetAbsOrigin(), 128.f, CLASS_PLAYER, pOwner, true);
 
-		Vector vLiftDir(0, 0, 512);
-		pOwner->ApplyAbsVelocityImpulse(vLiftDir); // push the player upwards 
-
+		Vector vLiftDir(0, 0, 352);
+		//pOwner->ApplyAbsVelocityImpulse(vLiftDir); // push the player upwards 
+		pOwner->SetAbsVelocity(vLiftDir);
+		UTIL_ScreenShake(GetAbsOrigin(), 3.2f, 100.0, 0.5, 256.0f, SHAKE_START, true);
 		AddKnockbackXY(1, 5); //sound and hit impact of npcs 
 
 		m_flNPCFreezeTime = gpGlobals->curtime + 0.6f;
 		AddKnockbackXY(1, 7);
 		//pHLOwner->ForceViewAngleToCamera(1.0f);
+
+		m_nSkCoolDownTime = 0;
+		m_bIsSkCoolDown = false;
 
 		m_bSkillLiftAttack = false; //making sure that the skill is only called once
 	}
@@ -2298,7 +2309,10 @@ void CBaseMeleeWeapon::AddKnockbackXY(float magnitude,int options)
 						if (UTIL_GetLocalPlayer()->GetGroundEntity() != NULL)
 						{	
 							if ((NPCHealth > 0) && (NPCHealth < sk_npcknockbackathealth.GetInt()))
-								ppAIs[i]->ApplyAbsVelocityImpulse(dirkb*flKnockbackVelocity);
+								ppAIs[i]->SetAbsVelocity(dirkb*flKnockbackVelocity);
+							
+							//ppAIs[i]->ApplyAbsVelocityImpulse(dirkb*flKnockbackVelocity);
+						
 						}
 						else if (UTIL_GetLocalPlayer()->GetGroundEntity() == NULL)
 						{

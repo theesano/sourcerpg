@@ -16,6 +16,7 @@
 #include "iservervehicle.h"
 #include "items.h"
 #include "hl2_gamerules.h"
+#include "usermessages.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -23,6 +24,8 @@
 //#define SF_BOB_					0x00010000
 #define SF_BOB_NOCHATTER			0x00100000
 #define SF_BOB_ALLOWED_TO_RESPOND	0x01000000
+#define SF_BOB_MID_RANGE_ATTACK		0x02000000
+
 
 #define BOB_MID_RANGE_ATTACK_RANGE	3500.0f
 
@@ -418,13 +421,13 @@ void CNPC_Bob2::Spawn(void)
 
 	SetModel(STRING(GetModelName()));
 
-	SetHullType(HULL_MEDIUM);
+	SetHullType(HULL_MEDIUM_TALL);
 	SetHullSizeNormal();
 
 	SetSolid(SOLID_BBOX);
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 	SetMoveType(MOVETYPE_STEP);
-	SetBloodColor(BLOOD_COLOR_RED);
+	SetBloodColor(DONT_BLEED);
 
 	if (HasSpawnFlags(SF_BOB_NOCHATTER))
 	{
@@ -448,11 +451,11 @@ void CNPC_Bob2::Spawn(void)
 	NPCInit();
 
 	// NOTE: This must occur *after* init, since init sets default dist look
-	//if (HasSpawnFlags(SF_BOB_MID_RANGE_ATTACK))
-//	{
-//	m_flDistTooFar = BOB_MID_RANGE_ATTACK_RANGE;
-//		SetDistLook(BOB_MID_RANGE_ATTACK_RANGE);
-//	}
+	if (HasSpawnFlags(SF_BOB_MID_RANGE_ATTACK))
+	{
+	m_flDistTooFar = BOB_MID_RANGE_ATTACK_RANGE;
+		SetDistLook(BOB_MID_RANGE_ATTACK_RANGE);
+	}
 
 
 	GetEnemies()->SetFreeKnowledgeDuration(6.0);
@@ -784,16 +787,16 @@ Activity CNPC_Bob2::NPC_TranslateActivity(Activity newActivity)
 //-----------------------------------------------------------------------------
 void CNPC_Bob2::Event_Killed(const CTakeDamageInfo &info)
 {
-	int iRNGSim;
-	iRNGSim = random->RandomInt(1, 2); //50% chance of dropping
+	//int iRNGSim;
+	//iRNGSim = random->RandomInt(1, 2); //50% chance of dropping
 
 	CBasePlayer *pPlayer = ToBasePlayer(info.GetAttacker());
 
 	if (pPlayer != NULL)
 	{
 		CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules);
-		if (iRNGSim == 1)//50% chance of dropping
-			DropItem("item_rage", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
+		//if (iRNGSim == 1)//50% chance of dropping
+			//DropItem("item_rage", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 
 		// Attempt to drop health
 		//if (pHL2GameRules->NPC_ShouldDropHealth(pPlayer))
@@ -1454,6 +1457,13 @@ int CNPC_Bob2::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 		}
 	}
 	
+	CSingleUserRecipientFilter PlayerFilter4(UTIL_GetLocalPlayer());
+	PlayerFilter4.MakeReliable();
+	UserMessageBegin(PlayerFilter4, "MonsterName");
+	WRITE_STRING("bob2");
+	MessageEnd();
+
+
 
 	return BaseClass::OnTakeDamage(inputInfo);
 }
@@ -1484,6 +1494,15 @@ int CNPC_Bob2::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
 		// being killed, consider running off and hiding.
 		m_nRecentDamage += info.GetDamage();
 		m_flRecentDamageTime = gpGlobals->curtime;
+	}
+
+	
+	//25% of dropping rage energy for every hit 
+	int iRNGSim = RandomInt(1, 11);
+	
+	if (iRNGSim == 1)
+	{
+		DropItem("item_rage", WorldSpaceCenter() + RandomVector(-4, 4), RandomAngle(0, 360));
 	}
 
 	//show damage number
@@ -1556,9 +1575,9 @@ void CNPC_Bob2::GatherConditions(void)
 	}
 	else if ((m_bIsArmorBreak) && (m_ArmorBreakDownTime.Expired()))
 	{
-		// SetCondition(COND_NPC_UNFREEZE);
-		// ClearCondition(COND_NPC_FREEZE);
-		// EntityText(5, "UNBREAK!", 1);
+		 SetCondition(COND_NPC_UNFREEZE);
+		 ClearCondition(COND_NPC_FREEZE);
+		 EntityText(5, "UNBREAK!", 1);
 		 m_bIsArmorBreak = false; // set as false to avoid triggering the armor break again
 	}
 

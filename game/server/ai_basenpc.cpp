@@ -732,15 +732,33 @@ int CAI_BaseNPC::OnTakeDamage(const CTakeDamageInfo &inputInfo)
 
 	//show npc health status
 
-	char HPstr[64];
-	Q_snprintf(HPstr, sizeof(HPstr), "%i / %i", GetHealth(), GetMaxHealth());
-	EntityText(-6, HPstr, 1);
-
-	char armorstr[64];
-	Q_snprintf(armorstr, sizeof(armorstr), "Armor: %i /100", m_iArmor);
+	//char HPstr[64];
+	//Q_snprintf(HPstr, sizeof(HPstr), "%i / %i", GetHealth(), GetMaxHealth());
+	//EntityText(-6, HPstr, 1);
+	//
+	//char armorstr[64];
+	//Q_snprintf(armorstr, sizeof(armorstr), "Armor: %i /100", m_iArmor);
 	//Q_snprintf(tempstr, sizeof(tempstr), "%i / %i", GetHealth(), GetMaxHealth());
-	EntityText(-5, armorstr, 1);
+	//EntityText(-5, armorstr, 1);
 
+	//send display information to client HUD
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter, "MonsterHP");
+	WRITE_SHORT((int)m_iHealth);
+	MessageEnd();
+
+	CSingleUserRecipientFilter PlayerFilter2(UTIL_GetLocalPlayer());
+	PlayerFilter2.MakeReliable();
+	UserMessageBegin(PlayerFilter2, "MonsterArmor");
+	WRITE_SHORT((int)m_iArmor);
+	MessageEnd();
+
+	CSingleUserRecipientFilter PlayerFilter3(UTIL_GetLocalPlayer());
+	PlayerFilter3.MakeReliable();
+	UserMessageBegin(PlayerFilter3, "MonsterHPMax");
+	WRITE_SHORT((int)GetMaxHealth());
+	MessageEnd();
 
 	return fTookDamage;
 }
@@ -3813,11 +3831,14 @@ void CAI_BaseNPC::CallNPCThink( void )
 
 		if (pWeapon->IsAICollisionOff())
 		{
-			AddSolidFlags(FSOLID_NOT_SOLID);
+			//AddSolidFlags(FSOLID_NOT_SOLID);
+			SetSolidFlags(FSOLID_NOT_SOLID);
+			SetSolid(SOLID_NONE);
 		}
 		else
 		{
 			RemoveSolidFlags(FSOLID_NOT_SOLID);
+			SetSolid(SOLID_BBOX);
 		}
 	}
 

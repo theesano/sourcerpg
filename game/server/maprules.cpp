@@ -213,6 +213,225 @@ void CGameScore::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 	}
 }
 
+// CGameBossCounter / game_bosscounter  -- Count and display the enemies required to activate the final game objective ( eg. Summon final boss)
+// functions killcount, a method to add the killcount // kill count to summon the boss( max count), method to reset the count, method to stop the count (when a boss is summonned)
+class CGameBossCounter : public CRulePointEntity
+{
+	DECLARE_CLASS(CGameBossCounter, CRulePointEntity);
+private:
+	
+	int m_iTargetCount; // the number of kills required to fire boss summon event
+	bool m_bHitTargetCount;
+
+	bool m_bDisabled;
+
+	void Spawn(void);
+
+	int DrawDebugTextOverlays(void);
+
+	// Inputs
+	void InputAddCount(inputdata_t &inputdata);
+	void InputResetCount(inputdata_t &inputdata);
+	void InputEnable(inputdata_t &inputdata);
+	void InputDisable(inputdata_t &inputdata);
+	void UpdateOutValue(CBaseEntity *pActivator, int iNewValue);
+	//inputenabledrawhud
+	//inputdisabledrawhud
+
+	// Outputs
+	COutputInt m_OutValue;
+	COutputEvent m_OnHitTargetCount;
+
+	DECLARE_DATADESC();
+
+};
+
+LINK_ENTITY_TO_CLASS(game_bosscounter, CGameBossCounter);
+
+BEGIN_DATADESC(CGameBossCounter)
+
+
+	DEFINE_FIELD(m_bHitTargetCount, FIELD_BOOLEAN),
+
+	//Keys
+	DEFINE_KEYFIELD(m_iTargetCount, FIELD_INTEGER, "targetcount"),
+
+	DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
+
+	//Inputs
+	DEFINE_INPUTFUNC(FIELD_VOID, "AddCount", InputAddCount),
+	DEFINE_INPUTFUNC(FIELD_VOID, "ResetCount", InputResetCount),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+	
+	//Outputs
+	DEFINE_OUTPUT(m_OutValue,"OutValue"),
+	DEFINE_OUTPUT(m_OnHitTargetCount,"OnHitTargetCount"),
+
+
+END_DATADESC()
+
+//Initialize the value as 0
+//Always start as 0
+void CGameBossCounter::Spawn(void)
+{
+	if (m_iTargetCount != 0)
+	{
+		//float flStartValue = clamp(m_OutValue.Get(), 0, m_iTargetCount);
+		//m_OutValue.Init(flStartValue);
+		m_OutValue.Init(0);
+	}
+
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter, "HudGameObjShouldDraw");
+	WRITE_BYTE(m_bDisabled);
+	MessageEnd();
+}
+
+int CGameBossCounter::DrawDebugTextOverlays(void)
+{
+	int text_offset = BaseClass::DrawDebugTextOverlays();
+
+	if (m_debugOverlays & OVERLAY_TEXT_BIT)
+	{
+		char tempstr[512];
+
+		Q_snprintf(tempstr, sizeof(tempstr), "    target value: %i", m_iTargetCount);
+		EntityText(text_offset, tempstr, 0);
+		text_offset++;
+
+		Q_snprintf(tempstr, sizeof(tempstr), "current value: %i", m_OutValue.Get());
+		EntityText(text_offset, tempstr, 0);
+		text_offset++;
+
+		if (m_bDisabled)
+		{
+			Q_snprintf(tempstr, sizeof(tempstr), "*DISABLED*");
+		}
+		else
+		{
+			Q_snprintf(tempstr, sizeof(tempstr), "Enabled.");
+		}
+		EntityText(text_offset, tempstr, 0);
+		text_offset++;
+
+
+	}
+	return text_offset;
+}
+
+void CGameBossCounter::InputAddCount(inputdata_t &inputdata)
+{
+	if (m_bDisabled)
+	{
+		DevMsg("game_bosscounter %s ignoring AddCount because it is disabled\n ", GetDebugName());
+		return;
+	}
+
+	//int iNewValue = m_OutValue.Get() + inputdata.value.Int();
+	int iNewValue = m_OutValue.Get() + 1;
+	UpdateOutValue(inputdata.pActivator, iNewValue);
+	
+	//DevMsg("Boss counter's addcount input is %i  \ %i \n", iNewValue, inputdata.value.Int());
+//	DevMsg("Boss counter's addcount input is %i \n", iNewValue);
+}
+
+void CGameBossCounter::InputResetCount(inputdata_t &inputdata)
+{
+	if (m_bDisabled)
+	{
+		DevMsg("game_bosscounter %s ignoring ResetCount because it is disabled\n", GetDebugName());
+		return;
+	}
+
+	UpdateOutValue(inputdata.pActivator, 0);
+	//Set outvalue back to 0
+}
+
+void CGameBossCounter::InputEnable(inputdata_t &inputdata)
+{
+	m_bDisabled = false;
+
+//HUD
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter, "HudGameObjShouldDraw");
+	WRITE_BYTE(1);
+	MessageEnd();
+
+	CSingleUserRecipientFilter PlayerFilter3(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter3, "HudGameObjCount");
+	WRITE_SHORT((int)m_OutValue.Get());
+	MessageEnd();
+
+	CSingleUserRecipientFilter PlayerFilter2(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter2, "HudGameObjTargetCount");
+	WRITE_SHORT((int)m_iTargetCount);
+	MessageEnd();
+}
+
+void CGameBossCounter::InputDisable(inputdata_t &inputdata)
+{
+	m_bDisabled = true;
+//HUD
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter, "HudGameObjShouldDraw");
+	WRITE_BYTE(0);
+	MessageEnd();
+}
+
+void CGameBossCounter::UpdateOutValue(CBaseEntity *pActivator, int iNewValue)
+{
+	if (m_iTargetCount != 0)
+	{
+		if (iNewValue >= m_iTargetCount)
+		{
+			if (!m_bHitTargetCount)
+			{
+				m_bHitTargetCount = true;
+				m_OnHitTargetCount.FireOutput(pActivator, this);
+
+				CSingleUserRecipientFilter PlayerFilterU(UTIL_GetLocalPlayer());
+				PlayerFilterU.MakeReliable();
+				UserMessageBegin(PlayerFilterU, "HudGameObjOnHitTarget");
+				WRITE_BYTE(1);
+				MessageEnd();
+			}
+		}
+		else
+		{
+			m_bHitTargetCount = false;
+			CSingleUserRecipientFilter PlayerFilterU(UTIL_GetLocalPlayer());
+			PlayerFilterU.MakeReliable();
+			UserMessageBegin(PlayerFilterU, "HudGameObjOnHitTarget");
+			WRITE_BYTE(0);
+			MessageEnd();
+		}
+
+		iNewValue = clamp(iNewValue, 0, m_iTargetCount);
+	}
+
+	m_OutValue.Set(iNewValue, pActivator, this);
+
+	//DevMsg("Boss counter's value is now %i \n", m_OutValue.Get());
+	
+	// send value to HUD
+	CSingleUserRecipientFilter PlayerFilter(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter, "HudGameObjCount");
+	WRITE_SHORT((int)m_OutValue.Get());
+	MessageEnd();
+
+	CSingleUserRecipientFilter PlayerFilter2(UTIL_GetLocalPlayer());
+	PlayerFilter.MakeReliable();
+	UserMessageBegin(PlayerFilter2, "HudGameObjTargetCount");
+	WRITE_SHORT((int)m_iTargetCount);
+	MessageEnd();
+}
 
 // CGameEnd / game_end	-- Ends the game in MP
 

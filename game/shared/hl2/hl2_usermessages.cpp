@@ -47,6 +47,16 @@ void RegisterUserMessages( void )
 	usermessages->Register( "UpdateJalopyRadar", -1 );
 	usermessages->Register("AS", -1);
 	usermessages->Register("RageBuffTime", -1);
+	usermessages->Register("MonsterName", -1);
+	usermessages->Register("MonsterHP", -1);
+	usermessages->Register("MonsterHPMax", - 1);
+	usermessages->Register("MonsterArmor", -1);
+	usermessages->Register("MonsterArmorMax", -1);
+	usermessages->Register("HudDisplayDuration", -1);
+	usermessages->Register("HudGameObjShouldDraw",-1);
+	usermessages->Register("HudGameObjCount", -1);
+	usermessages->Register("HudGameObjTargetCount", -1);
+	usermessages->Register("HudGameObjOnHitTarget", -1);
 
 
 #ifndef _X360
